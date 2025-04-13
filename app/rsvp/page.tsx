@@ -35,34 +35,40 @@ interface Event {
 
 function RSVPContent() {
   const searchParams = useSearchParams();
-  const token = searchParams.get('token');
+  const [inputToken, setInputToken] = useState('');
   const [guest, setGuest] = useState<Guest | null>(null);
   const [events, setEvents] = useState<Event[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (token) {
-      fetchGuestAndEvents();
-    } else {
-      setError('No RSVP token provided');
-      setLoading(false);
+    const urlToken = searchParams.get('token');
+    if (urlToken) {
+      handleTokenSubmit(urlToken);
     }
-  }, [token]);
+  }, [searchParams]);
 
-  const fetchGuestAndEvents = async () => {
+  const handleTokenSubmit = async (submittedToken: string) => {
+    setLoading(true);
+    setError(null);
+    
     try {
-      // Get guest by ID
-      const guestDoc = await getDoc(doc(db, 'guests', token!));
+      // Clean the token (remove any URL parts if pasted)
+      const cleanToken = submittedToken.split('?token=').pop()?.split('&')[0] || submittedToken;
       
-      if (!guestDoc.exists()) {
-        setError('Invalid RSVP link');
+      // Check if guest exists
+      const guestRef = doc(db, 'guests', cleanToken);
+      const guestSnap = await getDoc(guestRef);
+      
+      if (!guestSnap.exists()) {
+        setError('Invalid RSVP code. Please check your invitation and try again.');
         setLoading(false);
         return;
       }
 
-      const guestData = { id: guestDoc.id, ...guestDoc.data() } as Guest;
+      // Get guest data
+      const guestData = { id: guestSnap.id, ...guestSnap.data() } as Guest;
       setGuest(guestData);
 
       // Get all events
@@ -73,10 +79,10 @@ function RSVPContent() {
       })) as Event[];
       setEvents(eventsList);
 
-      setLoading(false);
-    } catch (error) {
-      console.error('Error fetching data:', error);
-      setError('An error occurred while loading your RSVP');
+    } catch (err) {
+      setError('An error occurred. Please try again.');
+      console.error('Error checking token:', err);
+    } finally {
       setLoading(false);
     }
   };
@@ -111,9 +117,61 @@ function RSVPContent() {
     }
   };
 
-  if (loading) return <p className="text-white">Loading...</p>;
-  if (error) return <p className="text-red-500">{error}</p>;
-  if (!guest) return <p className="text-red-500">Guest not found</p>;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-white to-pink-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!guest) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-white to-pink-50 flex items-center justify-center">
+        <div className="max-w-md w-full mx-4 bg-white rounded-lg shadow-lg p-8">
+          <h1 className="text-3xl font-serif text-center text-gray-900 mb-6">
+            RSVP
+          </h1>
+          
+          <p className="text-gray-600 text-center mb-8">
+            Please enter your RSVP code from your invitation
+          </p>
+
+          <div className="space-y-4">
+            <input
+              type="text"
+              value={inputToken}
+              onChange={(e) => setInputToken(e.target.value)}
+              placeholder="Enter your RSVP code"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+            />
+
+            {error && (
+              <p className="text-red-500 text-sm text-center">{error}</p>
+            )}
+
+            <button
+              onClick={() => handleTokenSubmit(inputToken)}
+              disabled={loading || !inputToken}
+              className={`w-full py-3 px-4 rounded-lg text-white font-medium ${
+                loading || !inputToken
+                  ? 'bg-gray-400 cursor-not-allowed'
+                  : 'bg-pink-500 hover:bg-pink-600'
+              }`}
+            >
+              {loading ? 'Checking...' : 'Continue'}
+            </button>
+          </div>
+
+          <p className="mt-6 text-sm text-gray-500 text-center">
+            Having trouble? Contact the couple directly
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const renderRSVPButtons = (guestId: string, rsvps: Record<string, string>, eventId: string, isSubGuest: boolean = false) => (
     <div className="flex space-x-4">
