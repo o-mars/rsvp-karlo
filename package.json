@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "serve out",
+    "start": "serve out --single",
     "lint": "next lint"
   },
   "dependencies": {

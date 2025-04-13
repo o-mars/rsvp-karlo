@@ -28,10 +28,28 @@ const resend = new Resend(apiKey);
 
 // Configure CORS
 const corsOptions = {
-  origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000', 'https://rsvpkarlo.com', 'https://api.rsvpkarlo.com', 'https://rsvp-karlo-45828692892.us-central1.run.app'],
+  origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
+    const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [
+      'http://localhost:3000',
+      'https://rsvpkarlo.com',
+      'https://api.rsvpkarlo.com',
+      'https://rsvp-karlo-45828692892.us-central1.run.app'
+    ];
+    
+    console.log('Received request from origin:', origin);
+    console.log('Allowed origins:', allowedOrigins);
+    
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   methods: ['POST', 'GET', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
+  credentials: true,
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 };
 
 // Type definitions
@@ -61,6 +79,12 @@ const port = process.env.PORT || 8080;
 // Middleware
 app.use(cors(corsOptions));
 app.use(express.json());
+
+// Log all requests
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.path} - Origin: ${req.headers.origin}`);
+  next();
+});
 
 // Health check endpoint
 app.get('/health', (req, res) => {

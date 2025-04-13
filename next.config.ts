@@ -6,7 +6,6 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true,
   },
-  // Optional: Add trailingSlash if you want URLs to end with a slash
   trailingSlash: true,
 };
 
