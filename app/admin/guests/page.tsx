@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { db } from '../../../utils/firebase';
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy } from 'firebase/firestore';
-import { Resend } from 'resend';
+import { collection, getDocs, query, orderBy, doc, updateDoc, deleteDoc, setDoc } from 'firebase/firestore';
+import { db } from '@/utils/firebase';
+import { v4 as uuidv4 } from 'uuid';
 
 interface SubGuest {
   id: string;
@@ -78,25 +78,31 @@ export default function GuestsPage() {
     }
   };
 
-  const handleAddGuest = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleAddGuest = async () => {
+    if (!newGuest.firstName || !newGuest.lastName || !newGuest.email) return;
+    
+    const id = uuidv4();
+    const token = Math.random().toString(36).substring(2, 15);
+    
     try {
-      const token = Math.random().toString(36).substring(2, 15);
-      await addDoc(collection(db, 'guests'), {
-        ...newGuest,
+      await setDoc(doc(db, 'guests', id), {
+        id,
         token,
-        createdAt: new Date(),
-        rsvps: events.reduce((acc, event) => ({
-          ...acc,
-          [event.id]: 'pending'
-        }), {})
+        firstName: newGuest.firstName,
+        lastName: newGuest.lastName,
+        email: newGuest.email,
+        rsvps: {},
+        subGuests: []
       });
+      
       setNewGuest({
         firstName: '',
         lastName: '',
         email: '',
         rsvps: {},
+        subGuests: []
       });
+      
       fetchData();
     } catch (error) {
       console.error('Error adding guest:', error);
@@ -136,16 +142,13 @@ export default function GuestsPage() {
         const [firstName, lastName, email] = line.split(',').map(s => s.trim());
         if (firstName && lastName) {
           const token = Math.random().toString(36).substring(2, 15);
-          await addDoc(collection(db, 'guests'), {
+          const id = uuidv4();
+          await setDoc(doc(db, 'guests', id), {
             firstName,
             lastName,
             email: email || '',
             token,
-            createdAt: new Date(),
-            rsvps: events.reduce((acc, event) => ({
-              ...acc,
-              [event.id]: 'pending'
-            }), {})
+            id
           });
         }
       }
@@ -170,52 +173,18 @@ export default function GuestsPage() {
         return;
       }
 
-      const resend = new Resend(process.env.NEXT_PUBLIC_RESEND_API_KEY);
-      
-      // Get all events for the email content
-      const eventsSnapshot = await getDocs(collection(db, 'events'));
-      const events = eventsSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Event[];
+      const response = await fetch(process.env.NEXT_PUBLIC_EMAIL_SERVICE_URL + '/send-emails', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          guestIds: selectedGuestsData.map(g => g.id)
+        }),
+      });
 
-      // Send emails to each selected guest
-      for (const guest of selectedGuestsData) {
-        try {
-          // Get the events this guest is invited to
-          const invitedEvents = events.filter(event => guest.rsvps[event.id] !== undefined);
-          
-          if (invitedEvents.length === 0) {
-            console.log(`Skipping ${guest.email} - no events invited to`);
-            continue;
-          }
-
-          const eventList = invitedEvents.map(event => `
-            <li>
-              <strong>${event.name}</strong><br>
-              ${event.date} at ${event.time}<br>
-              ${event.location}
-            </li>
-          `).join('');
-
-          await resend.emails.send({
-            from: 'invite@rsvpkarlo..com',
-            to: guest.email!,
-            subject: 'You\'re Invited!',
-            html: `
-              <p>Hi ${guest.firstName} ${guest.lastName},</p>
-              <p>You're invited to our events! Please RSVP using the link below:</p>
-              <ul>
-                ${eventList}
-              </ul>
-              <p><a href="https://rsvpkarlo.com/rsvp?token=${guest.id}">Click here to RSVP</a></p>
-              <p>Best regards,<br>The Event Team</p>
-            `
-          });
-          console.log(`Sent invite to ${guest.email}`);
-        } catch (error) {
-          console.error(`Failed to send invite to ${guest.email}:`, error);
-        }
+      if (!response.ok) {
+        throw new Error('Failed to send emails');
       }
 
       alert('Emails have been sent to selected guests');
