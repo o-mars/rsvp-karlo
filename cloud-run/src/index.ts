@@ -28,9 +28,10 @@ const resend = new Resend(apiKey);
 
 // Configure CORS
 const corsOptions = {
-  origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000', 'https://rsvpkarlo.com'],
+  origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000', 'https://rsvpkarlo.com', 'https://api.rsvpkarlo.com', 'https://rsvp-karlo-45828692892.us-central1.run.app'],
   methods: ['POST', 'GET', 'OPTIONS'],
-  allowedHeaders: ['Content-Type']
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
 };
 
 // Type definitions
@@ -65,6 +66,9 @@ app.use(express.json());
 app.get('/health', (req, res) => {
   res.status(200).send('OK');
 });
+
+// Handle preflight requests
+app.options('*', cors(corsOptions));
 
 // Email sending endpoint
 app.post('/send-emails', async (req, res) => {

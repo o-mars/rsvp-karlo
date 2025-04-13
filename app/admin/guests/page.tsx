@@ -161,9 +161,11 @@ export default function GuestsPage() {
   };
 
   const handleBulkEmail = async () => {
-    if (selectedGuests.length === 0) return;
-    
     try {
+      if (!process.env.NEXT_PUBLIC_EMAIL_SERVICE_URL) {
+        throw new Error('Email service URL is not configured');
+      }
+
       const selectedGuestsData = guests
         .filter(g => selectedGuests.includes(g.id))
         .filter(g => g.email); // Only include guests with email addresses
@@ -172,6 +174,9 @@ export default function GuestsPage() {
         alert('No valid email addresses selected');
         return;
       }
+
+      console.log('Sending emails to:', selectedGuestsData.map(g => g.id));
+      console.log('Using service URL:', process.env.NEXT_PUBLIC_EMAIL_SERVICE_URL);
 
       const response = await fetch(process.env.NEXT_PUBLIC_EMAIL_SERVICE_URL + '/send-emails', {
         method: 'POST',
@@ -184,13 +189,16 @@ export default function GuestsPage() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to send emails');
+        const errorText = await response.text();
+        console.error('Email service error:', errorText);
+        throw new Error(`Failed to send emails: ${errorText}`);
       }
 
       alert('Emails have been sent to selected guests');
-    } catch (error) {
-      console.error('Error sending emails:', error);
-      alert('Failed to send emails. Please try again.');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      console.error('Error in handleBulkEmail:', error);
+      alert(`Error sending emails: ${error?.message || 'Unknown error'}`);
     }
   };
 
