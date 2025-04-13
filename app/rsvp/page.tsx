@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { use } from 'react';
-import { db } from '../../../utils/firebase';
+import { useSearchParams } from 'next/navigation';
+import { db } from '../../utils/firebase';
 import { doc, updateDoc, collection, getDocs, getDoc } from 'firebase/firestore';
 
 interface SubGuest {
@@ -33,8 +33,9 @@ interface Event {
   location: string;
 }
 
-export default function RSVPPage({ params }: { params: Promise<{ token: string }> }) {
-  const { token } = use(params);
+export default function RSVPPage() {
+  const searchParams = useSearchParams();
+  const token = searchParams.get('token');
   const [guest, setGuest] = useState<Guest | null>(null);
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
@@ -42,13 +43,18 @@ export default function RSVPPage({ params }: { params: Promise<{ token: string }
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    fetchGuestAndEvents();
+    if (token) {
+      fetchGuestAndEvents();
+    } else {
+      setError('No RSVP token provided');
+      setLoading(false);
+    }
   }, [token]);
 
   const fetchGuestAndEvents = async () => {
     try {
       // Get guest by ID
-      const guestDoc = await getDoc(doc(db, 'guests', token));
+      const guestDoc = await getDoc(doc(db, 'guests', token!));
       
       if (!guestDoc.exists()) {
         setError('Invalid RSVP link');
@@ -205,4 +211,4 @@ export default function RSVPPage({ params }: { params: Promise<{ token: string }
       </div>
     </div>
   );
-}
+} 

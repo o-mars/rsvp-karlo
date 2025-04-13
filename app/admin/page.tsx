@@ -207,7 +207,7 @@ export default function AdminDashboard() {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <a
-                    href={`/rsvp/${guest.token}`}
+                    href={`/rsvp?token=${guest.token}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-500 hover:text-blue-700"

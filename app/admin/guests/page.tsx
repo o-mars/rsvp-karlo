@@ -199,7 +199,7 @@ export default function GuestsPage() {
           `).join('');
 
           await resend.emails.send({
-            from: 'invites@omar-and-zainab.com',
+            from: 'invite@rsvpkarlo..com',
             to: guest.email!,
             subject: 'You\'re Invited!',
             html: `
@@ -208,7 +208,7 @@ export default function GuestsPage() {
               <ul>
                 ${eventList}
               </ul>
-              <p><a href="https://omar-and-zainab.com/rsvp/${guest.id}">Click here to RSVP</a></p>
+              <p><a href="https://rsvpkarlo.com/rsvp?token=${guest.id}">Click here to RSVP</a></p>
               <p>Best regards,<br>The Event Team</p>
             `
           });

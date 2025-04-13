@@ -75,7 +75,7 @@ async function sendInvites() {
             <ul>
               ${eventList}
             </ul>
-            <p><a href="https://yourdomain.com/rsvp/${guest.token}">Click here to RSVP</a></p>
+            <p><a href="https://yourdomain.com/rsvp?token=${guest.token}">Click here to RSVP</a></p>
             <p>Best regards,<br>The Event Team</p>
           `
         });
