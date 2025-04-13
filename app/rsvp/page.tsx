@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { db } from '../../utils/firebase';
 import { doc, updateDoc, collection, getDocs, getDoc } from 'firebase/firestore';
@@ -33,7 +33,7 @@ interface Event {
   location: string;
 }
 
-export default function RSVPPage() {
+function RSVPContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
   const [guest, setGuest] = useState<Guest | null>(null);
@@ -210,5 +210,13 @@ export default function RSVPPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function RSVPPage() {
+  return (
+    <Suspense fallback={<p className="text-white">Loading...</p>}>
+      <RSVPContent />
+    </Suspense>
   );
 } 
