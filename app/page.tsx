@@ -1,21 +1,21 @@
 'use client';
 
-import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function Home() {
   const router = useRouter();
 
-  useEffect(() => {
-    // Check if user is already logged in
-    const isLoggedIn = localStorage.getItem('adminLoggedIn') === 'true';
-    if (isLoggedIn) {
-      router.push('/admin');
-    }
-  }, [router]);
-
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-pink-50">
+    <div className="min-h-screen bg-gradient-to-b from-white to-pink-50 relative">
+      {/* Host an Event Series Button */}
+      <div className="absolute top-0 right-0 m-6 z-50">
+        <button
+          onClick={() => router.push('/admin')}
+          className="bg-pink-600 hover:bg-pink-700 text-white px-6 py-2 rounded-full shadow-lg font-semibold transition-colors"
+        >
+          Host an Event Series
+        </button>
+      </div>
       {/* Hero Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className="text-center">
@@ -26,12 +26,6 @@ export default function Home() {
             We&apos;re getting married!
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button
-              onClick={() => router.push('/admin/login')}
-              className="bg-pink-500 hover:bg-pink-600 text-white px-8 py-3 rounded-full text-lg font-medium transition-colors"
-            >
-              Admin Login
-            </button>
             <button
               onClick={() => router.push('/rsvp')}
               className="bg-white hover:bg-gray-100 text-pink-500 border-2 border-pink-500 px-8 py-3 rounded-full text-lg font-medium transition-colors"

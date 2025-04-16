@@ -55,7 +55,9 @@ function RSVPContent() {
     
     try {
       // Clean the token (remove any URL parts if pasted)
-      const cleanToken = submittedToken.split('?token=').pop()?.split('&')[0] || submittedToken;
+      const cleanToken = submittedToken.includes('?token=')
+        ? submittedToken.split('?token=').pop()?.split('&')[0] || submittedToken
+        : submittedToken;
       
       // Check if guest exists
       const guestRef = doc(db, 'guests', cleanToken);
