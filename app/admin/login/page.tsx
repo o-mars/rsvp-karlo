@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '../../AuthContext';
+import { useAuth } from '../../../src/contexts/AuthContext';
 
 export default function AdminLogin() {
   const [email, setEmail] = useState('');

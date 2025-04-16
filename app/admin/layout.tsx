@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useAuth, AuthProvider } from '../AuthContext';
+import { useAuth, AuthProvider } from '../../src/contexts/AuthContext';
 import { useEffect } from 'react';
 
 function AdminLayoutContent({ children }: { children: React.ReactNode }) {
