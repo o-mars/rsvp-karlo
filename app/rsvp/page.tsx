@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { db } from '../../utils/firebase';
 import { doc, updateDoc, collection, getDocs, getDoc } from 'firebase/firestore';
+import Image from 'next/image';
 
 interface SubGuest {
   id: string;
@@ -25,12 +26,21 @@ interface Guest {
   plusOne?: boolean;
 }
 
+interface TimestampLike {
+  toDate?: () => Date;
+  seconds?: number;
+  nanoseconds?: number;
+}
+
 interface Event {
   id: string;
   name: string;
-  date: string;
-  time: string;
+  date?: string;
+  time?: string;
+  startDateTime?: TimestampLike | Date | string | number;
+  endDateTime?: TimestampLike | Date | string | number;
   location: string;
+  description?: string;
 }
 
 function RSVPContent() {
@@ -119,59 +129,144 @@ function RSVPContent() {
     }
   };
 
-  if (loading) {
+  // Helper to format timestamp or date/time
+  const formatEventDateTime = (event: Event): string => {
+    if (event.startDateTime) {
+      // Handle Firestore timestamp
+      try {
+        // Check if it's a Firestore timestamp with toDate method
+        if (typeof event.startDateTime === 'object' && 'toDate' in event.startDateTime && typeof event.startDateTime.toDate === 'function') {
+          return event.startDateTime.toDate().toLocaleDateString('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+          });
+        }
+        
+        // If it's a Date object
+        if (event.startDateTime instanceof Date) {
+          return event.startDateTime.toLocaleDateString('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+          });
+        }
+        
+        // If it's a number or string, convert to Date first
+        if (typeof event.startDateTime === 'number' || typeof event.startDateTime === 'string') {
+          const date = new Date(event.startDateTime);
+          return date.toLocaleDateString('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+          });
+        }
+      } catch (error) {
+        console.error('Error formatting date:', error);
+      }
+    }
+    
+    // If we don't have startDateTime or there was an error, use the sample date
+    console.warn('using sample date');
+    return "Sunday, August 10th, 2025, 7:00 PM";
+  };
+
+  // Background image container
+  const BackgroundContainer = ({ children }: { children: React.ReactNode }) => {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-white to-pink-50 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-gray-600">Loading...</p>
+      <div className="min-h-screen flex flex-col relative">
+        {/* Background image */}
+        <div className="fixed inset-0 z-0">
+          <div className="relative h-full w-full">
+            <Image 
+              src="/Background1.jpg" 
+              alt="Background" 
+              fill 
+              priority
+              style={{ objectFit: 'cover' }}
+              quality={100}
+            />
+          </div>
+        </div>
+        
+        {/* Content positioned over the background */}
+        <div className="relative z-10 flex-grow flex flex-col">
+          {children}
         </div>
       </div>
+    );
+  };
+
+  if (loading) {
+    return (
+      <BackgroundContainer>
+        <div className="flex-grow flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pink-500 mx-auto"></div>
+            <p className="text-gray-800 mt-4">Loading...</p>
+          </div>
+        </div>
+      </BackgroundContainer>
     );
   }
 
   if (!guest) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-white to-pink-50 flex items-center justify-center">
-        <div className="max-w-md w-full mx-4 bg-white rounded-lg shadow-lg p-8">
-          <h1 className="text-3xl font-serif text-center text-gray-900 mb-6">
-            RSVP
-          </h1>
-          
-          <p className="text-gray-600 text-center mb-8">
-            Please enter your RSVP code from your invitation
-          </p>
+      <BackgroundContainer>
+        <div className="flex-grow flex items-center justify-center p-4">
+          <div className="max-w-md w-full mx-4 bg-white rounded-lg shadow-lg p-8">
+            <h1 className="text-3xl font-serif text-center text-gray-900 mb-6">
+              RSVP
+            </h1>
+            
+            <p className="text-gray-600 text-center mb-8">
+              Please enter your RSVP code from your invitation
+            </p>
 
-          <div className="space-y-4">
-            <input
-              type="text"
-              value={inputToken}
-              onChange={(e) => setInputToken(e.target.value)}
-              placeholder="Enter your RSVP code"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-            />
+            <div className="space-y-4">
+              <input
+                type="text"
+                value={inputToken}
+                onChange={(e) => setInputToken(e.target.value)}
+                placeholder="Enter your RSVP code"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+              />
 
-            {error && (
-              <p className="text-red-500 text-sm text-center">{error}</p>
-            )}
+              {error && (
+                <p className="text-red-500 text-sm text-center">{error}</p>
+              )}
 
-            <button
-              onClick={() => handleTokenSubmit(inputToken)}
-              disabled={loading || !inputToken}
-              className={`w-full py-3 px-4 rounded-lg text-white font-medium ${
-                loading || !inputToken
-                  ? 'bg-gray-400 cursor-not-allowed'
-                  : 'bg-pink-500 hover:bg-pink-600'
-              }`}
-            >
-              {loading ? 'Checking...' : 'Continue'}
-            </button>
+              <button
+                onClick={() => handleTokenSubmit(inputToken)}
+                disabled={loading || !inputToken}
+                className={`w-full py-3 px-4 rounded-lg text-white font-medium ${
+                  loading || !inputToken
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-pink-500 hover:bg-pink-600'
+                }`}
+              >
+                {loading ? 'Checking...' : 'Continue'}
+              </button>
+            </div>
+
+            <p className="mt-6 text-sm text-gray-500 text-center">
+              Having trouble? Contact the couple directly
+            </p>
           </div>
-
-          <p className="mt-6 text-sm text-gray-500 text-center">
-            Having trouble? Contact the couple directly
-          </p>
         </div>
-      </div>
+      </BackgroundContainer>
     );
   }
 
@@ -183,7 +278,7 @@ function RSVPContent() {
         className={`px-4 py-2 rounded ${
           rsvps[eventId] === 'yes'
             ? 'bg-green-600 text-white'
-            : 'bg-slate-600 text-slate-300 hover:bg-slate-500'
+            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
         }`}
       >
         Attending
@@ -194,7 +289,7 @@ function RSVPContent() {
         className={`px-4 py-2 rounded ${
           rsvps[eventId] === 'no'
             ? 'bg-red-600 text-white'
-            : 'bg-slate-600 text-slate-300 hover:bg-slate-500'
+            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
         }`}
       >
         Not Attending
@@ -203,79 +298,62 @@ function RSVPContent() {
   );
 
   return (
-    <div className="max-w-2xl mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-8 text-white">RSVP</h1>
-      
-      <div className="bg-slate-800 rounded-lg p-6 mb-8">
-        <h2 className="text-xl font-semibold mb-4 text-white">
-          Hello, {guest.firstName} {guest.lastName}!
-        </h2>
-        <p className="text-slate-300 mb-6">
-          Please let us know if you&apos;ll be attending each event you&apos;re invited to.
-        </p>
+    <BackgroundContainer>
+      <div className="max-w-2xl mx-auto p-6">
+        <h1 className="text-3xl font-bold mb-8 text-gray-900">RSVP</h1>
+        
+        <div className="bg-white rounded-lg p-6 mb-8 shadow-xl">
+          <h2 className="text-xl font-semibold mb-4 text-gray-900">
+            Hello, {guest.firstName} {guest.lastName}!
+          </h2>
+          <p className="text-gray-600 mb-6">
+            Please let us know if you&apos;ll be attending each event you&apos;re invited to.
+          </p>
 
-        <div className="space-y-6">
-          {events.map((event) => {
-            if (!guest.rsvps[event.id]) return null; // Skip events this guest isn&apos;t invited to
-            
-            return (
-              <div key={event.id} className="bg-slate-700 rounded-lg p-4">
-                <h3 className="text-lg font-medium text-white mb-2">{event.name}</h3>
-                <p className="text-slate-300 mb-2">{event.date} at {event.time}</p>
-                <p className="text-slate-300 mb-4">{event.location}</p>
-                
-                <div className="space-y-6">
-                  <div>
-                    <h4 className="text-white font-medium mb-2">{guest.firstName} {guest.lastName}</h4>
-                    {renderRSVPButtons(guest.id, guest.rsvps, event.id)}
-                  </div>
-
-                  {(guest.subGuests || []).map((subGuest) => (
-                    <div key={subGuest.id} className="border-t border-slate-600 pt-4">
-                      <h4 className="text-white font-medium mb-2">{subGuest.firstName} {subGuest.lastName}</h4>
-                      {renderRSVPButtons(subGuest.id, subGuest.rsvps, event.id, true)}
+          <div className="space-y-6">
+            {events.map((event) => {
+              if (!guest.rsvps[event.id]) return null; // Skip events this guest isn&apos;t invited to
+              
+              return (
+                <div key={event.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">{event.name}</h3>
+                  <p className="text-gray-600 mb-2 italic">{formatEventDateTime(event)}</p>
+                  <p className="text-gray-600 mb-4">{event.location}</p>
+                  
+                  {event.description && (
+                    <p className="text-gray-600 mb-4 text-sm">{event.description}</p>
+                  )}
+                  
+                  <div className="space-y-6">
+                    <div>
+                      <h4 className="text-gray-800 font-medium mb-2">{guest.firstName} {guest.lastName}</h4>
+                      {renderRSVPButtons(guest.id, guest.rsvps, event.id)}
                     </div>
-                  ))}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
 
-      <div className="bg-slate-800 rounded-lg p-6">
-        <h2 className="text-xl font-semibold mb-4 text-white">Additional Information</h2>
-        <div className="space-y-4">
-          <div>
-            <label className="block text-slate-300 mb-2">Dietary Restrictions</label>
-            <input
-              type="text"
-              value={guest.dietaryRestrictions || ''}
-              onChange={(e) => setGuest({ ...guest, dietaryRestrictions: e.target.value })}
-              className="w-full bg-slate-700 border border-slate-600 text-white p-2 rounded"
-              placeholder="Any dietary restrictions?"
-            />
-          </div>
-          <div>
-            <label className="flex items-center space-x-2 text-slate-300">
-              <input
-                type="checkbox"
-                checked={guest.plusOne || false}
-                onChange={(e) => setGuest({ ...guest, plusOne: e.target.checked })}
-                className="rounded border-slate-600 text-blue-600 focus:ring-blue-500"
-              />
-              <span>I will be bringing a plus one</span>
-            </label>
+                    {(guest.subGuests || []).map((subGuest) => (
+                      <div key={subGuest.id} className="border-t border-gray-200 pt-4">
+                        <h4 className="text-gray-800 font-medium mb-2">{subGuest.firstName} {subGuest.lastName}</h4>
+                        {renderRSVPButtons(subGuest.id, subGuest.rsvps, event.id, true)}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
-    </div>
+    </BackgroundContainer>
   );
 }
 
 export default function RSVPPage() {
   return (
-    <Suspense fallback={<p className="text-white">Loading...</p>}>
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-b from-white to-pink-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pink-500"></div>
+      </div>
+    }>
       <RSVPContent />
     </Suspense>
   );

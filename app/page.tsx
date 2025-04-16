@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 export default function Home() {
   const router = useRouter();
@@ -20,14 +21,23 @@ export default function Home() {
       {/* Full-height hero section with image */}
       <div className="flex-grow flex items-center justify-center">
         <div className="relative h-[100vh] w-auto max-w-full">
-          {/* Use direct img tag for simplicity and reliability */}
-          <img
-            src="/WeddingGenericInvite.jpg"
-            alt="Wedding Invitation"
-            className="h-full w-auto max-w-full object-contain"
-          />
+          {/* Using Next.js Image component with proper layout */}
+          <div className="relative h-full w-auto" style={{ minWidth: '100vw' }}>
+            <Image
+              src="/WeddingGenericInvite.jpg"
+              alt="Wedding Invitation"
+              fill
+              priority
+              sizes="(max-width: 768px) 100vw, 80vw"
+              style={{ 
+                objectFit: 'contain',
+                objectPosition: 'center'
+              }}
+              quality={100}
+            />
+          </div>
           
-          {/* Button positioned at 8% from the top with responsive sizing */}
+          {/* Button positioned at 9% from the top with responsive sizing */}
           <div className="absolute top-[9%] left-0 right-0 flex justify-center z-10">
             <button
               onClick={() => router.push('/rsvp')}
