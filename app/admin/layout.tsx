@@ -29,22 +29,7 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-slate-900">
-      <div className="bg-slate-800 shadow relative">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16 items-center">
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={logout}
-                className="bg-pink-600 hover:bg-pink-700 text-white px-4 py-2 rounded-full font-semibold transition-colors"
-              >
-                Logout
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto py-2 sm:px-6 lg:px-8">
         {children}
       </div>
     </div>
