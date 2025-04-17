@@ -2,27 +2,32 @@
 
 import { useRouter, usePathname } from 'next/navigation';
 import Image from 'next/image';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 export default function Home() {
   const router = useRouter();
   const pathname = usePathname();
+  const hasNavigated = useRef(false);
   
   useEffect(() => {
+    // Prevent infinite loops by only trying once per page load
+    if (hasNavigated.current) return;
+    
     // Log current paths for debugging
     console.log('[Root] Next.js pathname:', pathname);
     console.log('[Root] Window pathname:', window.location.pathname);
     
-    // If there's a mismatch between router path and actual URL, fix it
+    // If we're not on the root path but seeing the root page, redirect
     if (window.location.pathname !== '/') {
+      hasNavigated.current = true;
       const targetPath = window.location.pathname + window.location.search;
-      console.log('[Root] Path mismatch - fixing navigation to:', targetPath);
+      console.log('[Root] Need to navigate to:', targetPath);
       
       router.replace('/');
       
       setTimeout(() => {
         router.push(targetPath);
-      }, 50);
+      }, 1000);
     }
   }, [pathname, router]);
 
