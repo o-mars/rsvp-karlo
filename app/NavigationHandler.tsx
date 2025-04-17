@@ -21,6 +21,8 @@ export default function NavigationHandler() {
         setTimeout(() => {
           router.replace(currentPath + currentSearch);
         }, 100);
+      } else {
+        console.log(`[NavigationHandler] No redirect needed for: ${currentPath}${currentSearch} -- pathname: ${pathname}`);
       }
     }
   }, [pathname, router]);
