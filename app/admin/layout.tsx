@@ -7,7 +7,7 @@ import { useEffect } from 'react';
 function AdminLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, loading, logout } = useAuth();
+  const { user, loading } = useAuth();
   
   const isLoginPage = pathname === '/admin/login/';
 
