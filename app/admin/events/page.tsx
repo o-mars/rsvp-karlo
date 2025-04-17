@@ -7,7 +7,8 @@ import { collection, getDocs, doc, query, where, limit, writeBatch } from 'fireb
 import Link from 'next/link';
 import CreateOrUpdateEventCard from '@/src/components/Events/CreateOrUpdateEventCard/CreateOrUpdateEventCard';
 import CreateOrUpdateEventSeriesCard from '@/src/components/EventSeries/CreateOrUpdateEventSeriesCard/CreateOrUpdateEventSeriesCard';
-import { Event, EventSeries as EventSeriesType } from '@/src/models/interfaces';
+import CreateOrUpdateGuestCard from '@/src/components/Guests/CreateOrUpdateGuestCard/CreateOrUpdateGuestCard';
+import { Event, EventSeries as EventSeriesType, Guest } from '@/src/models/interfaces';
 import { Timestamp } from 'firebase/firestore';
 import { useAuth } from '../../../src/contexts/AuthContext';
 import EventCard from '@/src/components/Events/EventCard/EventCard';
@@ -26,7 +27,9 @@ export default function EventsPage() {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEventModalOpen, setIsEventModalOpen] = useState(false);
+  const [isGuestModalOpen, setIsGuestModalOpen] = useState(false);
+  const [editingGuest, setEditingGuest] = useState<Guest | null>(null);
   const [eventSeries, setEventSeries] = useState<EventSeries | null>(null);
   const [activeTab, setActiveTab] = useState('events');
   const [isEditingEventSeries, setIsEditingEventSeries] = useState(false);
@@ -181,6 +184,13 @@ export default function EventsPage() {
     }
   };
 
+  const handleGuestSubmit = (guest: Partial<Guest>) => {
+    // Will implement actual guest creation/editing later
+    console.log('Guest data submitted:', guest);
+    setIsGuestModalOpen(false);
+    setEditingGuest(null);
+  };
+
   if (loading) return (
     <div className="p-8 text-white">
       <div className="flex justify-center p-6">
@@ -198,17 +208,8 @@ export default function EventsPage() {
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
             </svg>
-            Back to Dashboard
+            Back to Occasions
           </Link>
-          <button 
-            onClick={() => setIsModalOpen(true)}
-            className="bg-pink-600 hover:bg-pink-700 text-white py-2 px-4 rounded-lg transition-colors flex items-center"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-            </svg>
-            Create New Event
-          </button>
         </div>
         
         {eventSeries && (
@@ -256,13 +257,13 @@ export default function EventsPage() {
             </button>
             <button
               className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'stats' 
+                activeTab === 'rsvp' 
                   ? 'border-pink-500 text-pink-500' 
                   : 'border-transparent text-slate-400 hover:text-slate-300'
               }`}
-              onClick={() => setActiveTab('stats')}
+              onClick={() => setActiveTab('rsvp')}
             >
-              Statistics
+              RSVP
             </button>
           </div>
         </div>
@@ -271,7 +272,18 @@ export default function EventsPage() {
       {/* Events Tab Content */}
       {activeTab === 'events' && (
         <div className="bg-slate-800 shadow rounded-lg p-6">
-          <h2 className="text-xl font-semibold mb-4 text-white">Events</h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold text-white">Events</h2>
+            <button 
+              onClick={() => setIsEventModalOpen(true)}
+              className="bg-pink-600 hover:bg-pink-700 text-white py-1.5 px-3 rounded transition-colors flex items-center text-sm"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+              </svg>
+              Create Event
+            </button>
+          </div>
           
           {events.length === 0 ? (
             <div className="text-center py-8 text-slate-400">
@@ -296,27 +308,38 @@ export default function EventsPage() {
         </div>
       )}
       
-      {/* Guests Tab Content (Placeholder) */}
+      {/* Guests Tab Content */}
       {activeTab === 'guests' && (
         <div className="bg-slate-800 shadow rounded-lg p-6">
-          <h2 className="text-xl font-semibold mb-4 text-white">Guests</h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold text-white">Guests</h2>
+            <button 
+              onClick={() => setIsGuestModalOpen(true)}
+              className="bg-pink-600 hover:bg-pink-700 text-white py-1.5 px-3 rounded transition-colors flex items-center text-sm"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+              </svg>
+              Add Guest
+            </button>
+          </div>
           <p className="text-slate-400">Guest management functionality coming soon...</p>
         </div>
       )}
       
-      {/* Stats Tab Content (Placeholder) */}
-      {activeTab === 'stats' && (
+      {/* RSVP Tab Content */}
+      {activeTab === 'rsvp' && (
         <div className="bg-slate-800 shadow rounded-lg p-6">
-          <h2 className="text-xl font-semibold mb-4 text-white">Statistics</h2>
-          <p className="text-slate-400">Statistics and analytics coming soon...</p>
+          <h2 className="text-xl font-semibold mb-4 text-white">RSVPs</h2>
+          <p className="text-slate-400">RSVPs and analytics coming soon...</p>
         </div>
       )}
 
       {/* Add/Edit Event Modal */}
       <CreateOrUpdateEventCard
-        isOpen={isModalOpen || editingEvent !== null}
+        isOpen={isEventModalOpen || editingEvent !== null}
         onClose={() => {
-          setIsModalOpen(false);
+          setIsEventModalOpen(false);
           setEditingEvent(null);
         }}
         onComplete={fetchEvents}
@@ -324,6 +347,48 @@ export default function EventsPage() {
         eventSeriesId={eventSeries?.id || ''}
         eventSeriesAlias={alias || ''}
       />
+      
+      {/* Add/Edit Guest Modal */}
+      {isGuestModalOpen && (
+        <div className="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+          <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            {/* Background overlay */}
+            <div className="fixed inset-0 bg-black bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+            
+            {/* Modal panel */}
+            <div className="inline-block align-bottom rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full">
+              <div className="bg-slate-900 px-4 pt-5 pb-4 sm:p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-semibold text-white" id="modal-title">
+                    {editingGuest ? 'Edit Guest' : 'Add New Guest'}
+                  </h3>
+                  <button
+                    onClick={() => {
+                      setIsGuestModalOpen(false);
+                      setEditingGuest(null);
+                    }}
+                    className="text-slate-400 hover:text-white"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                
+                <CreateOrUpdateGuestCard
+                  guest={editingGuest}
+                  events={events}
+                  onSubmit={handleGuestSubmit}
+                  onCancel={() => {
+                    setIsGuestModalOpen(false);
+                    setEditingGuest(null);
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* Edit Event Series Modal */}
       {isEditingEventSeries && eventSeries && user && (

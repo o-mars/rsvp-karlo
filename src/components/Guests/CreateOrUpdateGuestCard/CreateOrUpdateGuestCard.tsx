@@ -3,19 +3,19 @@
 import { useState, useEffect } from 'react';
 import { Guest, Event } from '@/src/models/interfaces';
 
-interface CreateOrUpdateGuestProps {
+interface CreateOrUpdateGuestCardProps {
   guest: Partial<Guest> | null;
   events: Event[];
   onSubmit: (guest: Partial<Guest>) => void;
   onCancel: () => void;
 }
 
-export default function CreateOrUpdateGuest({
+export default function CreateOrUpdateGuestCard({
   guest,
   events,
   onSubmit,
   onCancel
-}: CreateOrUpdateGuestProps) {
+}: CreateOrUpdateGuestCardProps) {
   const [guestData, setGuestData] = useState<Partial<Guest>>({
     firstName: '',
     lastName: '',

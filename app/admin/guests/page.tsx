@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import CreateOrUpdateGuest from '@/src/components/Guests/CreateOrUpdateGuest/CreateOrUpdateGuest';
+import CreateOrUpdateGuest from '@/src/components/Guests/CreateOrUpdateGuestCard/CreateOrUpdateGuestCard';
 import GuestListTable from '@/src/components/Guests/GuestListTable/GuestListTable';
 import { useGuestManagement } from '@/src/hooks/useGuestManagement';
 import { Guest } from '@/src/models/interfaces';
