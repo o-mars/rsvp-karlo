@@ -96,7 +96,8 @@ export default function NewEventSeries() {
         
         <CreateOrUpdateEventSeriesCard
           onSubmit={handleSubmit}
-          onCancel={handleCancel}
+          onClose={handleCancel}
+          isOpen={true}
           editingEventSeries={null}
           userId={user?.uid || ''}
         />

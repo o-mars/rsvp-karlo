@@ -1,5 +1,7 @@
 import { Timestamp } from 'firebase/firestore';
 
+export type RsvpStatus = 'attending' | 'not-attending' | 'awaiting-response' | 'email-not-sent' | 'not-invited';
+
 export interface Event {
   id: string;
   name: string;
@@ -39,7 +41,7 @@ export interface Guest {
   rsvps: Record<string, string>;
   subGuests: SubGuest[];
   dietaryRestrictions?: string;
-  plusOne?: boolean;
+  additionalGuests?: Record<string, number>;
 }
 
 export interface EventStats {

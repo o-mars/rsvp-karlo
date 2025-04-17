@@ -6,15 +6,17 @@ import { db } from '@/utils/firebase';
 import { EventSeries } from '@/src/models/interfaces';
 
 interface CreateOrUpdateEventSeriesCardProps {
+  isOpen: boolean;
+  onClose: () => void;
   onSubmit: (eventSeries: Partial<EventSeries>) => void;
-  onCancel: () => void;
   editingEventSeries?: EventSeries | null;
   userId: string;
 }
 
 export default function CreateOrUpdateEventSeriesCard({
+  isOpen,
+  onClose,
   onSubmit,
-  onCancel,
   editingEventSeries,
   userId
 }: CreateOrUpdateEventSeriesCardProps) {
@@ -182,113 +184,139 @@ export default function CreateOrUpdateEventSeriesCard({
     setAlias(sanitizedValue);
   };
 
+  if (!isOpen) return null;
+
   return (
-    <div className="bg-slate-800 rounded-lg p-6 shadow-lg">
-      {errors.general && (
-        <div className="bg-red-500/10 border border-red-500/20 rounded p-4 mb-6 text-red-500">
-          {errors.general}
-        </div>
-      )}
-      
-      <form onSubmit={handleSubmit}>
-        <div className="space-y-6">
-          <div>
-            <label htmlFor="name" className="block text-sm font-medium text-slate-300 mb-1">
-              Series Name <span className="text-pink-500">*</span>
-            </label>
-            <input
-              type="text"
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-              placeholder="e.g. The Smith Wedding"
-            />
-            {errors.name && (
-              <p className="mt-1 text-sm text-red-500">{errors.name}</p>
-            )}
-          </div>
-          
-          <div>
-            <label htmlFor="alias" className="block text-sm font-medium text-slate-300 mb-1">
-              Alias <span className="text-pink-500">*</span>
-              <span className="ml-2 text-xs text-slate-400">
-                (Used in URLs, must be unique)
-              </span>
-            </label>
-            <div className="relative">
-              <input
-                type="text"
-                id="alias"
-                value={alias}
-                onChange={(e) => handleAliasChange(e.target.value)}
-                className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                placeholder="e.g. smith-wedding"
-                disabled={editingEventSeries !== null && editingEventSeries !== undefined}
-              />
-              {isCheckingAlias && (
-                <div className="absolute right-3 top-2.5">
-                  <svg className="animate-spin h-5 w-5 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                </div>
-              )}
+    <div className="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+      <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        {/* Background overlay */}
+        <div className="fixed inset-0 bg-black bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+        
+        {/* Modal panel */}
+        <div className="inline-block align-bottom bg-slate-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
+          <div className="bg-slate-800 px-4 pt-5 pb-4 sm:p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-semibold text-white" id="modal-title">
+                {editingEventSeries ? 'Edit Event Series' : 'Create New Event Series'}
+              </h3>
+              <button
+                onClick={onClose}
+                className="text-slate-400 hover:text-white"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
-            <p className="mt-1 text-xs text-slate-400">
-              Only lowercase letters, numbers, hyphens, and underscores allowed
-            </p>
-            {errors.alias && (
-              <p className="mt-1 text-sm text-red-500">{errors.alias}</p>
+
+            {errors.general && (
+              <div className="bg-red-500/10 border border-red-500/20 rounded p-4 mb-6 text-red-500">
+                {errors.general}
+              </div>
             )}
-          </div>
-          
-          <div>
-            <label htmlFor="description" className="block text-sm font-medium text-slate-300 mb-1">
-              Description <span className="text-xs text-slate-400">(Optional)</span>
-            </label>
-            <textarea
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={3}
-              className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-              placeholder="A brief description of this event series"
-            ></textarea>
-          </div>
-          
-          <div className="pt-4 flex justify-end space-x-4">
-            <button
-              type="button"
-              onClick={onCancel}
-              className="px-4 py-2 bg-slate-600 text-white rounded hover:bg-slate-500 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting || isCheckingAlias || Object.keys(errors).length > 0}
-              className={`px-4 py-2 rounded text-white ${
-                (isSubmitting || isCheckingAlias || Object.keys(errors).length > 0)
-                  ? 'bg-pink-500/50 cursor-not-allowed'
-                  : 'bg-pink-600 hover:bg-pink-700'
-              }`}
-            >
-              {isSubmitting ? (
-                <span className="flex items-center">
-                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  {editingEventSeries ? 'Updating...' : 'Creating...'}
-                </span>
-              ) : (
-                editingEventSeries ? 'Update Event Series' : 'Create Event Series'
-              )}
-            </button>
+            
+            <form onSubmit={handleSubmit}>
+              <div className="space-y-6">
+                <div>
+                  <label htmlFor="name" className="block text-sm font-medium text-slate-300 mb-1">
+                    Series Name <span className="text-pink-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                    placeholder="e.g. The Smith Wedding"
+                  />
+                  {errors.name && (
+                    <p className="mt-1 text-sm text-red-500">{errors.name}</p>
+                  )}
+                </div>
+                
+                <div>
+                  <label htmlFor="alias" className="block text-sm font-medium text-slate-300 mb-1">
+                    Alias <span className="text-pink-500">*</span>
+                    <span className="ml-2 text-xs text-slate-400">
+                      (Used in URLs, must be unique)
+                    </span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      id="alias"
+                      value={alias}
+                      onChange={(e) => handleAliasChange(e.target.value)}
+                      className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                      placeholder="e.g. smith-wedding"
+                      disabled={editingEventSeries !== null && editingEventSeries !== undefined}
+                    />
+                    {isCheckingAlias && (
+                      <div className="absolute right-3 top-2.5">
+                        <svg className="animate-spin h-5 w-5 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+                  <p className="mt-1 text-xs text-slate-400">
+                    Only lowercase letters, numbers, hyphens, and underscores allowed
+                  </p>
+                  {errors.alias && (
+                    <p className="mt-1 text-sm text-red-500">{errors.alias}</p>
+                  )}
+                </div>
+                
+                <div>
+                  <label htmlFor="description" className="block text-sm font-medium text-slate-300 mb-1">
+                    Description <span className="text-xs text-slate-400">(Optional)</span>
+                  </label>
+                  <textarea
+                    id="description"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    rows={3}
+                    className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                    placeholder="A brief description of this event series"
+                  ></textarea>
+                </div>
+                
+                <div className="pt-4 flex justify-end space-x-4">
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="px-4 py-2 bg-slate-600 text-white rounded hover:bg-slate-500 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting || isCheckingAlias || Object.keys(errors).length > 0}
+                    className={`px-4 py-2 rounded text-white ${
+                      (isSubmitting || isCheckingAlias || Object.keys(errors).length > 0)
+                        ? 'bg-pink-500/50 cursor-not-allowed'
+                        : 'bg-pink-600 hover:bg-pink-700'
+                    }`}
+                  >
+                    {isSubmitting ? (
+                      <span className="flex items-center">
+                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        {editingEventSeries ? 'Updating...' : 'Creating...'}
+                      </span>
+                    ) : (
+                      editingEventSeries ? 'Update Event Series' : 'Create Event Series'
+                    )}
+                  </button>
+                </div>
+              </div>
+            </form>
           </div>
         </div>
-      </form>
+      </div>
     </div>
   );
 } 

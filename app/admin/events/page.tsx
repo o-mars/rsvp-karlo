@@ -3,16 +3,17 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { db } from '../../../utils/firebase';
-import { collection, getDocs, doc, query, where, limit, writeBatch } from 'firebase/firestore';
+import { collection, getDocs, doc, query, where, limit, writeBatch, Timestamp } from 'firebase/firestore';
 import Link from 'next/link';
 import CreateOrUpdateEventCard from '@/src/components/Events/CreateOrUpdateEventCard/CreateOrUpdateEventCard';
 import CreateOrUpdateEventSeriesCard from '@/src/components/EventSeries/CreateOrUpdateEventSeriesCard/CreateOrUpdateEventSeriesCard';
 import CreateOrUpdateGuestCard from '@/src/components/Guests/CreateOrUpdateGuestCard/CreateOrUpdateGuestCard';
 import { Event, EventSeries as EventSeriesType, Guest } from '@/src/models/interfaces';
-import { Timestamp } from 'firebase/firestore';
 import { useAuth } from '../../../src/contexts/AuthContext';
 import EventCard from '@/src/components/Events/EventCard/EventCard';
 import { useEventManagement } from '@/src/hooks/useEventManagement';
+import GuestListTable from '@/src/components/Guests/GuestListTable/GuestListTable';
+import { useGuestManagement } from '@/src/hooks/useGuestManagement';
 
 interface EventSeries {
   id: string;
@@ -39,7 +40,8 @@ export default function EventsPage() {
   const searchParams = useSearchParams();
   const alias = searchParams.get('a');
   const { user } = useAuth();
-  const { handleDeleteEvent } = useEventManagement({ useContext: false });
+  const { handleDeleteEvent, handleAddEvent, handleUpdateEvent } = useEventManagement({ useContext: false });
+  const { guests, selectedGuests, toggleGuestSelection, toggleAllSelection, handleDeleteGuest, handleBulkEmail } = useGuestManagement();
 
   useEffect(() => {
     if (alias) {
@@ -181,6 +183,39 @@ export default function EventsPage() {
       fetchEvents();
     } catch (error) {
       console.error('Error deleting event:', error);
+      alert('Failed to delete event');
+    }
+  };
+
+  const handleEventSubmit = async (eventData: Partial<Event>, startDateTime: Date, endDateTime: Date | null) => {
+    try {
+      if (editingEvent) {
+        // For updating existing event
+        await handleUpdateEvent({
+          ...eventData,
+          id: editingEvent.id,
+          startDateTime: Timestamp.fromDate(startDateTime),
+          ...(endDateTime ? { endDateTime: Timestamp.fromDate(endDateTime) } : {})
+        });
+      } else {
+        // For creating new event
+        await handleAddEvent({
+          ...eventData,
+          startDateTime: Timestamp.fromDate(startDateTime),
+          ...(endDateTime ? { endDateTime: Timestamp.fromDate(endDateTime) } : {}),
+          createdAt: Timestamp.fromDate(new Date())
+        });
+      }
+      
+      // Refresh events after adding/updating
+      fetchEvents();
+      
+      // Reset state
+      setEditingEvent(null);
+      setIsEventModalOpen(false);
+    } catch (error) {
+      console.error('Error saving event:', error);
+      alert('Failed to save event');
     }
   };
 
@@ -275,7 +310,10 @@ export default function EventsPage() {
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold text-white">Events</h2>
             <button 
-              onClick={() => setIsEventModalOpen(true)}
+              onClick={() => {
+                setEditingEvent(null);
+                setIsEventModalOpen(true);
+              }}
               className="bg-pink-600 hover:bg-pink-700 text-white py-1.5 px-3 rounded transition-colors flex items-center text-sm"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
@@ -299,7 +337,10 @@ export default function EventsPage() {
                 <EventCard 
                   key={event.id} 
                   event={event} 
-                  onEdit={() => setEditingEvent(event)} 
+                  onEdit={() => {
+                    setEditingEvent(event);
+                    setIsEventModalOpen(true);
+                  }} 
                   onDelete={handleEventDelete}
                 />
               ))}
@@ -310,21 +351,20 @@ export default function EventsPage() {
       
       {/* Guests Tab Content */}
       {activeTab === 'guests' && (
-        <div className="bg-slate-800 shadow rounded-lg p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold text-white">Guests</h2>
-            <button 
-              onClick={() => setIsGuestModalOpen(true)}
-              className="bg-pink-600 hover:bg-pink-700 text-white py-1.5 px-3 rounded transition-colors flex items-center text-sm"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-              </svg>
-              Add Guest
-            </button>
-          </div>
-          <p className="text-slate-400">Guest management functionality coming soon...</p>
-        </div>
+        <GuestListTable
+          guests={guests}
+          events={events}
+          selectedGuests={selectedGuests}
+          isLoading={loading}
+          onSelectGuest={(id) => toggleGuestSelection(id)}
+          onSelectAll={toggleAllSelection}
+          onEditGuest={setEditingGuest}
+          onDeleteGuest={handleDeleteGuest}
+          onBulkEmail={handleBulkEmail}
+          onImportGuests={() => console.log('Import guests clicked: TODO')}
+          onExportGuests={() => console.log('Export guests clicked: TODO')}
+          onAddGuest={() => setIsGuestModalOpen(true)}
+        />
       )}
       
       {/* RSVP Tab Content */}
@@ -337,100 +377,38 @@ export default function EventsPage() {
 
       {/* Add/Edit Event Modal */}
       <CreateOrUpdateEventCard
-        isOpen={isEventModalOpen || editingEvent !== null}
+        isOpen={isEventModalOpen}
         onClose={() => {
           setIsEventModalOpen(false);
           setEditingEvent(null);
         }}
-        onComplete={fetchEvents}
+        onSubmit={handleEventSubmit}
         editingEvent={editingEvent}
         eventSeriesId={eventSeries?.id || ''}
         eventSeriesAlias={alias || ''}
       />
       
       {/* Add/Edit Guest Modal */}
-      {isGuestModalOpen && (
-        <div className="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-          <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            {/* Background overlay */}
-            <div className="fixed inset-0 bg-black bg-opacity-75 transition-opacity" aria-hidden="true"></div>
-            
-            {/* Modal panel */}
-            <div className="inline-block align-bottom rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full">
-              <div className="bg-slate-900 px-4 pt-5 pb-4 sm:p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-xl font-semibold text-white" id="modal-title">
-                    {editingGuest ? 'Edit Guest' : 'Add New Guest'}
-                  </h3>
-                  <button
-                    onClick={() => {
-                      setIsGuestModalOpen(false);
-                      setEditingGuest(null);
-                    }}
-                    className="text-slate-400 hover:text-white"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-                
-                <CreateOrUpdateGuestCard
-                  guest={editingGuest}
-                  events={events}
-                  onSubmit={handleGuestSubmit}
-                  onCancel={() => {
-                    setIsGuestModalOpen(false);
-                    setEditingGuest(null);
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <CreateOrUpdateGuestCard
+        isOpen={isGuestModalOpen || editingGuest !== null}
+        onClose={() => {
+          setIsGuestModalOpen(false);
+          setEditingGuest(null);
+        }}
+        guest={editingGuest}
+        events={events}
+        onSubmit={handleGuestSubmit}
+      />
       
       {/* Edit Event Series Modal */}
-      {isEditingEventSeries && eventSeries && user && (
-        <div className="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-          <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            {/* Background overlay */}
-            <div className="fixed inset-0 bg-black bg-opacity-75 transition-opacity" aria-hidden="true"></div>
-            
-            {/* Modal panel */}
-            <div className="inline-block align-bottom rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
-              <div className="bg-slate-900 px-4 pt-5 pb-4 sm:p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-xl font-semibold text-white" id="modal-title">
-                    Edit Event Series
-                  </h3>
-                  <button
-                    onClick={() => setIsEditingEventSeries(false)}
-                    className="text-slate-400 hover:text-white"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-                
-                <CreateOrUpdateEventSeriesCard
-                  onSubmit={handleUpdateEventSeries}
-                  onCancel={() => setIsEditingEventSeries(false)}
-                  editingEventSeries={{
-                    id: eventSeries.id,
-                    name: eventSeries.name,
-                    alias: eventSeries.alias,
-                    description: eventSeries.description,
-                    createdBy: eventSeries.createdBy,
-                    createdAt: eventSeries.createdAt
-                  }}
-                  userId={user.uid}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
+      {user && (
+        <CreateOrUpdateEventSeriesCard
+          isOpen={isEditingEventSeries}
+          onClose={() => setIsEditingEventSeries(false)}
+          onSubmit={handleUpdateEventSeries}
+          editingEventSeries={eventSeries}
+          userId={user.uid}
+        />
       )}
     </div>
   );

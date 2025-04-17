@@ -1,8 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { doc, updateDoc, addDoc, collection } from 'firebase/firestore';
-import { db } from '@/utils/firebase';
 import { Event } from '@/src/models/interfaces';
 import DateInput from '@/src/components/shared/DateInput';
 import TimeInput from '@/src/components/shared/TimeInput';
@@ -10,7 +8,7 @@ import TimeInput from '@/src/components/shared/TimeInput';
 interface CreateOrUpdateEventCardProps {
   isOpen: boolean;
   onClose: () => void;
-  onComplete: () => void;
+  onSubmit: (event: Partial<Event>, startDateTime: Date, endDateTime: Date | null) => void;
   editingEvent: Event | null;
   eventSeriesId: string;
   eventSeriesAlias: string;
@@ -19,7 +17,7 @@ interface CreateOrUpdateEventCardProps {
 export default function CreateOrUpdateEventCard({
   isOpen,
   onClose,
-  onComplete,
+  onSubmit,
   editingEvent,
   eventSeriesId,
   eventSeriesAlias
@@ -80,50 +78,30 @@ export default function CreateOrUpdateEventCard({
     setNewFieldValue('');
   };
   
-  const handleAddEvent = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    try {
-      const startDateTime = new Date(`${date}T${startTime}`);
-      const endDateTime = endTime ? new Date(`${date}T${endTime}`) : undefined;
-      
-      await addDoc(collection(db, 'events'), {
-        ...newEvent,
-        startDateTime,
-        ...(endDateTime && { endDateTime }),
-        additionalFields: newEvent.additionalFields || {},
-        eventSeriesAlias,
-        eventSeriesId,
-        createdAt: new Date()
-      });
-      
-      resetForm();
-      onClose();
-      onComplete();
-    } catch (error) {
-      console.error('Error adding event:', error);
-    }
-  };
-
-  const handleUpdateEvent = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingEvent) return;
     
     try {
       const startDateTime = new Date(`${date}T${startTime}`);
       const endDateTime = endTime ? new Date(`${date}T${endTime}`) : null;
       
-      await updateDoc(doc(db, 'events', editingEvent.id), {
+      // Include eventSeriesId and eventSeriesAlias for new events
+      const eventData = {
         ...newEvent,
-        startDateTime,
-        endDateTime,
-        additionalFields: newEvent.additionalFields || {},
-      });
+        ...(editingEvent ? {} : { 
+          eventSeriesId,
+          eventSeriesAlias
+        })
+      };
       
+      onSubmit(eventData, startDateTime, endDateTime);
+      
+      if (!editingEvent) {
+        resetForm();
+      }
       onClose();
-      onComplete();
     } catch (error) {
-      console.error('Error updating event:', error);
+      console.error('Error with event submission:', error);
     }
   };
 
@@ -173,7 +151,7 @@ export default function CreateOrUpdateEventCard({
               </button>
             </div>
             
-            <form onSubmit={editingEvent ? handleUpdateEvent : handleAddEvent} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                 <div className="col-span-2">
                   <label htmlFor="event-name" className="block text-sm font-medium text-slate-300 mb-1">
@@ -318,7 +296,7 @@ export default function CreateOrUpdateEventCard({
                 </button>
                 <button
                   type="submit"
-                  className="bg-pink-600 text-white px-4 py-2 rounded hover:bg-pink-500"
+                  className="bg-pink-600 text-white px-4 py-2 rounded hover:bg-pink-700"
                 >
                   {editingEvent ? 'Update Event' : 'Add Event'}
                 </button>

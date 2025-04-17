@@ -60,7 +60,8 @@ export default function GuestsPage() {
         guest={editingGuest}
         events={events}
         onSubmit={handleGuestSubmit}
-        onCancel={() => setEditingGuest(null)}
+        isOpen={editingGuest !== null}
+        onClose={() => setEditingGuest(null)}
       />
 
       {/* Guest List Table */}
@@ -75,6 +76,8 @@ export default function GuestsPage() {
         onDeleteGuest={handleDeleteGuest}
         onBulkEmail={handleBulkEmail}
         onImportGuests={() => setShowImportModal(true)}
+        onExportGuests={() => console.log('Export guests clicked: TODO')}
+        onAddGuest={() => console.log('Add guest clicked: TODO')}
       />
 
       {/* Import Modal */}

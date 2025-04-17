@@ -14,6 +14,8 @@ interface GuestListTableProps {
   onDeleteGuest: (id: string) => void;
   onBulkEmail: () => void;
   onImportGuests: () => void;
+  onExportGuests: () => void;
+  onAddGuest: () => void;
 }
 
 export default function GuestListTable({
@@ -26,12 +28,14 @@ export default function GuestListTable({
   onEditGuest,
   onDeleteGuest,
   onBulkEmail,
-  onImportGuests
+  onImportGuests,
+  onExportGuests,
+  onAddGuest
 }: GuestListTableProps) {
   
   if (isLoading) {
     return (
-      <div className="bg-slate-800 shadow rounded-lg p-6 flex justify-center">
+      <div className="flex justify-center p-6">
         <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
       </div>
     );
@@ -40,35 +44,83 @@ export default function GuestListTable({
   if (guests.length === 0) {
     return (
       <div className="bg-slate-800 shadow rounded-lg p-6 text-center">
-        <h2 className="text-xl font-semibold mb-2 text-white">No Guests Found</h2>
-        <p className="text-slate-400 mb-4">Create your first guest to get started</p>
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-xl font-semibold text-white">Guests</h2>
+          <button 
+            onClick={onAddGuest}
+            className="bg-pink-600 hover:bg-pink-700 text-white py-1.5 px-3 rounded transition-colors flex items-center text-sm"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+            </svg>
+            Add Guest
+          </button>
+        </div>
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto mb-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+        </svg>
+        <p className="text-lg font-medium text-white">No Guests Found</p>
+        <p className="mt-1 mb-4 text-slate-400">Create your first guest to get started</p>
         <button
           onClick={onImportGuests}
-          className="bg-slate-600 text-white px-4 py-2 rounded hover:bg-slate-500"
+          className="bg-slate-600 hover:bg-slate-500 text-white py-1.5 px-3 rounded transition-colors flex items-center text-sm"
         >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" />
+          </svg>
           Import Guests
         </button>
       </div>
     );
   }
   
+  const allGuestsSelected = selectedGuests.length === guests.length && guests.length > 0;
+  
   return (
     <div className="bg-slate-800 shadow rounded-lg p-6">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold text-white">Guests</h2>
-        <div className="space-x-2">
-          <button
-            onClick={onImportGuests}
-            className="bg-slate-600 text-white px-4 py-2 rounded hover:bg-slate-500"
-          >
-            Import Guests
-          </button>
+        <div className="flex space-x-2">
+          {selectedGuests.length > 0 ? (
+            <button
+              onClick={onExportGuests}
+              className="bg-slate-600 hover:bg-slate-500 text-white py-1.5 px-3 rounded transition-colors flex items-center text-sm"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" />
+              </svg>
+              {allGuestsSelected ? 'Export Guests' : 'Export Selected'}
+            </button>
+          ) : (
+            <button
+              onClick={onImportGuests}
+              className="bg-slate-600 hover:bg-slate-500 text-white py-1.5 px-3 rounded transition-colors flex items-center text-sm"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" />
+              </svg>
+              Import Guests
+            </button>
+          )}
           <button
             onClick={onBulkEmail}
             disabled={selectedGuests.length === 0}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-500 disabled:opacity-50"
+            className="bg-slate-600 hover:bg-slate-500 text-white py-1.5 px-3 rounded transition-colors flex items-center text-sm disabled:opacity-50"
           >
-            Email Selected
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+              <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+            </svg>
+            Send Emails
+          </button>
+          <button
+            onClick={onAddGuest}
+            className="bg-pink-600 hover:bg-pink-700 text-white py-1.5 px-3 rounded transition-colors flex items-center text-sm"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+            </svg>
+            Add Guest
           </button>
         </div>
       </div>
@@ -80,7 +132,7 @@ export default function GuestListTable({
               <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
                 <input
                   type="checkbox"
-                  checked={selectedGuests.length === guests.length && guests.length > 0}
+                  checked={allGuestsSelected}
                   onChange={(e) => onSelectAll(e.target.checked)}
                   className="rounded border-slate-600 text-blue-600 focus:ring-blue-500"
                 />
