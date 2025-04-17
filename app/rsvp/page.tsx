@@ -53,7 +53,7 @@ function RSVPContent() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    const urlToken = searchParams.get('token');
+    const urlToken = searchParams.get('c');
     if (urlToken) {
       handleTokenSubmit(urlToken);
     }
@@ -65,8 +65,8 @@ function RSVPContent() {
     
     try {
       // Clean the token (remove any URL parts if pasted)
-      const cleanToken = submittedToken.includes('?token=')
-        ? submittedToken.split('?token=').pop()?.split('&')[0] || submittedToken
+      const cleanToken = submittedToken.includes('?c=')
+        ? submittedToken.split('?c=').pop()?.split('&')[0] || submittedToken
         : submittedToken;
       
       // Check if guest exists
