@@ -1,27 +1,30 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import Image from 'next/image';
-import { useCallback, useEffect } from 'react';
+import { useEffect } from 'react';
 
 export default function Home() {
   const router = useRouter();
+  const pathname = usePathname();
   
-  const delayedRoute = useCallback(async () => {
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    console.log('[Root] Navigating to:', window.location.pathname + window.location.search);
-    router.push(window.location.pathname + window.location.search);
-  }, [router]);
-
   useEffect(() => {
-    // Log current path for debugging
-    console.log('[Root] Current path:', window.location.pathname);
+    // Log current paths for debugging
+    console.log('[Root] Next.js pathname:', pathname);
+    console.log('[Root] Window pathname:', window.location.pathname);
     
-    // If not on root, navigate to current path
+    // If there's a mismatch between router path and actual URL, fix it
     if (window.location.pathname !== '/') {
-      delayedRoute();
+      const targetPath = window.location.pathname + window.location.search;
+      console.log('[Root] Path mismatch - fixing navigation to:', targetPath);
+      
+      router.replace('/');
+      
+      setTimeout(() => {
+        router.push(targetPath);
+      }, 50);
     }
-  }, [router, delayedRoute]);
+  }, [pathname, router]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-pink-50 flex flex-col">
