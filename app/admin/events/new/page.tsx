@@ -64,7 +64,7 @@ export default function NewEventSeries() {
       await batch.commit();
       
       // Redirect to the admin dashboard
-      router.push('/admin');
+      router.push('/admin/');
     } catch (error) {
       console.error('Error creating event series:', error);
       setError('An error occurred while creating the event series. Please try again.');
@@ -72,7 +72,7 @@ export default function NewEventSeries() {
   };
 
   const handleCancel = () => {
-    router.push('/admin');
+    router.push('/admin/');
   };
 
   return (

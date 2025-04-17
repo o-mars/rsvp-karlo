@@ -1,42 +1,17 @@
 'use client';
 
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { useEffect, useRef } from 'react';
 
 export default function Home() {
   const router = useRouter();
-  const pathname = usePathname();
-  const hasNavigated = useRef(false);
-  
-  useEffect(() => {
-    // Prevent infinite loops by only trying once per page load
-    if (hasNavigated.current) return;
-    
-    // Log current paths for debugging
-    console.log('[Root] Next.js pathname:', pathname);
-    console.log('[Root] Window pathname:', window.location.pathname);
-    
-    // If we're not on the root path but seeing the root page, redirect
-    if (window.location.pathname !== '/') {
-      hasNavigated.current = true;
-      const targetPath = window.location.pathname + window.location.search;
-      console.log('[Root] Need to navigate to:', targetPath);
-      
-      router.replace('/');
-      
-      setTimeout(() => {
-        router.push('/rsvp');
-      }, 3000);
-    }
-  }, [pathname, router]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-pink-50 flex flex-col">
       {/* Host an Event Series Button with vh scaling */}
       <div className="absolute top-0 right-0 m-[2vh] z-50">
         <button
-          onClick={() => router.push('/admin')}
+          onClick={() => router.push('/admin/')}
           className="bg-pink-600 hover:bg-pink-700 text-white px-[2vw] py-[1vh] rounded-full shadow-lg font-semibold transition-colors text-[1.8vh]"
         >
           Host an Event Series
@@ -65,7 +40,7 @@ export default function Home() {
           {/* Button positioned at 9% from the top with responsive sizing */}
           <div className="absolute top-[9%] left-0 right-0 flex justify-center z-10">
             <button
-              onClick={() => router.push('/rsvp')}
+              onClick={() => router.push('/rsvp/')}
               className="bg-pink-600 hover:bg-pink-700 text-white px-[3vw] py-[1.5vh] rounded-full text-[2.2vh] font-medium transition-colors shadow-xl transform hover:scale-105"
             >
               RSVP Now

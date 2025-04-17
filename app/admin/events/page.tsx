@@ -176,7 +176,7 @@ export default function EventsPage() {
       
       // Refresh data or redirect if the alias changed
       if (updatedEventSeries.alias && updatedEventSeries.alias !== alias) {
-        router.push(`/admin/events?a=${updatedEventSeries.alias}`);
+        router.push(`/admin/events/?a=${updatedEventSeries.alias}`);
       } else {
         // Update the local state
         setEventSeries(prev => prev ? { ...prev, ...updatedEventSeries } : null);

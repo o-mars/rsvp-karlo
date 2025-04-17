@@ -56,7 +56,7 @@ export default function AdminDashboard() {
   };
 
   const handleCreateNew = () => {
-    router.push('/admin/events/new');
+    router.push('/admin/events/new/');
   };
 
   return (
