@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { collection, getDocs, query, orderBy, doc, updateDoc, deleteDoc, addDoc, Timestamp, where } from 'firebase/firestore';
+import { collection, getDocs, query, doc, updateDoc, deleteDoc, addDoc, Timestamp, where } from 'firebase/firestore';
 import { db } from '@/utils/firebase';
 import { Event } from '@/src/models/interfaces';
 import { useEventSeries } from '@/src/contexts/EventSeriesContext';
@@ -38,12 +38,10 @@ export function useEventManagement({ eventSeriesId, useContext = true }: UseEven
         eventsQuery = query(
           collection(db, 'events'),
           where('eventSeriesId', '==', seriesId),
-          orderBy('startDateTime')
         );
       } else {
         eventsQuery = query(
           collection(db, 'events'),
-          orderBy('startDateTime')
         );
       }
 
@@ -85,9 +83,9 @@ export function useEventManagement({ eventSeriesId, useContext = true }: UseEven
       const newEvent = {
         ...eventData,
         eventSeriesId: seriesId,
+        createdBy: series.createdBy,
         eventSeriesAlias: series.alias,
         createdAt: new Date(),
-        createdBy: series.createdBy,
         additionalFields: eventData.additionalFields || {}
       };
       

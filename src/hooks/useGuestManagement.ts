@@ -1,17 +1,18 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { collection, getDocs, query, orderBy, doc, updateDoc, deleteDoc, setDoc, where } from 'firebase/firestore';
+import { collection, getDocs, query, doc, updateDoc, deleteDoc, setDoc, where } from 'firebase/firestore';
 import { db } from '@/utils/firebase';
 import { Guest, Event } from '@/src/models/interfaces';
 import { useEventSeries } from '@/src/contexts/EventSeriesContext';
-
+import { useAuth } from '@/src/contexts/AuthContext';
 interface UseGuestManagementProps {
   eventSeriesId?: string;
   useContext?: boolean;
 }
 
 export function useGuestManagement({ eventSeriesId, useContext = true }: UseGuestManagementProps = {}) {
+  const { user } = useAuth();
   const [guests, setGuests] = useState<Guest[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
@@ -42,23 +43,19 @@ export function useGuestManagement({ eventSeriesId, useContext = true }: UseGues
         eventsQuery = query(
           collection(db, 'events'),
           where('eventSeriesId', '==', seriesId),
-          orderBy('startDateTime')
         );
         
         guestsQuery = query(
           collection(db, 'guests'),
           where('eventSeriesId', '==', seriesId),
-          orderBy('lastName')
         );
       } else {
         eventsQuery = query(
           collection(db, 'events'),
-          orderBy('startDateTime')
         );
         
         guestsQuery = query(
           collection(db, 'guests'),
-          orderBy('lastName')
         );
       }
 
@@ -94,21 +91,23 @@ export function useGuestManagement({ eventSeriesId, useContext = true }: UseGues
   };
 
   const handleAddGuest = async (guestData: Partial<Guest>) => {
-    if (!guestData.firstName || !guestData.lastName) return;
+    const seriesId = eventSeriesId || eventSeriesContext?.eventSeries?.id;
+    if (!user || !seriesId || !guestData.firstName || !guestData.lastName) return;
     
     const id = generateGuestId(guestData.firstName, guestData.lastName);
     
     try {
-      const seriesId = eventSeriesId || eventSeriesContext?.eventSeries?.id;
       
       await setDoc(doc(db, 'guests', id), {
         id,
+        eventSeriesId: seriesId, // Add event series id if available
+        eventSeriesAlias: eventSeriesContext?.eventSeries?.alias || '',
+        createdBy: user.uid,
         firstName: guestData.firstName,
         lastName: guestData.lastName,
         email: guestData.email || '',
         rsvps: guestData.rsvps || {},
         subGuests: guestData.subGuests || [],
-        eventSeriesId: seriesId, // Add event series id if available
       });
       
       // Use context refresh if available, otherwise fetch data

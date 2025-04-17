@@ -41,7 +41,20 @@ export default function EventsPage() {
   const alias = searchParams.get('a');
   const { user } = useAuth();
   const { handleDeleteEvent, handleAddEvent, handleUpdateEvent } = useEventManagement({ useContext: false });
-  const { guests, selectedGuests, toggleGuestSelection, toggleAllSelection, handleDeleteGuest, handleBulkEmail } = useGuestManagement();
+  const { 
+    guests, 
+    selectedGuests, 
+    toggleGuestSelection, 
+    toggleAllSelection, 
+    handleDeleteGuest, 
+    handleBulkEmail,
+    handleAddGuest,
+    handleUpdateGuest,
+    fetchData: fetchGuestData
+  } = useGuestManagement({ 
+    eventSeriesId: eventSeries?.id,
+    useContext: false 
+  });
 
   useEffect(() => {
     if (alias) {
@@ -219,11 +232,35 @@ export default function EventsPage() {
     }
   };
 
-  const handleGuestSubmit = (guest: Partial<Guest>) => {
-    // Will implement actual guest creation/editing later
-    console.log('Guest data submitted:', guest);
-    setIsGuestModalOpen(false);
-    setEditingGuest(null);
+  const handleGuestSubmit = async (guest: Partial<Guest>) => {
+    try {
+      if (editingGuest) {
+        // For updating existing guest
+        await handleUpdateGuest({
+          ...guest,
+          id: editingGuest.id
+        });
+        
+        console.log('Guest updated successfully:', guest.firstName, guest.lastName);
+      } else {
+        // For creating new guest
+        const guestId = await handleAddGuest(guest);
+        
+        if (guestId) {
+          console.log('Guest created successfully:', guest.firstName, guest.lastName);
+        }
+      }
+      
+      // Refresh the guest data after operation
+      await fetchGuestData();
+      
+      // Reset state
+      setEditingGuest(null);
+      setIsGuestModalOpen(false);
+    } catch (error) {
+      console.error('Error saving guest:', error);
+      alert('Failed to save guest');
+    }
   };
 
   if (loading) return (

@@ -4,13 +4,14 @@ export type RsvpStatus = 'attending' | 'not-attending' | 'awaiting-response' | '
 
 export interface Event {
   id: string;
+  eventSeriesId: string;
+  createdBy: string;
+  eventSeriesAlias: string;
   name: string;
   startDateTime: Timestamp;
   endDateTime?: Timestamp;
   location: string;
   description?: string;
-  eventSeriesId: string;
-  eventSeriesAlias: string;
   createdAt: Timestamp;
   additionalFields?: Record<string, string>;
 }
@@ -34,13 +35,15 @@ export interface SubGuest {
 
 export interface Guest {
   id: string;
+  eventSeriesId: string;
+  eventSeriesAlias: string;
+  createdBy: string;
   firstName: string;
   lastName: string;
   email: string;
   token: string;
   rsvps: Record<string, string>;
   subGuests: SubGuest[];
-  dietaryRestrictions?: string;
   additionalGuests?: Record<string, number>;
 }
 
