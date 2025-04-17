@@ -10,7 +10,7 @@ export default function AdminLogin() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [mode, setMode] = useState<'login' | 'register'>('login');
+  const [mode, setMode] = useState<'login' | 'register'>('register');
   const { user, loading, login, register } = useAuth();
   const router = useRouter();
 
@@ -32,7 +32,7 @@ export default function AdminLogin() {
   useEffect(() => {
     if (!loading && user) {
       console.log('User is logged in, redirecting to admin');
-      router.replace('/admin');
+      router.replace('/admin/');
     }
   }, [user, loading, router]);
 
