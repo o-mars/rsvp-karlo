@@ -2,20 +2,26 @@
 
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 
 export default function Home() {
   const router = useRouter();
   
+  const delayedRoute = useCallback(async () => {
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    console.log('[Root] Navigating to:', window.location.pathname + window.location.search);
+    router.push(window.location.pathname + window.location.search);
+  }, [router]);
+
   useEffect(() => {
     // Log current path for debugging
     console.log('[Root] Current path:', window.location.pathname);
     
     // If not on root, navigate to current path
     if (window.location.pathname !== '/') {
-      router.push(window.location.pathname + window.location.search);
+      delayedRoute();
     }
-  }, [router]);
+  }, [router, delayedRoute]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-pink-50 flex flex-col">
