@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { collection, getDocs, query, orderBy, doc, updateDoc, deleteDoc, setDoc, where } from 'firebase/firestore';
 import { db } from '@/utils/firebase';
-import { v4 as uuidv4 } from 'uuid';
 import { Guest, Event } from '@/src/models/interfaces';
 import { useEventSeries } from '@/src/contexts/EventSeriesContext';
 
@@ -97,15 +96,13 @@ export function useGuestManagement({ eventSeriesId, useContext = true }: UseGues
   const handleAddGuest = async (guestData: Partial<Guest>) => {
     if (!guestData.firstName || !guestData.lastName) return;
     
-    const id = uuidv4();
-    const token = Math.random().toString(36).substring(2, 15);
+    const id = generateGuestId(guestData.firstName, guestData.lastName);
     
     try {
       const seriesId = eventSeriesId || eventSeriesContext?.eventSeries?.id;
       
       await setDoc(doc(db, 'guests', id), {
         id,
-        token,
         firstName: guestData.firstName,
         lastName: guestData.lastName,
         email: guestData.email || '',
@@ -210,6 +207,28 @@ export function useGuestManagement({ eventSeriesId, useContext = true }: UseGues
       throw error;
     }
   };
+
+  const generateGuestId = (firstName: string, lastName: string) => {
+    // Clean and normalize names
+    const cleanFirstName = firstName.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+    const cleanLastName = lastName.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+    
+    // Create name prefix
+    const namePrefix = cleanFirstName && cleanLastName 
+      ? `${cleanFirstName}-${cleanLastName}-`
+      : '';
+      
+    // Generate 20-character random suffix (same length as Firebase)
+    const randomBytes = new Uint8Array(15); // 15 bytes = 20 base64 chars
+    crypto.getRandomValues(randomBytes);
+    const randomSuffix = btoa(String.fromCharCode(...randomBytes))
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '')
+      .substring(0, 20);
+      
+    return namePrefix + randomSuffix;
+  }
 
   // Initialize data
   useEffect(() => {

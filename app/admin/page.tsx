@@ -64,7 +64,7 @@ export default function AdminDashboard() {
       {/* Event Series Section */}
       <div className="mb-12">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-2xl font-bold">My Event Series</h1>
+          <h1 className="text-2xl font-bold">My Occasions</h1>
           <button 
             onClick={handleCreateNew}
             className="bg-pink-600 hover:bg-pink-700 text-white py-2 px-4 rounded-lg transition-colors flex items-center"
@@ -72,7 +72,7 @@ export default function AdminDashboard() {
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
             </svg>
-            Create New Series
+            New Occasion
           </button>
         </div>
 
@@ -82,8 +82,8 @@ export default function AdminDashboard() {
           </div>
         ) : eventSeries.length === 0 ? (
           <div className="bg-slate-800 rounded-lg p-6 text-center">
-            <h2 className="text-xl font-semibold mb-2">No Event Series Found</h2>
-            <p className="text-slate-400">Create your first event series to get started</p>
+            <h2 className="text-xl font-semibold mb-2">No Occasions Found</h2>
+            <p className="text-slate-400">Create your first occasion to get started</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

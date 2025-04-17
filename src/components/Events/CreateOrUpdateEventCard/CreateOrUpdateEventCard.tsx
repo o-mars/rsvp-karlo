@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { doc, updateDoc, addDoc, collection } from 'firebase/firestore';
 import { db } from '@/utils/firebase';
 import { Event } from '@/src/models/interfaces';
+import DateInput from '@/src/components/shared/DateInput';
+import TimeInput from '@/src/components/shared/TimeInput';
 
 interface CreateOrUpdateEventCardProps {
   isOpen: boolean;
@@ -88,7 +90,7 @@ export default function CreateOrUpdateEventCard({
       await addDoc(collection(db, 'events'), {
         ...newEvent,
         startDateTime,
-        endDateTime,
+        ...(endDateTime && { endDateTime }),
         additionalFields: newEvent.additionalFields || {},
         eventSeriesAlias,
         eventSeriesId,
@@ -171,89 +173,133 @@ export default function CreateOrUpdateEventCard({
               </button>
             </div>
             
-            <form onSubmit={editingEvent ? handleUpdateEvent : handleAddEvent} className="space-y-4">
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <input
-                  type="text"
-                  placeholder="Event Name"
-                  value={newEvent.name}
-                  onChange={(e) => setNewEvent({ ...newEvent, name: e.target.value })}
-                  className="bg-slate-700 border border-slate-600 text-white p-2 rounded focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
-                  required
-                />
-                <input
-                  type="date"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  className="bg-slate-700 border border-slate-600 text-white p-2 rounded focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
-                  required
-                />
-                <input
-                  type="time"
-                  value={startTime}
-                  onChange={(e) => setStartTime(e.target.value)}
-                  className="bg-slate-700 border border-slate-600 text-white p-2 rounded focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
-                  required
-                />
-                <input
-                  type="time"
-                  value={endTime}
-                  onChange={(e) => setEndTime(e.target.value)}
-                  className="bg-slate-700 border border-slate-600 text-white p-2 rounded focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
-                />
-                <input
-                  type="text"
-                  placeholder="Location"
-                  value={newEvent.location}
-                  onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })}
-                  className="bg-slate-700 border border-slate-600 text-white p-2 rounded focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
-                  required
-                />
-              </div>
-              
-              <textarea
-                placeholder="Description"
-                value={newEvent.description || ''}
-                onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
-                className="bg-slate-700 border border-slate-600 text-white p-2 rounded w-full focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
-                rows={3}
-              />
-
-              <div className="space-y-2">
-                <h3 className="font-medium text-white">Additional Fields</h3>
-                <div className="flex space-x-2">
+            <form onSubmit={editingEvent ? handleUpdateEvent : handleAddEvent} className="space-y-6">
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                <div className="col-span-2">
+                  <label htmlFor="event-name" className="block text-sm font-medium text-slate-300 mb-1">
+                    Event Name
+                  </label>
                   <input
+                    id="event-name"
                     type="text"
-                    placeholder="Field Name"
-                    value={newFieldKey}
-                    onChange={(e) => setNewFieldKey(e.target.value)}
-                    className="bg-slate-700 border border-slate-600 text-white p-2 rounded flex-1 focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                    placeholder="Enter event name"
+                    value={newEvent.name}
+                    onChange={(e) => setNewEvent({ ...newEvent, name: e.target.value })}
+                    className="bg-slate-700 border border-slate-600 text-white p-2 rounded focus:ring-2 focus:ring-pink-500 focus:border-pink-500 w-full"
+                    required
                   />
-                  <input
-                    type="text"
-                    placeholder="Field Value"
-                    value={newFieldValue}
-                    onChange={(e) => setNewFieldValue(e.target.value)}
-                    className="bg-slate-700 border border-slate-600 text-white p-2 rounded flex-1 focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
-                  />
-                  <button
-                    type="button"
-                    onClick={addCustomField}
-                    className="bg-pink-600 text-white px-4 py-2 rounded hover:bg-pink-700"
-                  >
-                    Add Field
-                  </button>
                 </div>
                 
-                <div className="grid grid-cols-2 gap-2">
+                <DateInput 
+                  id="event-date"
+                  label="When"
+                  value={date}
+                  onChange={setDate}
+                  required={true}
+                />
+                
+                <div className="col-span-1">
+                  <div className="flex gap-4">
+                    <TimeInput
+                      id="start-time"
+                      label="From"
+                      value={startTime}
+                      onChange={setStartTime}
+                      required={true}
+                      className="flex-1"
+                    />
+                    
+                    <TimeInput
+                      id="end-time"
+                      label="Till (Optional)"
+                      value={endTime}
+                      onChange={setEndTime}
+                      className="flex-1"
+                    />
+                  </div>
+                </div>
+                
+                <div className="col-span-2">
+                  <label htmlFor="location" className="block text-sm font-medium text-slate-300 mb-1">
+                    Location
+                  </label>
+                  <input
+                    id="location"
+                    type="text"
+                    placeholder="Enter location"
+                    value={newEvent.location}
+                    onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })}
+                    className="bg-slate-700 border border-slate-600 text-white p-2 rounded focus:ring-2 focus:ring-pink-500 focus:border-pink-500 w-full"
+                    required
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <label htmlFor="description" className="block text-sm font-medium text-slate-300 mb-1">
+                  Description
+                </label>
+                <textarea
+                  id="description"
+                  placeholder="Enter event description"
+                  value={newEvent.description || ''}
+                  onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
+                  className="bg-slate-700 border border-slate-600 text-white p-2 rounded w-full focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                  rows={3}
+                />
+              </div>
+
+              <div className="space-y-3">
+                <h3 className="font-medium text-white">Event Details</h3>
+                <div className="flex space-x-2">
+                  <div className="flex-grow">
+                    <label htmlFor="detail-name" className="block text-sm font-medium text-slate-300 mb-1">
+                      Detail Name
+                    </label>
+                    <input
+                      id="detail-name"
+                      type="text"
+                      placeholder="e.g., Dress Code, Menu, RSVP By"
+                      value={newFieldKey}
+                      onChange={(e) => setNewFieldKey(e.target.value)}
+                      className="bg-slate-700 border border-slate-600 text-white p-2 rounded w-full focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                    />
+                  </div>
+                  <div className="flex-grow">
+                    <label htmlFor="detail-value" className="block text-sm font-medium text-slate-300 mb-1">
+                      Detail Value
+                    </label>
+                    <input
+                      id="detail-value"
+                      type="text"
+                      placeholder="e.g., Formal, Italian, June 1st"
+                      value={newFieldValue}
+                      onChange={(e) => setNewFieldValue(e.target.value)}
+                      className="bg-slate-700 border border-slate-600 text-white p-2 rounded w-full focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                    />
+                  </div>
+                  <div className="flex items-end">
+                    <button
+                      type="button"
+                      onClick={addCustomField}
+                      className="bg-pink-600 text-white px-4 py-2 rounded hover:bg-pink-700"
+                    >
+                      Add
+                    </button>
+                  </div>
+                </div>
+                
+                <div className="flex flex-wrap gap-2">
                   {Object.entries(newEvent.additionalFields || {}).map(([key, value]) => (
-                    <div key={key} className="flex items-center space-x-2 bg-slate-700 p-2 rounded">
-                      <span className="font-medium text-white">{key}:</span>
-                      <span className="text-slate-300">{value}</span>
+                    <div key={key} className="inline-flex items-center bg-slate-700 px-3 py-1.5 rounded">
+                      <div>
+                        <span className="font-medium text-white">{key}:</span>
+                        <span className="ml-1 text-slate-300">{value}</span>
+                      </div>
                       <button
                         type="button"
                         onClick={() => removeCustomField(key)}
-                        className="text-red-400 hover:text-red-300"
+                        className="ml-2 text-red-400 hover:text-red-300 text-lg font-bold"
                       >
                         ×
                       </button>

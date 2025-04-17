@@ -3,14 +3,15 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { db } from '../../../utils/firebase';
-import { collection, getDocs, deleteDoc, doc, query, where, limit, writeBatch } from 'firebase/firestore';
+import { collection, getDocs, doc, query, where, limit, writeBatch } from 'firebase/firestore';
 import Link from 'next/link';
-import { format } from 'date-fns';
 import CreateOrUpdateEventCard from '@/src/components/Events/CreateOrUpdateEventCard/CreateOrUpdateEventCard';
 import CreateOrUpdateEventSeriesCard from '@/src/components/EventSeries/CreateOrUpdateEventSeriesCard/CreateOrUpdateEventSeriesCard';
 import { Event, EventSeries as EventSeriesType } from '@/src/models/interfaces';
 import { Timestamp } from 'firebase/firestore';
 import { useAuth } from '../../../src/contexts/AuthContext';
+import EventCard from '@/src/components/Events/EventCard/EventCard';
+import { useEventManagement } from '@/src/hooks/useEventManagement';
 
 interface EventSeries {
   id: string;
@@ -35,6 +36,7 @@ export default function EventsPage() {
   const searchParams = useSearchParams();
   const alias = searchParams.get('a');
   const { user } = useAuth();
+  const { handleDeleteEvent } = useEventManagement({ useContext: false });
 
   useEffect(() => {
     if (alias) {
@@ -106,7 +108,11 @@ export default function EventsPage() {
       })) as Event[];
       
       // Sort by date
-      eventsList.sort((a, b) => a.startDateTime.toMillis() - b.startDateTime.toMillis());
+      eventsList.sort((a, b) => {
+        const dateA = a.startDateTime?.toMillis ? a.startDateTime.toMillis() : 0;
+        const dateB = b.startDateTime?.toMillis ? b.startDateTime.toMillis() : 0;
+        return dateA - dateB;
+      });
       
       setEvents(eventsList);
     } catch (error) {
@@ -166,32 +172,12 @@ export default function EventsPage() {
     }
   };
 
-  const handleDeleteEvent = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this event?')) return;
-    
+  const handleEventDelete = async (id: string) => {
     try {
-      await deleteDoc(doc(db, 'events', id));
+      await handleDeleteEvent(id);
       fetchEvents();
     } catch (error) {
       console.error('Error deleting event:', error);
-    }
-  };
-  
-  const formatEventDate = (timestamp: Timestamp) => {
-    try {
-      const date = timestamp.toDate();
-      return format(date, 'EEE MMM do, yyyy');
-    } catch {
-      return 'Invalid date';
-    }
-  };
-  
-  const formatEventTime = (timestamp: Timestamp) => {
-    try {
-      const date = timestamp.toDate();
-      return format(date, 'h:mm a');
-    } catch {
-      return 'Invalid time';
     }
   };
 
@@ -236,7 +222,7 @@ export default function EventsPage() {
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
                   <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
                 </svg>
-                Edit Series
+                Edit Occasion
               </button>
             </div>
             {eventSeries.description && (
@@ -294,53 +280,17 @@ export default function EventsPage() {
               </svg>
               <p className="text-lg font-medium">No events yet</p>
               <p className="mt-1">Create your first event to get started</p>
-              <button 
-                onClick={() => setIsModalOpen(true)}
-                className="mt-4 bg-pink-600 hover:bg-pink-700 text-white py-2 px-4 rounded-lg transition-colors inline-flex items-center"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-                </svg>
-                Create New Event
-              </button>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-slate-700">
-                <thead className="bg-slate-700">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Name</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Date</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Time</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Location</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-slate-800 divide-y divide-slate-700">
-                  {events.map((event) => (
-                    <tr key={event.id} className="hover:bg-slate-700">
-                      <td className="px-6 py-4 whitespace-nowrap text-white">{event.name}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-white">{formatEventDate(event.startDateTime)}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-white">{formatEventTime(event.startDateTime)}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-white">{event.location}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <button
-                          onClick={() => setEditingEvent(event)}
-                          className="text-blue-400 hover:text-blue-300 mr-2"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDeleteEvent(event.id)}
-                          className="text-red-400 hover:text-red-300"
-                        >
-                          Delete
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {events.map((event) => (
+                <EventCard 
+                  key={event.id} 
+                  event={event} 
+                  onEdit={() => setEditingEvent(event)} 
+                  onDelete={handleEventDelete}
+                />
+              ))}
             </div>
           )}
         </div>
