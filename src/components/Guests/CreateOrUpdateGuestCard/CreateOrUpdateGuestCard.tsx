@@ -306,14 +306,14 @@ export default function CreateOrUpdateGuestCard({
                         id="rsvp-link"
                         type="text"
                         readOnly
-                        value={`https://rsvpkarlo.com/rsvp?c=${guest.id || ''}`}
+                        value={`https://rsvpkarlo.com/rsvp/?c=${guest.id || ''}`}
                         className="bg-slate-700 border border-slate-600 text-pink-500 font-mono p-2 rounded focus:ring-2 focus:ring-pink-500 focus:border-pink-500 w-full"
                       />
                     </div>
                     <button 
                       type="button"
                       onClick={() => {
-                        const rsvpUrl = `https://rsvpkarlo.com/rsvp?c=${guest.id || ''}`;
+                        const rsvpUrl = `https://rsvpkarlo.com/rsvp/?c=${guest.id || ''}`;
                         navigator.clipboard.writeText(rsvpUrl)
                           .then(() => setCopyStatus(true))
                           .catch(err => console.error('Could not copy text: ', err));
