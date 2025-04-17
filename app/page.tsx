@@ -2,9 +2,20 @@
 
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { useEffect } from 'react';
 
 export default function Home() {
   const router = useRouter();
+  
+  useEffect(() => {
+    // Log current path for debugging
+    console.log('[Root] Current path:', window.location.pathname);
+    
+    // If not on root, navigate to current path
+    if (window.location.pathname !== '/') {
+      router.push(window.location.pathname + window.location.search);
+    }
+  }, [router]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-pink-50 flex flex-col">
