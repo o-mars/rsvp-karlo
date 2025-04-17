@@ -23,11 +23,17 @@ export default function Home() {
       const targetPath = window.location.pathname + window.location.search;
       console.log('[Root] Need to navigate to:', targetPath);
       
-      router.replace('/');
+      // First prefetch the route to ensure it's loaded
+      router.prefetch(targetPath);
       
+      // Replace to root path first to "reset" the router
+      router.replace('/?_=' + Date.now()); // Add random param to ensure it's a new navigation
+      
+      // Then navigate to the target path after a delay
       setTimeout(() => {
-        router.push(targetPath);
-      }, 1000);
+        console.log('[Root] Now navigating to:', targetPath);
+        window.location.href = targetPath; // Use hard navigation as fallback
+      }, 2000);
     }
   }, [pathname, router]);
 
