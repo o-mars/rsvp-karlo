@@ -78,7 +78,7 @@ export default function TimeInput({
 
   return (
     <div className={className}>
-      <label htmlFor={id} className="block text-sm font-medium text-slate-300 mb-1">
+      <label htmlFor={id} className="block text-sm font-medium text-[var(--blossom-text-dark)]/70 mb-1">
         {label}
       </label>
       <div className="relative" ref={displayRef}>
@@ -86,12 +86,12 @@ export default function TimeInput({
         <div
           onClick={handleTimeClick}
           onKeyDown={handleKeyDown}
-          className="bg-slate-700 border border-slate-600 text-white p-2 pr-10 rounded cursor-pointer hover:border-pink-500 focus:ring-2 focus:ring-pink-500 focus:border-pink-500 w-full flex items-center group"
+          className="bg-white border border-[var(--blossom-border)] text-[var(--blossom-text-dark)] p-2 pr-10 rounded cursor-pointer hover:border-[var(--blossom-pink-primary)] focus:ring-2 focus:ring-[var(--blossom-pink-primary)] focus:border-[var(--blossom-pink-primary)] w-full flex items-center group"
           tabIndex={0} // Make div focusable for keyboard events
           role="button"
           aria-label={`Select ${label}`}
         >
-          <span className="flex-grow">
+          <span className={`flex-grow ${value ? 'text-[var(--blossom-text-dark)]' : 'text-[var(--blossom-text-dark)]/50'}`}>
             {value ? formatTimeForDisplay(value) : 'Select a time'}
           </span>
 
@@ -101,7 +101,7 @@ export default function TimeInput({
               <button
                 type="button"
                 onClick={handleClearClick}
-                className="text-slate-400 hover:text-pink-500 transition-colors z-10 mr-5 focus:outline-none"
+                className="text-[var(--blossom-text-dark)]/50 hover:text-[var(--blossom-pink-primary)] transition-colors z-10 mr-5 focus:outline-none"
                 aria-label="Clear time"
               >
                 <svg 
@@ -117,7 +117,7 @@ export default function TimeInput({
             )}
             <svg 
               xmlns="http://www.w3.org/2000/svg" 
-              className="h-5 w-5 text-white group-hover:text-pink-500 transition-colors pointer-events-none" 
+              className={`h-5 w-5 ${value ? 'text-[var(--blossom-pink-primary)]' : 'text-[var(--blossom-text-dark)]/50'} group-hover:text-[var(--blossom-pink-primary)] transition-colors pointer-events-none`} 
               fill="none" 
               viewBox="0 0 24 24" 
               stroke="currentColor"

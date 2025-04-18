@@ -62,22 +62,22 @@ export default function DateInput({
 
   return (
     <div className={className}>
-      <label htmlFor={id} className="block text-sm font-medium text-slate-300 mb-1">
+      <label htmlFor={id} className="block text-sm font-medium text-[var(--blossom-text-dark)]/70 mb-1">
         {label}
       </label>
       <div ref={datePickerRef} className="relative">
         {/* Visible display field with calendar icon */}
         <div
           onClick={handleDateClick}
-          className="bg-slate-700 border border-slate-600 text-white p-2 pr-10 rounded cursor-pointer hover:border-pink-500 focus:ring-2 focus:ring-pink-500 focus:border-pink-500 w-full flex items-center group"
+          className="bg-white border border-[var(--blossom-border)] text-[var(--blossom-text-dark)] p-2 pr-10 rounded cursor-pointer hover:border-[var(--blossom-pink-primary)] focus:ring-2 focus:ring-[var(--blossom-pink-primary)] focus:border-[var(--blossom-pink-primary)] w-full flex items-center group"
         >
-          <span className="flex-grow">
+          <span className={`flex-grow ${value ? 'text-[var(--blossom-text-dark)]' : 'text-[var(--blossom-text-dark)]/50'}`}>
             {value ? formatDateForDisplay(value) : 'Select a date'}
           </span>
           <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
             <svg 
               xmlns="http://www.w3.org/2000/svg" 
-              className="h-5 w-5 text-white group-hover:text-pink-500 transition-colors" 
+              className={`h-5 w-5 ${value ? 'text-[var(--blossom-pink-primary)]' : 'text-[var(--blossom-text-dark)]/50'} group-hover:text-[var(--blossom-pink-primary)] transition-colors`} 
               fill="none" 
               viewBox="0 0 24 24" 
               stroke="currentColor"

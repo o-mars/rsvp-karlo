@@ -5,43 +5,8 @@ import { useSearchParams } from 'next/navigation';
 import { db } from '../../utils/firebase';
 import { doc, updateDoc, collection, getDocs, getDoc } from 'firebase/firestore';
 import Image from 'next/image';
+import { Guest, Event, RsvpStatus } from '@/src/models/interfaces';
 
-interface SubGuest {
-  id: string;
-  firstName: string;
-  lastName: string;
-  rsvps: Record<string, string>;
-  dietaryRestrictions?: string;
-}
-
-interface Guest {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  token: string;
-  rsvps: Record<string, string>;
-  subGuests: SubGuest[];
-  dietaryRestrictions?: string;
-  plusOne?: boolean;
-}
-
-interface TimestampLike {
-  toDate?: () => Date;
-  seconds?: number;
-  nanoseconds?: number;
-}
-
-interface Event {
-  id: string;
-  name: string;
-  date?: string;
-  time?: string;
-  startDateTime?: TimestampLike | Date | string | number;
-  endDateTime?: TimestampLike | Date | string | number;
-  location: string;
-  description?: string;
-}
 
 function RSVPContent() {
   const searchParams = useSearchParams();
@@ -64,10 +29,30 @@ function RSVPContent() {
     setError(null);
     
     try {
-      // Clean the token (remove any URL parts if pasted)
-      const cleanToken = submittedToken.includes('?c=')
-        ? submittedToken.split('?c=').pop()?.split('&')[0] || submittedToken
-        : submittedToken;
+      // Clean the token using URL parsing to properly handle any query parameters
+      let cleanToken = submittedToken;
+      
+      try {
+        // Check if the token is actually a URL with query parameters
+        if (submittedToken.includes('?')) {
+          // Create a URL object or parse as URL search params
+          const params = new URLSearchParams(
+            submittedToken.includes('://') 
+              ? new URL(submittedToken).search
+              : submittedToken.split('?')[1]
+          );
+          // Get the c parameter value
+          const paramToken = params.get('c');
+          if (paramToken) {
+            cleanToken = paramToken;
+          }
+        }
+        
+        console.log('[RSVP] Clean token:', cleanToken);
+      } catch (err) {
+        console.error('[RSVP] Error parsing token URL:', err);
+        // Fall back to the submitted token if parsing fails
+      }
       
       // Check if guest exists
       const guestRef = doc(db, 'guests', cleanToken);
@@ -273,10 +258,10 @@ function RSVPContent() {
   const renderRSVPButtons = (guestId: string, rsvps: Record<string, string>, eventId: string, isSubGuest: boolean = false) => (
     <div className="flex space-x-4">
       <button
-        onClick={() => handleRSVP(guestId, eventId, 'yes', isSubGuest)}
+        onClick={() => handleRSVP(guestId, eventId, RsvpStatus.ATTENDING, isSubGuest)}
         disabled={saving}
         className={`px-4 py-2 rounded ${
-          rsvps[eventId] === 'yes'
+          rsvps[eventId] === RsvpStatus.ATTENDING
             ? 'bg-green-600 text-white'
             : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
         }`}
@@ -284,10 +269,10 @@ function RSVPContent() {
         Attending
       </button>
       <button
-        onClick={() => handleRSVP(guestId, eventId, 'no', isSubGuest)}
+        onClick={() => handleRSVP(guestId, eventId, RsvpStatus.NOT_ATTENDING, isSubGuest)}
         disabled={saving}
         className={`px-4 py-2 rounded ${
-          rsvps[eventId] === 'no'
+          rsvps[eventId] === RsvpStatus.NOT_ATTENDING
             ? 'bg-red-600 text-white'
             : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
         }`}

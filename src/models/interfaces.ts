@@ -1,6 +1,14 @@
 import { Timestamp } from 'firebase/firestore';
 
-export type RsvpStatus = 'attending' | 'not-attending' | 'awaiting-response' | 'email-not-sent' | 'not-invited';
+export enum RsvpStatus {
+  ATTENDING = 'attending',
+  NOT_ATTENDING = 'not-attending',
+  AWAITING_RESPONSE = 'awaiting-response',
+  EMAIL_NOT_SENT = 'email-not-sent',
+  NOT_INVITED = 'not-invited'
+}
+
+export type RSVPStatus = RsvpStatus.ATTENDING | RsvpStatus.NOT_ATTENDING | RsvpStatus.AWAITING_RESPONSE | RsvpStatus.EMAIL_NOT_SENT | RsvpStatus.NOT_INVITED;
 
 export interface Event {
   id: string;
@@ -41,6 +49,7 @@ export interface Guest {
   firstName: string;
   lastName: string;
   email: string;
+  emailSent: boolean;
   token: string;
   rsvps: Record<string, string>;
   subGuests: SubGuest[];

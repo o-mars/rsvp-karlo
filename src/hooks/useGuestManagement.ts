@@ -106,6 +106,7 @@ export function useGuestManagement({ eventSeriesId, useContext = true }: UseGues
         firstName: guestData.firstName,
         lastName: guestData.lastName,
         email: guestData.email || '',
+        emailSent: false,
         rsvps: guestData.rsvps || {},
         subGuests: guestData.subGuests || [],
       });
@@ -132,6 +133,7 @@ export function useGuestManagement({ eventSeriesId, useContext = true }: UseGues
         firstName: guestData.firstName,
         lastName: guestData.lastName,
         email: guestData.email || '',
+        emailSent: guestData.emailSent || false,
         rsvps: guestData.rsvps || {},
         subGuests: guestData.subGuests || []
       });

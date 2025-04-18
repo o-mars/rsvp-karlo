@@ -36,6 +36,7 @@ export default function CreateOrUpdateGuestCard({
     subGuests: {}
   });
   
+  const [rsvpLink, setRsvpLink] = useState('');
   // Track copy status
   const [copyStatus, setCopyStatus] = useState(false);
 
@@ -52,10 +53,18 @@ export default function CreateOrUpdateGuestCard({
           rsvps: { ...sg.rsvps },
         })),
       });
+      setRsvpLink(`https://rsvpkarlo.com/rsvp/?a=${guest.eventSeriesAlias || ''}&c=${guest.id || ''}`);
     } else {
       resetForm();
     }
   }, [guest]);
+  
+  // Reset form when modal is closed
+  useEffect(() => {
+    if (!isOpen) {
+      resetForm();
+    }
+  }, [isOpen]);
   
   // Run validation whenever guestData changes
   useEffect(() => {
@@ -215,15 +224,15 @@ export default function CreateOrUpdateGuestCard({
         <div className="fixed inset-0 bg-black bg-opacity-75 transition-opacity" aria-hidden="true"></div>
         
         {/* Modal panel */}
-        <div className="inline-block align-bottom bg-slate-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full">
-          <div className="bg-slate-800 px-4 pt-5 pb-4 sm:p-6">
+        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full">
+          <div className="bg-white px-4 pt-5 pb-4 sm:p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-semibold text-white" id="modal-title">
+              <h3 className="text-xl font-semibold text-[var(--blossom-text-dark)]" id="modal-title">
                 {guest ? 'Edit Guest' : 'Add New Guest'}
               </h3>
               <button
                 onClick={onClose}
-                className="text-slate-400 hover:text-white"
+                className="text-[var(--blossom-text-dark)]/50 hover:text-[var(--blossom-text-dark)]"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -243,10 +252,10 @@ export default function CreateOrUpdateGuestCard({
                     placeholder="Enter first name"
                     value={guestData.firstName || ''}
                     onChange={(e) => setGuestData({ ...guestData, firstName: e.target.value })}
-                    className={`bg-slate-700 border text-white p-2 rounded focus:ring-2 focus:ring-pink-500 focus:border-pink-500 w-full ${
+                    className={`bg-white border text-[var(--blossom-text-dark)] p-2 rounded focus:ring-2 focus:ring-[var(--blossom-pink-primary)] focus:border-[var(--blossom-pink-primary)] w-full ${
                       errors.mainGuest.includes('First name is required') 
                         ? 'border-red-500' 
-                        : 'border-slate-600'
+                        : 'border-[var(--blossom-border)]'
                     }`}
                     aria-invalid={errors.mainGuest.includes('First name is required')}
                     required
@@ -266,10 +275,10 @@ export default function CreateOrUpdateGuestCard({
                     placeholder="Enter last name"
                     value={guestData.lastName || ''}
                     onChange={(e) => setGuestData({ ...guestData, lastName: e.target.value })}
-                    className={`bg-slate-700 border text-white p-2 rounded focus:ring-2 focus:ring-pink-500 focus:border-pink-500 w-full ${
+                    className={`bg-white border text-[var(--blossom-text-dark)] p-2 rounded focus:ring-2 focus:ring-[var(--blossom-pink-primary)] focus:border-[var(--blossom-pink-primary)] w-full ${
                       errors.mainGuest.includes('Last name is required') 
                         ? 'border-red-500' 
-                        : 'border-slate-600'
+                        : 'border-[var(--blossom-border)]'
                     }`}
                     aria-invalid={errors.mainGuest.includes('Last name is required')}
                     required
@@ -280,7 +289,7 @@ export default function CreateOrUpdateGuestCard({
                 </div>
                 
                 <div className="sm:col-span-2">
-                  <label htmlFor="email" className="block text-sm font-medium text-slate-300 mb-1">
+                  <label htmlFor="email" className="block text-sm font-medium text-[var(--blossom-text-dark)]/70 mb-1">
                     Email
                   </label>
                   <input
@@ -289,7 +298,7 @@ export default function CreateOrUpdateGuestCard({
                     placeholder="Enter email address"
                     value={guestData.email || ''}
                     onChange={(e) => setGuestData({ ...guestData, email: e.target.value })}
-                    className="bg-slate-700 border border-slate-600 text-white p-2 rounded focus:ring-2 focus:ring-pink-500 focus:border-pink-500 w-full"
+                    className="bg-white border border-[var(--blossom-border)] text-[var(--blossom-text-dark)] p-2 rounded focus:ring-2 focus:ring-[var(--blossom-pink-primary)] focus:border-[var(--blossom-pink-primary)] w-full"
                   />
                 </div>
               </div>
@@ -297,8 +306,8 @@ export default function CreateOrUpdateGuestCard({
               {/* Display RSVP Link when in edit mode */}
               {guest && guest.id && (
                 <div className="sm:col-span-2">
-                  <label htmlFor="rsvp-link" className="block text-sm font-medium text-slate-300 mb-1">
-                    RSVP Link
+                  <label htmlFor="rsvp-link" className="block text-sm font-medium text-[var(--blossom-text-dark)]/70 mb-1">
+                    RSVP Code
                   </label>
                   <div className="flex items-center">
                     <div className="relative flex-grow">
@@ -306,19 +315,18 @@ export default function CreateOrUpdateGuestCard({
                         id="rsvp-link"
                         type="text"
                         readOnly
-                        value={`https://rsvpkarlo.com/rsvp/?c=${guest.id || ''}`}
-                        className="bg-slate-700 border border-slate-600 text-pink-500 font-mono p-2 rounded focus:ring-2 focus:ring-pink-500 focus:border-pink-500 w-full"
+                        value={guest.id}
+                        className="bg-white border border-[var(--blossom-border)] text-[var(--blossom-pink-primary)] font-mono p-2 rounded focus:ring-2 focus:ring-[var(--blossom-pink-primary)] focus:border-[var(--blossom-pink-primary)] w-full"
                       />
                     </div>
                     <button 
                       type="button"
                       onClick={() => {
-                        const rsvpUrl = `https://rsvpkarlo.com/rsvp/?c=${guest.id || ''}`;
-                        navigator.clipboard.writeText(rsvpUrl)
+                        navigator.clipboard.writeText(rsvpLink)
                           .then(() => setCopyStatus(true))
                           .catch(err => console.error('Could not copy text: ', err));
                       }}
-                      className="bg-slate-600 hover:bg-slate-500 text-white ml-2 p-2 rounded border border-slate-500 flex items-center justify-center"
+                      className="bg-[var(--blossom-pink-light)] hover:bg-[var(--blossom-pink-medium)] text-[var(--blossom-text-dark)] ml-2 p-2 rounded border border-[var(--blossom-border)] flex items-center justify-center"
                       title="Copy RSVP link to clipboard"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -328,7 +336,7 @@ export default function CreateOrUpdateGuestCard({
                     </button>
                   </div>
                   {copyStatus && (
-                    <p className="text-green-400 text-sm mt-1 flex items-center">
+                    <p className="text-green-600 text-sm mt-1 flex items-center">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
@@ -340,22 +348,22 @@ export default function CreateOrUpdateGuestCard({
 
               <div className="space-y-4">
                 <div className="flex flex-wrap items-center justify-between">
-                  <h3 className="font-medium text-white text-base border-b border-slate-700 pb-2">
-                    Event Invitations <span className="text-pink-500">*</span>
+                  <h3 className="font-medium text-[var(--blossom-text-dark)] text-base border-b border-[var(--blossom-border)] pb-2">
+                    Event Invitations <span className="text-[var(--blossom-pink-primary)]">*</span>
                   </h3>
                   {errors.mainGuest.includes('Guest must be invited to at least one event') && (
                     <p className="text-sm text-red-500">Guest must be invited to at least one event</p>
                   )}
                 </div>
                 
-                <div className={`bg-slate-750 p-4 rounded-lg ${
+                <div className={`bg-[var(--blossom-card-bg-secondary)] p-4 rounded-lg ${
                   errors.mainGuest.includes('Guest must be invited to at least one event') 
                     ? 'border border-red-500' 
                     : ''
                 }`}>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     {events.map((event) => (
-                      <div key={event.id} className="bg-slate-700 p-4 rounded-lg">
+                      <div key={event.id} className="bg-white p-4 rounded-lg border border-[var(--blossom-border)]">
                         <div className="flex items-center mb-3">
                           <input
                             id={`event-${event.id}`}
@@ -372,14 +380,12 @@ export default function CreateOrUpdateGuestCard({
                               if (e.target.checked) {
                                 updatedRsvps[event.id] = 'pending';
                                 updatedAdditionalGuests[event.id] = 0;
-                                // Set all sub-guests to pending for this event
                                 updatedSubGuests.forEach(subGuest => {
                                   subGuest.rsvps[event.id] = 'pending';
                                 });
                               } else {
                                 delete updatedRsvps[event.id];
                                 delete updatedAdditionalGuests[event.id];
-                                // Remove event from all sub-guests
                                 updatedSubGuests.forEach(subGuest => {
                                   delete subGuest.rsvps[event.id];
                                 });
@@ -392,16 +398,16 @@ export default function CreateOrUpdateGuestCard({
                                 subGuests: updatedSubGuests
                               });
                             }}
-                            className="rounded border-slate-600 text-pink-600 focus:ring-pink-500 mr-2"
+                            className="rounded border-[var(--blossom-border)] text-[var(--blossom-pink-primary)] focus:ring-[var(--blossom-pink-primary)] mr-2"
                           />
-                          <label htmlFor={`event-${event.id}`} className="text-white font-medium">
+                          <label htmlFor={`event-${event.id}`} className="text-[var(--blossom-text-dark)] font-medium">
                             {event.name}
                           </label>
                         </div>
                         
                         {guestData.rsvps?.[event.id] && (
-                          <div className="mt-3 pt-2 border-t border-slate-600">
-                            <label htmlFor={`additional-guests-${event.id}`} className="block text-xs font-medium text-slate-300 mb-1">
+                          <div className="mt-3 pt-2 border-t border-[var(--blossom-border)]">
+                            <label htmlFor={`additional-guests-${event.id}`} className="block text-xs font-medium text-[var(--blossom-text-dark)]/70 mb-1">
                               Additional Guests Allowed
                             </label>
                             <input
@@ -410,7 +416,7 @@ export default function CreateOrUpdateGuestCard({
                               min="0"
                               value={guestData.additionalGuests?.[event.id] || 0}
                               onChange={(e) => handleAdditionalGuestsChange(event.id, e.target.value)}
-                              className="bg-slate-600 border border-slate-500 text-white p-2 rounded focus:ring-2 focus:ring-pink-500 focus:border-pink-500 w-full text-sm"
+                              className="bg-white border border-[var(--blossom-border)] text-[var(--blossom-text-dark)] p-2 rounded focus:ring-2 focus:ring-[var(--blossom-pink-primary)] focus:border-[var(--blossom-pink-primary)] w-full text-sm"
                             />
                           </div>
                         )}
@@ -422,14 +428,14 @@ export default function CreateOrUpdateGuestCard({
 
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <h3 className="font-medium text-white text-base border-b border-slate-700 pb-2">Additional Guests</h3>
+                  <h3 className="font-medium text-[var(--blossom-text-dark)] text-base border-b border-[var(--blossom-border)] pb-2">Additional Guests</h3>
                   <button
                     type="button"
                     onClick={handleAddSubGuest}
-                    className={`text-white py-1.5 px-3 rounded transition-colors flex items-center text-sm ${
+                    className={`text-[var(--blossom-text-dark)] py-1.5 px-3 rounded transition-colors flex items-center text-sm ${
                       Object.keys(guestData.rsvps || {}).length === 0
-                        ? 'bg-slate-500 cursor-not-allowed'
-                        : 'bg-pink-600 hover:bg-pink-700'
+                        ? 'bg-[var(--blossom-pink-light)]/30 text-[var(--blossom-text-dark)]/50 cursor-not-allowed'
+                        : 'bg-[var(--blossom-pink-primary)] hover:bg-[var(--blossom-pink-hover)] text-white'
                     }`}
                     disabled={Object.keys(guestData.rsvps || {}).length === 0}
                     title={Object.keys(guestData.rsvps || {}).length === 0 ? 'Add event invitations first' : ''}
@@ -442,7 +448,7 @@ export default function CreateOrUpdateGuestCard({
                 </div>
                 
                 {(guestData.subGuests || []).length === 0 ? (
-                  <div className="text-center py-6 text-slate-400 bg-slate-750 rounded-lg">
+                  <div className="text-center py-6 text-[var(--blossom-text-dark)]/70 bg-[var(--blossom-card-bg-secondary)] rounded-lg">
                     <p>No additional guests added yet.</p>
                     <p className="text-sm mt-1">Additional guests will attend with the main guest.</p>
                   </div>
@@ -454,18 +460,18 @@ export default function CreateOrUpdateGuestCard({
                       return (
                         <div 
                           key={subGuest.id} 
-                          className={`bg-slate-700 p-4 rounded-lg space-y-4 ${
-                            subGuestHasErrors ? 'border border-red-500' : ''
+                          className={`bg-white p-4 rounded-lg space-y-4 border border-[var(--blossom-border)] ${
+                            subGuestHasErrors ? 'border-red-500' : ''
                           }`}
                         >
                           <div className="flex justify-between items-center">
-                            <h4 className="text-white font-medium">
+                            <h4 className="text-[var(--blossom-text-dark)] font-medium">
                               Guest {index + 1}
                             </h4>
                             <button
                               type="button"
                               onClick={() => handleRemoveSubGuest(index)}
-                              className="text-red-400 hover:text-red-300 flex items-center text-sm"
+                              className="text-red-500 hover:text-red-600 flex items-center text-sm"
                             >
                               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
                                 <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
@@ -476,8 +482,8 @@ export default function CreateOrUpdateGuestCard({
                           
                           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <div>
-                              <label htmlFor={`sub-guest-${index}-first-name`} className="block text-sm font-medium text-slate-300 mb-1">
-                                First Name <span className="text-pink-500">*</span>
+                              <label htmlFor={`sub-guest-${index}-first-name`} className="block text-sm font-medium text-[var(--blossom-text-dark)]/70 mb-1">
+                                First Name <span className="text-[var(--blossom-pink-primary)]">*</span>
                               </label>
                               <input
                                 id={`sub-guest-${index}-first-name`}
@@ -489,10 +495,10 @@ export default function CreateOrUpdateGuestCard({
                                   updatedSubGuests[index] = { ...subGuest, firstName: e.target.value };
                                   setGuestData({ ...guestData, subGuests: updatedSubGuests });
                                 }}
-                                className={`bg-slate-600 border text-white p-2 rounded focus:ring-2 focus:ring-pink-500 focus:border-pink-500 w-full ${
+                                className={`bg-white border text-[var(--blossom-text-dark)] p-2 rounded focus:ring-2 focus:ring-[var(--blossom-pink-primary)] focus:border-[var(--blossom-pink-primary)] w-full ${
                                   errors.subGuests[subGuest.id]?.includes('First name is required') 
                                     ? 'border-red-500' 
-                                    : 'border-slate-500'
+                                    : 'border-[var(--blossom-border)]'
                                 }`}
                                 aria-invalid={errors.subGuests[subGuest.id]?.includes('First name is required')}
                                 required
@@ -502,8 +508,8 @@ export default function CreateOrUpdateGuestCard({
                               )}
                             </div>
                             <div>
-                              <label htmlFor={`sub-guest-${index}-last-name`} className="block text-sm font-medium text-slate-300 mb-1">
-                                Last Name <span className="text-pink-500">*</span>
+                              <label htmlFor={`sub-guest-${index}-last-name`} className="block text-sm font-medium text-[var(--blossom-text-dark)]/70 mb-1">
+                                Last Name <span className="text-[var(--blossom-pink-primary)]">*</span>
                               </label>
                               <input
                                 id={`sub-guest-${index}-last-name`}
@@ -515,10 +521,10 @@ export default function CreateOrUpdateGuestCard({
                                   updatedSubGuests[index] = { ...subGuest, lastName: e.target.value };
                                   setGuestData({ ...guestData, subGuests: updatedSubGuests });
                                 }}
-                                className={`bg-slate-600 border text-white p-2 rounded focus:ring-2 focus:ring-pink-500 focus:border-pink-500 w-full ${
+                                className={`bg-white border text-[var(--blossom-text-dark)] p-2 rounded focus:ring-2 focus:ring-[var(--blossom-pink-primary)] focus:border-[var(--blossom-pink-primary)] w-full ${
                                   errors.subGuests[subGuest.id]?.includes('Last name is required') 
                                     ? 'border-red-500' 
-                                    : 'border-slate-500'
+                                    : 'border-[var(--blossom-border)]'
                                 }`}
                                 aria-invalid={errors.subGuests[subGuest.id]?.includes('Last name is required')}
                                 required
@@ -530,10 +536,10 @@ export default function CreateOrUpdateGuestCard({
                           </div>
                           
                           {/* Event selection for sub-guest */}
-                          <div className="mt-4 pt-2 border-t border-slate-600">
+                          <div className="mt-4 pt-2 border-t border-[var(--blossom-border)]">
                             <div className="flex flex-wrap items-center justify-between mb-2">
-                              <h5 className="text-sm font-medium text-slate-300">
-                                Event Invitations <span className="text-pink-500">*</span>
+                              <h5 className="text-sm font-medium text-[var(--blossom-text-dark)]/70">
+                                Event Invitations <span className="text-[var(--blossom-pink-primary)]">*</span>
                               </h5>
                             </div>
                             <div className={`grid grid-cols-1 gap-2 sm:grid-cols-2 ${
@@ -546,7 +552,7 @@ export default function CreateOrUpdateGuestCard({
                                 if (!event) return null;
                                 
                                 return (
-                                  <div key={`sub-${index}-event-${eventId}`} className="flex items-center bg-slate-600 p-2 rounded">
+                                  <div key={`sub-${index}-event-${eventId}`} className="flex items-center bg-white p-2 rounded border border-[var(--blossom-border)]">
                                     <input
                                       id={`sub-${index}-event-${eventId}`}
                                       type="checkbox"
@@ -571,9 +577,9 @@ export default function CreateOrUpdateGuestCard({
                                           subGuests: updatedSubGuests 
                                         });
                                       }}
-                                      className="rounded border-slate-500 text-pink-600 focus:ring-pink-500 mr-2"
+                                      className="rounded border-[var(--blossom-border)] text-[var(--blossom-pink-primary)] focus:ring-[var(--blossom-pink-primary)] mr-2"
                                     />
-                                    <label htmlFor={`sub-${index}-event-${eventId}`} className="text-white text-sm">
+                                    <label htmlFor={`sub-${index}-event-${eventId}`} className="text-[var(--blossom-text-dark)] text-sm">
                                       {event.name}
                                     </label>
                                   </div>
@@ -595,16 +601,16 @@ export default function CreateOrUpdateGuestCard({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="bg-slate-600 text-white px-4 py-2 rounded hover:bg-slate-500"
+                  className="bg-[var(--blossom-pink-light)] hover:bg-[var(--blossom-pink-light)]/80 text-[var(--blossom-text-dark)] px-4 py-2 rounded"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className={`text-white px-4 py-2 rounded ${
+                  className={`px-4 py-2 rounded ${
                     isFormValid 
-                      ? 'bg-pink-600 hover:bg-pink-700' 
-                      : 'bg-slate-500 cursor-not-allowed'
+                      ? 'bg-[var(--blossom-pink-primary)] hover:bg-[var(--blossom-pink-hover)] text-white' 
+                      : 'bg-[var(--blossom-pink-light)]/30 text-[var(--blossom-text-dark)] cursor-not-allowed'
                   }`}
                   disabled={!isFormValid}
                 >

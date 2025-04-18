@@ -3,6 +3,23 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  
+  /* Blossom color scheme - simple variables for reuse */
+  --blossom-pink-primary: #ec4899;   /* Pink-600 - main buttons */
+  --blossom-pink-hover: #be185d;     /* Pink-700 - button hover */
+  --blossom-pink-light: #fdf2f8;     /* Pink-50 - background gradient */
+  --blossom-pink-dark: #9d174d;      /* Darker pink */
+  --blossom-pink-medium: #f472b6;    /* Pink-400 */
+  --blossom-border: #f9a8d4;         /* Pink-300 */
+  --blossom-text-light: #4b5563;     /* Gray-600 - darker for better contrast on light bg */
+  --blossom-text-dark: #171717;      /* Near black for text on light backgrounds */
+  --blossom-divider: #f3f4f6;        /* Gray-100 */
+  
+  /* Card background levels */
+  --blossom-card-bg-primary: #ffffff;     /* White - top level cards */
+  --blossom-card-bg-secondary: #fdf2f8;   /* Pink-50 - secondary/nested cards */
+  --blossom-card-bg-tertiary: #fcfcfc;    /* Subtle off-white - deeply nested */
+  --blossom-card-shadow: 0 1px 3px rgba(236, 72, 153, 0.1), 0 1px 2px rgba(236, 72, 153, 0.06);
 }
 
 @theme inline {

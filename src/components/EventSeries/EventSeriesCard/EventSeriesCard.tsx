@@ -77,13 +77,13 @@ export default function EventSeriesCard({ series, onDelete }: EventSeriesCardPro
       <Link 
         href={`/admin/events?a=${series.alias}`} 
         key={series.id}
-        className="bg-slate-800 rounded-lg p-6 hover:bg-slate-700 transition-colors shadow-lg group relative"
+        className="bg-[var(--blossom-pink-light)] rounded-lg p-6 hover:bg-[var(--blossom-pink-medium)] transition-colors shadow-[var(--blossom-card-shadow)] group relative"
       >
         <div className="flex items-center justify-between mb-2">
-          <h2 className="text-xl font-semibold group-hover:text-pink-300 transition-colors">{series.name}</h2>
+          <h2 className="text-xl font-semibold text-[var(--blossom-text-dark)] group-hover:text-[var(--blossom-text-dark)] transition-colors">{series.name}</h2>
           <button 
             onClick={handleDeleteClick}
-            className="h-6 w-6 flex items-center justify-center rounded-full bg-red-500/0 group-hover:bg-red-500/20 text-slate-400 group-hover:text-red-500 hover:bg-red-500/30 transition-colors z-10"
+            className="h-6 w-6 flex items-center justify-center text-red-500 hover:text-red-600 transition-colors z-10"
             aria-label="Delete event series"
           >
             <svg 
@@ -100,12 +100,12 @@ export default function EventSeriesCard({ series, onDelete }: EventSeriesCardPro
         </div>
         
         {series.description && (
-          <p className="text-slate-400 text-sm line-clamp-2 group-hover:text-slate-300 transition-colors">
+          <p className="text-[var(--blossom-text-dark)]/80 text-sm line-clamp-2 group-hover:text-[var(--blossom-text-dark)]/90 transition-colors">
             {series.description}
           </p>
         )}
 
-        <div className="mt-4 text-xs text-slate-500">
+        <div className="mt-4 text-xs text-[var(--blossom-text-dark)]/60">
           Created {new Date(series.createdAt?.toDate?.() || series.createdAt).toLocaleDateString()}
         </div>
       </Link>

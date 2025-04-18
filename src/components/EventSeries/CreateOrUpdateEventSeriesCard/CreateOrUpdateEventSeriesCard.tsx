@@ -193,15 +193,15 @@ export default function CreateOrUpdateEventSeriesCard({
         <div className="fixed inset-0 bg-black bg-opacity-75 transition-opacity" aria-hidden="true"></div>
         
         {/* Modal panel */}
-        <div className="inline-block align-bottom bg-slate-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
-          <div className="bg-slate-800 px-4 pt-5 pb-4 sm:p-6">
+        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-[var(--blossom-card-shadow)] transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
+          <div className="bg-white px-4 pt-5 pb-4 sm:p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-semibold text-white" id="modal-title">
+              <h3 className="text-xl font-semibold text-[var(--blossom-text-dark)]" id="modal-title">
                 {editingEventSeries ? 'Edit Event Series' : 'Create New Event Series'}
               </h3>
               <button
                 onClick={onClose}
-                className="text-slate-400 hover:text-white"
+                className="text-[var(--blossom-text-dark)]/70 hover:text-[var(--blossom-text-dark)]"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -218,15 +218,15 @@ export default function CreateOrUpdateEventSeriesCard({
             <form onSubmit={handleSubmit}>
               <div className="space-y-6">
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-slate-300 mb-1">
-                    Series Name <span className="text-pink-500">*</span>
+                  <label htmlFor="name" className="block text-sm font-medium text-[var(--blossom-text-dark)] mb-1">
+                    Series Name <span className="text-[var(--blossom-pink-primary)]">*</span>
                   </label>
                   <input
                     type="text"
                     id="name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                    className="w-full bg-[var(--blossom-pink-light)] border border-[var(--blossom-border)] rounded-md py-2 px-3 text-[var(--blossom-text-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--blossom-pink-primary)] focus:border-transparent"
                     placeholder="e.g. The Smith Wedding"
                   />
                   {errors.name && (
@@ -235,9 +235,9 @@ export default function CreateOrUpdateEventSeriesCard({
                 </div>
                 
                 <div>
-                  <label htmlFor="alias" className="block text-sm font-medium text-slate-300 mb-1">
-                    Alias <span className="text-pink-500">*</span>
-                    <span className="ml-2 text-xs text-slate-400">
+                  <label htmlFor="alias" className="block text-sm font-medium text-[var(--blossom-text-dark)] mb-1">
+                    Alias <span className="text-[var(--blossom-pink-primary)]">*</span>
+                    <span className="ml-2 text-xs text-[var(--blossom-text-dark)]/70">
                       (Used in URLs, must be unique)
                     </span>
                   </label>
@@ -247,20 +247,20 @@ export default function CreateOrUpdateEventSeriesCard({
                       id="alias"
                       value={alias}
                       onChange={(e) => handleAliasChange(e.target.value)}
-                      className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                      className="w-full bg-[var(--blossom-pink-light)] border border-[var(--blossom-border)] rounded-md py-2 px-3 text-[var(--blossom-text-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--blossom-pink-primary)] focus:border-transparent"
                       placeholder="e.g. smith-wedding"
                       disabled={editingEventSeries !== null && editingEventSeries !== undefined}
                     />
                     {isCheckingAlias && (
                       <div className="absolute right-3 top-2.5">
-                        <svg className="animate-spin h-5 w-5 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <svg className="animate-spin h-5 w-5 text-[var(--blossom-text-dark)]/70" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
                       </div>
                     )}
                   </div>
-                  <p className="mt-1 text-xs text-slate-400">
+                  <p className="mt-1 text-xs text-[var(--blossom-text-dark)]/70">
                     Only lowercase letters, numbers, hyphens, and underscores allowed
                   </p>
                   {errors.alias && (
@@ -269,15 +269,15 @@ export default function CreateOrUpdateEventSeriesCard({
                 </div>
                 
                 <div>
-                  <label htmlFor="description" className="block text-sm font-medium text-slate-300 mb-1">
-                    Description <span className="text-xs text-slate-400">(Optional)</span>
+                  <label htmlFor="description" className="block text-sm font-medium text-[var(--blossom-text-dark)] mb-1">
+                    Description <span className="text-xs text-[var(--blossom-text-dark)]/70">(Optional)</span>
                   </label>
                   <textarea
                     id="description"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     rows={3}
-                    className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                    className="w-full bg-[var(--blossom-pink-light)] border border-[var(--blossom-border)] rounded-md py-2 px-3 text-[var(--blossom-text-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--blossom-pink-primary)] focus:border-transparent"
                     placeholder="A brief description of this event series"
                   ></textarea>
                 </div>
@@ -286,7 +286,7 @@ export default function CreateOrUpdateEventSeriesCard({
                   <button
                     type="button"
                     onClick={onClose}
-                    className="px-4 py-2 bg-slate-600 text-white rounded hover:bg-slate-500 transition-colors"
+                    className="px-4 py-2 bg-white border border-[var(--blossom-border)] text-[var(--blossom-text-dark)] rounded hover:bg-[var(--blossom-pink-light)] transition-colors"
                   >
                     Cancel
                   </button>
@@ -295,8 +295,8 @@ export default function CreateOrUpdateEventSeriesCard({
                     disabled={isSubmitting || isCheckingAlias || Object.keys(errors).length > 0}
                     className={`px-4 py-2 rounded text-white ${
                       (isSubmitting || isCheckingAlias || Object.keys(errors).length > 0)
-                        ? 'bg-pink-500/50 cursor-not-allowed'
-                        : 'bg-pink-600 hover:bg-pink-700'
+                        ? 'bg-[var(--blossom-pink-primary)]/50 cursor-not-allowed'
+                        : 'bg-[var(--blossom-pink-primary)] hover:bg-[var(--blossom-pink-hover)]'
                     }`}
                   >
                     {isSubmitting ? (

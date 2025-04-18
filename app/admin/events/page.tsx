@@ -264,19 +264,19 @@ export default function EventsPage() {
   };
 
   if (loading) return (
-    <div className="p-8 text-white">
+    <div className="p-8 text-[var(--blossom-text-dark)]">
       <div className="flex justify-center p-6">
-        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-pink-500"></div>
+        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[var(--blossom-pink-primary)]"></div>
       </div>
     </div>
   );
 
   return (
-    <div className="p-8 text-white">
+    <div className="p-8 text-[var(--blossom-text-dark)]">
       {/* Header Section */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-4">
-          <Link href="/admin" className="text-slate-300 hover:text-white flex items-center">
+          <Link href="/admin" className="text-[var(--blossom-text-dark)]/70 hover:text-[var(--blossom-text-dark)] flex items-center">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
             </svg>
@@ -290,7 +290,7 @@ export default function EventsPage() {
               <h1 className="text-3xl font-bold">{eventSeries.name}</h1>
               <button 
                 onClick={() => setIsEditingEventSeries(true)}
-                className="text-slate-300 hover:text-white flex items-center text-sm bg-slate-700 hover:bg-slate-600 px-3 py-1 rounded transition-colors"
+                className="text-[var(--blossom-text-dark)]/70 hover:text-[var(--blossom-text-dark)] flex items-center text-sm bg-[var(--blossom-pink-light)] hover:bg-[var(--blossom-pink-medium)] px-3 py-1 rounded transition-colors"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
                   <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
@@ -299,39 +299,39 @@ export default function EventsPage() {
               </button>
             </div>
             {eventSeries.description && (
-              <p className="text-slate-300">{eventSeries.description}</p>
+              <p className="text-[var(--blossom-text-dark)]/70">{eventSeries.description}</p>
             )}
           </div>
         )}
         
         {/* Tabs Navigation */}
-        <div className="border-b border-slate-700 mb-6">
+        <div className="border-b border-[var(--blossom-border)] mb-6">
           <div className="flex space-x-8">
             <button
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              className={`py-2 px-1 border-b-2 font-medium text-md ${
                 activeTab === 'events' 
-                  ? 'border-pink-500 text-pink-500' 
-                  : 'border-transparent text-slate-400 hover:text-slate-300'
+                  ? 'border-[var(--blossom-pink-primary)] text-[var(--blossom-pink-primary)]' 
+                  : 'border-transparent text-[var(--blossom-text-dark)]/70 hover:text-[var(--blossom-text-dark)]'
               }`}
               onClick={() => setActiveTab('events')}
             >
               Events
             </button>
             <button
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              className={`py-2 px-1 border-b-2 font-medium text-md ${
                 activeTab === 'guests' 
-                  ? 'border-pink-500 text-pink-500' 
-                  : 'border-transparent text-slate-400 hover:text-slate-300'
+                  ? 'border-[var(--blossom-pink-primary)] text-[var(--blossom-pink-primary)]' 
+                  : 'border-transparent text-[var(--blossom-text-dark)]/70 hover:text-[var(--blossom-text-dark)]'
               }`}
               onClick={() => setActiveTab('guests')}
             >
               Guests
             </button>
             <button
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              className={`py-2 px-1 border-b-2 font-medium text-md ${
                 activeTab === 'rsvp' 
-                  ? 'border-pink-500 text-pink-500' 
-                  : 'border-transparent text-slate-400 hover:text-slate-300'
+                  ? 'border-[var(--blossom-pink-primary)] text-[var(--blossom-pink-primary)]' 
+                  : 'border-transparent text-[var(--blossom-text-dark)]/70 hover:text-[var(--blossom-text-dark)]'
               }`}
               onClick={() => setActiveTab('rsvp')}
             >
@@ -343,15 +343,15 @@ export default function EventsPage() {
 
       {/* Events Tab Content */}
       {activeTab === 'events' && (
-        <div className="bg-slate-800 shadow rounded-lg p-6">
+        <div className="bg-[var(--blossom-card-bg-tertiary)] border border-[var(--blossom-border)] shadow rounded-lg p-6">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold text-white">Events</h2>
+            <h2 className="text-xl font-semibold">Events</h2>
             <button 
               onClick={() => {
                 setEditingEvent(null);
                 setIsEventModalOpen(true);
               }}
-              className="bg-pink-600 hover:bg-pink-700 text-white py-1.5 px-3 rounded transition-colors flex items-center text-sm"
+              className="bg-[var(--blossom-pink-primary)] hover:bg-[var(--blossom-pink-hover)] text-white py-1.5 px-3 rounded transition-colors flex items-center text-sm"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
@@ -361,8 +361,8 @@ export default function EventsPage() {
           </div>
           
           {events.length === 0 ? (
-            <div className="text-center py-8 text-slate-400">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto mb-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="text-center py-8 text-[var(--blossom-text-dark)]/70">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto mb-4 text-[var(--blossom-text-dark)]/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
               <p className="text-lg font-medium">No events yet</p>
@@ -406,9 +406,9 @@ export default function EventsPage() {
       
       {/* RSVP Tab Content */}
       {activeTab === 'rsvp' && (
-        <div className="bg-slate-800 shadow rounded-lg p-6">
-          <h2 className="text-xl font-semibold mb-4 text-white">RSVPs</h2>
-          <p className="text-slate-400">RSVPs and analytics coming soon...</p>
+        <div className="bg-white border border-[var(--blossom-border)] shadow rounded-lg p-6">
+          <h2 className="text-xl font-semibold mb-4">RSVPs</h2>
+          <p className="text-[var(--blossom-text-dark)]/70">RSVPs and analytics coming soon...</p>
         </div>
       )}
 

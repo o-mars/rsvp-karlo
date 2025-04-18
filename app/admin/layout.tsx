@@ -24,11 +24,11 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
 
   // For other admin pages, show loading state and auth check
   if (loading || !user) {
-    return <div className="min-h-screen bg-slate-900 flex items-center justify-center text-white">Loading...</div>;
+    return <div className="min-h-screen flex items-center justify-center text-[var(--blossom-text-dark)]">Loading...</div>;
   }
 
   return (
-    <div className="min-h-screen bg-slate-900">
+    <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto py-2 sm:px-6 lg:px-8">
         {children}
       </div>

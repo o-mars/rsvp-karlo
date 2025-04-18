@@ -135,15 +135,15 @@ export default function CreateOrUpdateEventCard({
         <div className="fixed inset-0 bg-black bg-opacity-75 transition-opacity" aria-hidden="true"></div>
         
         {/* Modal panel */}
-        <div className="inline-block align-bottom bg-slate-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full">
-          <div className="bg-slate-800 px-4 pt-5 pb-4 sm:p-6">
+        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full">
+          <div className="bg-white px-4 pt-5 pb-4 sm:p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-semibold text-white" id="modal-title">
+              <h3 className="text-xl font-semibold text-[var(--blossom-text-dark)]" id="modal-title">
                 {editingEvent ? 'Edit Event' : 'Create New Event'}
               </h3>
               <button
                 onClick={onClose}
-                className="text-slate-400 hover:text-white"
+                className="text-[var(--blossom-text-dark)]/70 hover:text-[var(--blossom-text-dark)]"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -154,7 +154,7 @@ export default function CreateOrUpdateEventCard({
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                 <div className="col-span-2">
-                  <label htmlFor="event-name" className="block text-sm font-medium text-slate-300 mb-1">
+                  <label htmlFor="event-name" className="block text-sm font-medium text-[var(--blossom-text-dark)]/70 mb-1">
                     Event Name
                   </label>
                   <input
@@ -163,7 +163,7 @@ export default function CreateOrUpdateEventCard({
                     placeholder="Enter event name"
                     value={newEvent.name}
                     onChange={(e) => setNewEvent({ ...newEvent, name: e.target.value })}
-                    className="bg-slate-700 border border-slate-600 text-white p-2 rounded focus:ring-2 focus:ring-pink-500 focus:border-pink-500 w-full"
+                    className="bg-white border border-[var(--blossom-border)] text-[var(--blossom-text-dark)] p-2 rounded focus:ring-2 focus:ring-[var(--blossom-pink-primary)] focus:border-[var(--blossom-pink-primary)] w-full"
                     required
                   />
                 </div>
@@ -198,7 +198,7 @@ export default function CreateOrUpdateEventCard({
                 </div>
                 
                 <div className="col-span-2">
-                  <label htmlFor="location" className="block text-sm font-medium text-slate-300 mb-1">
+                  <label htmlFor="location" className="block text-sm font-medium text-[var(--blossom-text-dark)]/70 mb-1">
                     Location
                   </label>
                   <input
@@ -207,14 +207,14 @@ export default function CreateOrUpdateEventCard({
                     placeholder="Enter location"
                     value={newEvent.location}
                     onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })}
-                    className="bg-slate-700 border border-slate-600 text-white p-2 rounded focus:ring-2 focus:ring-pink-500 focus:border-pink-500 w-full"
+                    className="bg-white border border-[var(--blossom-border)] text-[var(--blossom-text-dark)] p-2 rounded focus:ring-2 focus:ring-[var(--blossom-pink-primary)] focus:border-[var(--blossom-pink-primary)] w-full"
                     required
                   />
                 </div>
               </div>
               
               <div>
-                <label htmlFor="description" className="block text-sm font-medium text-slate-300 mb-1">
+                <label htmlFor="description" className="block text-sm font-medium text-[var(--blossom-text-dark)]/70 mb-1">
                   Description
                 </label>
                 <textarea
@@ -222,16 +222,16 @@ export default function CreateOrUpdateEventCard({
                   placeholder="Enter event description"
                   value={newEvent.description || ''}
                   onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
-                  className="bg-slate-700 border border-slate-600 text-white p-2 rounded w-full focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                  className="bg-white border border-[var(--blossom-border)] text-[var(--blossom-text-dark)] p-2 rounded w-full focus:ring-2 focus:ring-[var(--blossom-pink-primary)] focus:border-[var(--blossom-pink-primary)]"
                   rows={3}
                 />
               </div>
 
               <div className="space-y-3">
-                <h3 className="font-medium text-white">Event Details</h3>
+                <h3 className="font-medium text-[var(--blossom-text-dark)]">Event Details</h3>
                 <div className="flex space-x-2">
                   <div className="flex-grow">
-                    <label htmlFor="detail-name" className="block text-sm font-medium text-slate-300 mb-1">
+                    <label htmlFor="detail-name" className="block text-sm font-medium text-[var(--blossom-text-dark)]/70 mb-1">
                       Detail Name
                     </label>
                     <input
@@ -240,11 +240,11 @@ export default function CreateOrUpdateEventCard({
                       placeholder="e.g., Dress Code, Menu, RSVP By"
                       value={newFieldKey}
                       onChange={(e) => setNewFieldKey(e.target.value)}
-                      className="bg-slate-700 border border-slate-600 text-white p-2 rounded w-full focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                      className="bg-white border border-[var(--blossom-border)] text-[var(--blossom-text-dark)] p-2 rounded w-full focus:ring-2 focus:ring-[var(--blossom-pink-primary)] focus:border-[var(--blossom-pink-primary)]"
                     />
                   </div>
                   <div className="flex-grow">
-                    <label htmlFor="detail-value" className="block text-sm font-medium text-slate-300 mb-1">
+                    <label htmlFor="detail-value" className="block text-sm font-medium text-[var(--blossom-text-dark)]/70 mb-1">
                       Detail Value
                     </label>
                     <input
@@ -253,14 +253,14 @@ export default function CreateOrUpdateEventCard({
                       placeholder="e.g., Formal, Italian, June 1st"
                       value={newFieldValue}
                       onChange={(e) => setNewFieldValue(e.target.value)}
-                      className="bg-slate-700 border border-slate-600 text-white p-2 rounded w-full focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                      className="bg-white border border-[var(--blossom-border)] text-[var(--blossom-text-dark)] p-2 rounded w-full focus:ring-2 focus:ring-[var(--blossom-pink-primary)] focus:border-[var(--blossom-pink-primary)]"
                     />
                   </div>
                   <div className="flex items-end">
                     <button
                       type="button"
                       onClick={addCustomField}
-                      className="bg-pink-600 text-white px-4 py-2 rounded hover:bg-pink-700"
+                      className="bg-[var(--blossom-pink-primary)] text-white px-4 py-2 rounded hover:bg-[var(--blossom-pink-hover)]"
                     >
                       Add
                     </button>
@@ -269,15 +269,15 @@ export default function CreateOrUpdateEventCard({
                 
                 <div className="flex flex-wrap gap-2">
                   {Object.entries(newEvent.additionalFields || {}).map(([key, value]) => (
-                    <div key={key} className="inline-flex items-center bg-slate-700 px-3 py-1.5 rounded">
+                    <div key={key} className="inline-flex items-center bg-[var(--blossom-pink-light)] px-3 py-1.5 rounded">
                       <div>
-                        <span className="font-medium text-white">{key}:</span>
-                        <span className="ml-1 text-slate-300">{value}</span>
+                        <span className="font-medium text-[var(--blossom-text-dark)]">{key}:</span>
+                        <span className="ml-1 text-[var(--blossom-text-dark)]/70">{value}</span>
                       </div>
                       <button
                         type="button"
                         onClick={() => removeCustomField(key)}
-                        className="ml-2 text-red-400 hover:text-red-300 text-lg font-bold"
+                        className="ml-2 text-red-500 hover:text-red-600 text-lg font-bold"
                       >
                         ×
                       </button>
@@ -290,13 +290,13 @@ export default function CreateOrUpdateEventCard({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="bg-slate-600 text-white px-4 py-2 rounded hover:bg-slate-500"
+                  className="bg-[var(--blossom-pink-light)] text-[var(--blossom-text-dark)] px-4 py-2 rounded hover:bg-[var(--blossom-pink-medium)]"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="bg-pink-600 text-white px-4 py-2 rounded hover:bg-pink-700"
+                  className="bg-[var(--blossom-pink-primary)] text-white px-4 py-2 rounded hover:bg-[var(--blossom-pink-hover)]"
                 >
                   {editingEvent ? 'Update Event' : 'Add Event'}
                 </button>

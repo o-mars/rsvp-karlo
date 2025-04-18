@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Event, Guest, SubGuest } from '@/src/models/interfaces';
+import { Event, Guest, SubGuest, RsvpStatus } from '@/src/models/interfaces';
 import DeleteConfirmationModal from '@/src/components/shared/DeleteConfirmationModal';
 
 interface GuestListTableRowProps {
@@ -25,23 +25,23 @@ export default function GuestListTableRow({
   const [isDeleting, setIsDeleting] = useState(false);
   
   // Formats RSVP status with appropriate styling
-  const RsvpStatus = ({ status }: { status: string | undefined }) => {
+  const RsvpStatusElement = ({ status }: { status: string | undefined }) => {
     if (!status) {
       return (
-        <span className="px-2 py-1 rounded-full text-xs font-medium bg-slate-900 text-slate-300">
+        <span className="px-2 py-1 rounded-full text-xs font-medium bg-[var(--blossom-pink-light)] text-[var(--blossom-text-dark)]/70">
           Not Invited
         </span>
       );
     }
     
     const classMap: Record<string, string> = {
-      'yes': 'bg-green-900 text-green-300',
-      'no': 'bg-red-900 text-red-300',
-      'pending': 'bg-yellow-900 text-yellow-300'
+      [RsvpStatus.ATTENDING]: 'bg-green-100 text-green-800',
+      [RsvpStatus.NOT_ATTENDING]: 'bg-red-100 text-red-800',
+      [RsvpStatus.AWAITING_RESPONSE]: 'bg-yellow-100 text-yellow-800'
     };
     
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${classMap[status] || 'bg-slate-900 text-slate-300'}`}>
+      <span className={`px-2 py-1 rounded-full text-xs font-medium ${classMap[status] || 'bg-[var(--blossom-pink-light)] text-[var(--blossom-text-dark)]/70'}`}>
         {status}
       </span>
     );
@@ -77,7 +77,7 @@ export default function GuestListTableRow({
     return guest.subGuests.map((subGuest: SubGuest) => (
       <tr 
         key={subGuest.id} 
-        className="hover:bg-slate-700 bg-slate-750 cursor-pointer" 
+        className="hover:bg-[var(--blossom-pink-light)]/40 bg-white cursor-pointer transition-colors duration-150" 
         onClick={handleRowClick}
       >
         <td className="px-6 py-4 whitespace-nowrap" onClick={handleCheckboxClick}>
@@ -85,16 +85,16 @@ export default function GuestListTableRow({
             type="checkbox"
             checked={isSelected}
             onChange={(e) => onSelect(guest.id, e.target.checked)}
-            className="rounded border-slate-600 text-blue-600 focus:ring-blue-500"
+            className="rounded border-[var(--blossom-border)] text-[var(--blossom-pink-primary)] focus:ring-[var(--blossom-pink-primary)]"
           />
         </td>
-        <td className="px-6 py-4 whitespace-nowrap text-white pl-12">
+        <td className="px-6 py-4 whitespace-nowrap text-[var(--blossom-text-dark)] pl-12">
           {subGuest.firstName} {subGuest.lastName}
         </td>
-        <td className="px-6 py-4 whitespace-nowrap text-white">-</td>
+        <td className="px-6 py-4 whitespace-nowrap text-[var(--blossom-text-dark)]">-</td>
         {events.map((event) => (
           <td key={event.id} className="px-6 py-4 whitespace-nowrap">
-            <RsvpStatus status={subGuest.rsvps[event.id]} />
+            <RsvpStatusElement status={subGuest.rsvps[event.id]} />
           </td>
         ))}
         <td className="px-6 py-4 whitespace-nowrap">
@@ -107,22 +107,34 @@ export default function GuestListTableRow({
   return (
     <>
       {/* Main guest row */}
-      <tr className="hover:bg-slate-700 cursor-pointer" onClick={handleRowClick}>
+      <tr className="hover:bg-[var(--blossom-pink-light)]/40 cursor-pointer transition-colors duration-150" onClick={handleRowClick}>
         <td className="px-6 py-4 whitespace-nowrap" onClick={handleCheckboxClick}>
           <input
             type="checkbox"
             checked={isSelected}
             onChange={(e) => onSelect(guest.id, e.target.checked)}
-            className="rounded border-slate-600 text-blue-600 focus:ring-blue-500"
+            className="rounded border-[var(--blossom-border)] text-[var(--blossom-pink-primary)] focus:ring-[var(--blossom-pink-primary)]"
           />
         </td>
-        <td className="px-6 py-4 whitespace-nowrap text-white">
+        <td className="px-6 py-4 whitespace-nowrap text-[var(--blossom-text-dark)]">
           {guest.firstName} {guest.lastName}
         </td>
-        <td className="px-6 py-4 whitespace-nowrap text-white">{guest.email}</td>
+        <td className="px-6 py-4 whitespace-nowrap">
+          <div className="flex items-center">
+            <span 
+              className={`mr-1 w-2 h-2 rounded-full ${
+                guest.emailSent ? 'bg-green-500' : 'bg-yellow-500'
+              }`} 
+              title={guest.emailSent ? "Email sent" : "Email not sent"}
+            ></span>
+            <span className="text-[var(--blossom-text-dark)]">
+              {guest.email}
+            </span>
+          </div>
+        </td>
         {events.map((event) => (
           <td key={event.id} className="px-6 py-4 whitespace-nowrap">
-            <RsvpStatus status={guest.rsvps[event.id]} />
+            <RsvpStatusElement status={guest.rsvps[event.id]} />
           </td>
         ))}
         <td className="px-6 py-4 whitespace-nowrap">
@@ -132,7 +144,7 @@ export default function GuestListTableRow({
                 e.stopPropagation();
                 onEdit(guest);
               }}
-              className="text-slate-400 hover:text-blue-400"
+              className="text-[var(--blossom-text-dark)]/50 hover:text-[var(--blossom-pink-primary)]"
               aria-label="Edit guest"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -141,7 +153,7 @@ export default function GuestListTableRow({
             </button>
             <button
               onClick={handleDeleteClick}
-              className="text-slate-400 hover:text-red-400"
+              className="text-[var(--blossom-text-dark)]/50 hover:text-red-500"
               aria-label="Delete guest"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
