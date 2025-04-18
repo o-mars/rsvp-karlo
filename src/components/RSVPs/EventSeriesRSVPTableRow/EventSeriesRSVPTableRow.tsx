@@ -1,6 +1,6 @@
 'use client';
 
-import { Guest, Event } from '@/src/models/interfaces';
+import { Guest, Event, RsvpStatus } from '@/src/models/interfaces';
 
 interface EventSeriesRSVPTableRowProps {
   guest: Guest;
@@ -11,20 +11,20 @@ export default function EventSeriesRSVPTableRow({ guest, events }: EventSeriesRS
   // Get the appropriate style class for a given RSVP status
   const getRsvpStatusClass = (status: string | undefined) => {
     switch (status) {
-      case 'yes':
-        return 'bg-green-900 text-green-300';
-      case 'no':
-        return 'bg-red-900 text-red-300';
-      case 'pending':
-        return 'bg-yellow-900 text-yellow-300';
+      case RsvpStatus.ATTENDING:
+        return 'bg-green-100 text-green-800';
+      case RsvpStatus.NOT_ATTENDING:
+        return 'bg-red-100 text-red-800';
+      case RsvpStatus.AWAITING_RESPONSE:
+        return 'bg-yellow-100 text-yellow-800';
       default:
-        return 'bg-slate-900 text-slate-300';
+        return 'bg-slate-600 text-slate-200';
     }
   };
 
   return (
-    <tr className="hover:bg-slate-700">
-      <td className="px-6 py-4 whitespace-nowrap text-white">
+    <tr className="hover:bg-[var(--blossom-card-bg-secondary)]">
+      <td className="px-6 py-4 whitespace-nowrap text-[var(--blossom-text-dark)]">
         {guest.firstName} {guest.lastName}
       </td>
       {events.map((event) => (

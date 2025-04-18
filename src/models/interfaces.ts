@@ -1,11 +1,11 @@
 import { Timestamp } from 'firebase/firestore';
 
 export enum RsvpStatus {
-  ATTENDING = 'attending',
-  NOT_ATTENDING = 'not-attending',
-  AWAITING_RESPONSE = 'awaiting-response',
-  EMAIL_NOT_SENT = 'email-not-sent',
-  NOT_INVITED = 'not-invited'
+  ATTENDING = 'Attending',
+  NOT_ATTENDING = 'Not Attending',
+  AWAITING_RESPONSE = 'Awaiting Response',
+  EMAIL_NOT_SENT = 'Email Not Sent',
+  NOT_INVITED = 'Not Invited'
 }
 
 export type RSVPStatus = RsvpStatus.ATTENDING | RsvpStatus.NOT_ATTENDING | RsvpStatus.AWAITING_RESPONSE | RsvpStatus.EMAIL_NOT_SENT | RsvpStatus.NOT_INVITED;

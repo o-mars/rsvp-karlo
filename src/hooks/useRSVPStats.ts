@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '@/utils/firebase';
-import { Guest, Event, EventStats } from '@/src/models/interfaces';
+import { Guest, Event, EventStats, RsvpStatus } from '@/src/models/interfaces';
 
 interface UseRSVPStatsProps {
   eventSeriesId?: string;
@@ -168,10 +168,10 @@ export function useRSVPStats({ eventSeriesId }: UseRSVPStatsProps = {}) {
     const eventGuests = guests.filter(g => g.rsvps && g.rsvps[eventId] !== undefined);
     const totalGuests = guests.length;
     const invited = eventGuests.length;
-    const responded = eventGuests.filter(g => g.rsvps[eventId] === 'yes' || g.rsvps[eventId] === 'no').length;
-    const attending = eventGuests.filter(g => g.rsvps[eventId] === 'yes').length;
-    const notAttending = eventGuests.filter(g => g.rsvps[eventId] === 'no').length;
-    const pending = eventGuests.filter(g => g.rsvps[eventId] === 'pending').length;
+    const responded = eventGuests.filter(g => g.rsvps[eventId] === RsvpStatus.ATTENDING || g.rsvps[eventId] === RsvpStatus.NOT_ATTENDING).length;
+    const attending = eventGuests.filter(g => g.rsvps[eventId] === RsvpStatus.ATTENDING).length;
+    const notAttending = eventGuests.filter(g => g.rsvps[eventId] === RsvpStatus.NOT_ATTENDING).length;
+    const pending = eventGuests.filter(g => g.rsvps[eventId] === RsvpStatus.AWAITING_RESPONSE).length;
     const notInvited = totalGuests - invited;
 
     return {
