@@ -97,10 +97,19 @@ export function useGuestManagement({ eventSeriesId, useContext = true }: UseGues
     const id = generateGuestId(guestData.firstName, guestData.lastName);
     
     try {
+      // Initialize additionalGuests for each event the guest is invited to
+      const additionalGuests: Record<string, number> = {};
+      // Initialize additionalRsvps with the same keys as rsvps, defaulting to 0
+      const additionalRsvps: Record<string, number> = {};
+      
+      Object.keys(guestData.rsvps || {}).forEach(eventId => {
+        additionalGuests[eventId] = guestData.additionalGuests?.[eventId] ?? 0;
+        additionalRsvps[eventId] = 0; // Initialize to 0 for each invited event
+      });
       
       await setDoc(doc(db, 'guests', id), {
         id,
-        eventSeriesId: seriesId, // Add event series id if available
+        eventSeriesId: seriesId,
         eventSeriesAlias: eventSeriesContext?.eventSeries?.alias || '',
         createdBy: user.uid,
         firstName: guestData.firstName,
@@ -108,6 +117,8 @@ export function useGuestManagement({ eventSeriesId, useContext = true }: UseGues
         email: guestData.email || '',
         emailSent: false,
         rsvps: guestData.rsvps || {},
+        additionalGuests,
+        additionalRsvps,
         subGuests: guestData.subGuests || [],
       });
       
@@ -129,12 +140,23 @@ export function useGuestManagement({ eventSeriesId, useContext = true }: UseGues
     if (!guestData.id || !guestData.firstName || !guestData.lastName) return;
     
     try {
+      // Ensure additionalGuests is properly initialized for all events
+      const additionalGuests: Record<string, number> = {};
+      Object.keys(guestData.rsvps || {}).forEach(eventId => {
+        additionalGuests[eventId] = guestData.additionalGuests?.[eventId] ?? 0;
+      });
+      
+      // Preserve existing additionalRsvps if they exist
+      const additionalRsvps = guestData.additionalRsvps || {};
+      
       await updateDoc(doc(db, 'guests', guestData.id), {
         firstName: guestData.firstName,
         lastName: guestData.lastName,
         email: guestData.email || '',
         emailSent: guestData.emailSent || false,
         rsvps: guestData.rsvps || {},
+        additionalGuests,
+        additionalRsvps,
         subGuests: guestData.subGuests || []
       });
       

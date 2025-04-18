@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { Guest, Event } from '@/src/models/interfaces';
+import { Guest, Event, RsvpStatus } from '@/src/models/interfaces';
 
 interface CreateOrUpdateGuestCardProps {
   isOpen: boolean;
@@ -174,12 +174,42 @@ export default function CreateOrUpdateGuestCard({
     
     if (isNaN(numberValue) || numberValue < 0) return;
     
+    // Get current additionalRsvps value for this event
+    const currentAdditionalRsvps = guestData.additionalRsvps?.[eventId] ?? 0;
+    
+    // If the new additionalGuests value is less than current additionalRsvps,
+    // we need to update additionalRsvps to match the new limit
+    const updatedAdditionalRsvps = { ...(guestData.additionalRsvps || {}) };
+    if (numberValue < currentAdditionalRsvps) {
+      updatedAdditionalRsvps[eventId] = numberValue;
+    }
+    
     setGuestData({
       ...guestData,
       additionalGuests: {
         ...(guestData.additionalGuests || {}),
         [eventId]: numberValue
-      }
+      },
+      additionalRsvps: updatedAdditionalRsvps
+    });
+  };
+
+  const handleEventInvitationChange = (eventId: string, isInvited: boolean) => {
+    const updatedRsvps = { ...(guestData.rsvps || {}) };
+    const updatedAdditionalGuests = { ...(guestData.additionalGuests || {}) };
+    
+    if (isInvited) {
+      updatedRsvps[eventId] = RsvpStatus.AWAITING_RESPONSE;
+      updatedAdditionalGuests[eventId] = 0; // Initialize to 0 when invited
+    } else {
+      delete updatedRsvps[eventId];
+      delete updatedAdditionalGuests[eventId];
+    }
+    
+    setGuestData({
+      ...guestData,
+      rsvps: updatedRsvps,
+      additionalGuests: updatedAdditionalGuests
     });
   };
 
@@ -369,35 +399,7 @@ export default function CreateOrUpdateGuestCard({
                             id={`event-${event.id}`}
                             type="checkbox"
                             checked={guestData.rsvps?.[event.id] !== undefined}
-                            onChange={(e) => {
-                              const updatedRsvps = { ...(guestData.rsvps || {}) };
-                              const updatedAdditionalGuests = { ...(guestData.additionalGuests || {}) };
-                              const updatedSubGuests = (guestData.subGuests || []).map(subGuest => ({
-                                ...subGuest,
-                                rsvps: { ...subGuest.rsvps }
-                              }));
-                              
-                              if (e.target.checked) {
-                                updatedRsvps[event.id] = 'pending';
-                                updatedAdditionalGuests[event.id] = 0;
-                                updatedSubGuests.forEach(subGuest => {
-                                  subGuest.rsvps[event.id] = 'pending';
-                                });
-                              } else {
-                                delete updatedRsvps[event.id];
-                                delete updatedAdditionalGuests[event.id];
-                                updatedSubGuests.forEach(subGuest => {
-                                  delete subGuest.rsvps[event.id];
-                                });
-                              }
-                              
-                              setGuestData({
-                                ...guestData,
-                                rsvps: updatedRsvps,
-                                additionalGuests: updatedAdditionalGuests,
-                                subGuests: updatedSubGuests
-                              });
-                            }}
+                            onChange={(e) => handleEventInvitationChange(event.id, e.target.checked)}
                             className="rounded border-[var(--blossom-border)] text-[var(--blossom-pink-primary)] focus:ring-[var(--blossom-pink-primary)] mr-2"
                           />
                           <label htmlFor={`event-${event.id}`} className="text-[var(--blossom-text-dark)] font-medium">

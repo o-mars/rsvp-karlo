@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Event, Guest, SubGuest, RsvpStatus } from '@/src/models/interfaces';
+import { Event, Guest, SubGuest } from '@/src/models/interfaces';
 import DeleteConfirmationModal from '@/src/components/shared/DeleteConfirmationModal';
+import RsvpStatusBadge from '@/src/components/shared/RsvpStatusBadge';
 
 interface GuestListTableRowProps {
   guest: Guest;
@@ -23,29 +24,6 @@ export default function GuestListTableRow({
 }: GuestListTableRowProps) {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  
-  // Formats RSVP status with appropriate styling
-  const RsvpStatusElement = ({ status }: { status: string | undefined }) => {
-    if (!status) {
-      return (
-        <span className="px-2 py-1 rounded-full text-xs font-medium bg-[var(--blossom-pink-light)] text-[var(--blossom-text-dark)]/70">
-          Not Invited
-        </span>
-      );
-    }
-    
-    const classMap: Record<string, string> = {
-      [RsvpStatus.ATTENDING]: 'bg-green-100 text-green-800',
-      [RsvpStatus.NOT_ATTENDING]: 'bg-red-100 text-red-800',
-      [RsvpStatus.AWAITING_RESPONSE]: 'bg-yellow-100 text-yellow-800'
-    };
-    
-    return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${classMap[status] || 'bg-[var(--blossom-pink-light)] text-[var(--blossom-text-dark)]/70'}`}>
-        {status}
-      </span>
-    );
-  };
   
   const handleRowClick = () => {
     onEdit(guest);
@@ -94,7 +72,7 @@ export default function GuestListTableRow({
         <td className="px-6 py-4 whitespace-nowrap text-[var(--blossom-text-dark)]">-</td>
         {events.map((event) => (
           <td key={event.id} className="px-6 py-4 whitespace-nowrap">
-            <RsvpStatusElement status={subGuest.rsvps[event.id]} />
+            <RsvpStatusBadge status={subGuest.rsvps[event.id]} />
           </td>
         ))}
         <td className="px-6 py-4 whitespace-nowrap">
@@ -134,7 +112,7 @@ export default function GuestListTableRow({
         </td>
         {events.map((event) => (
           <td key={event.id} className="px-6 py-4 whitespace-nowrap">
-            <RsvpStatusElement status={guest.rsvps[event.id]} />
+            <RsvpStatusBadge status={guest.rsvps[event.id]} />
           </td>
         ))}
         <td className="px-6 py-4 whitespace-nowrap">

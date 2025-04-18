@@ -167,12 +167,57 @@ export function useRSVPStats({ eventSeriesId }: UseRSVPStatsProps = {}) {
   const getEventStats = (eventId: string): EventStats => {
     const eventGuests = guests.filter(g => g.rsvps && g.rsvps[eventId] !== undefined);
     const totalGuests = guests.length;
-    const invited = eventGuests.length;
-    const responded = eventGuests.filter(g => g.rsvps[eventId] === RsvpStatus.ATTENDING || g.rsvps[eventId] === RsvpStatus.NOT_ATTENDING).length;
-    const attending = eventGuests.filter(g => g.rsvps[eventId] === RsvpStatus.ATTENDING).length;
-    const notAttending = eventGuests.filter(g => g.rsvps[eventId] === RsvpStatus.NOT_ATTENDING).length;
-    const pending = eventGuests.filter(g => g.rsvps[eventId] === RsvpStatus.AWAITING_RESPONSE).length;
-    const notInvited = totalGuests - invited;
+    
+    // Calculate total invited (main guests + their sub-guests + additional guests allowed)
+    const invited = eventGuests.reduce((total, guest) => {
+      const subGuestsCount = (guest.subGuests || []).filter(sg => sg.rsvps[eventId] !== undefined).length;
+      const additionalGuestsAllowed = guest.additionalGuests?.[eventId] ?? 0;
+      return total + 1 + subGuestsCount + additionalGuestsAllowed;
+    }, 0);
+    
+    // Calculate total responded (main guests + sub-guests + additional guests who have responded)
+    const responded = eventGuests.reduce((total, guest) => {
+      const hasResponded = guest.rsvps[eventId] === RsvpStatus.ATTENDING || guest.rsvps[eventId] === RsvpStatus.NOT_ATTENDING;
+      if (!hasResponded) return total;
+      
+      const subGuestsResponded = (guest.subGuests || []).filter(sg => 
+        sg.rsvps[eventId] === RsvpStatus.ATTENDING || sg.rsvps[eventId] === RsvpStatus.NOT_ATTENDING
+      ).length;
+      
+      return total + 1 + subGuestsResponded + (guest.additionalGuests?.[eventId] ?? 0);
+    }, 0);
+    
+    // Calculate total attending (main guests + sub-guests + additional guests who are attending)
+    const attending = eventGuests.reduce((total, guest) => {
+      const mainGuestAttending = guest.rsvps[eventId] === RsvpStatus.ATTENDING ? 1 : 0;
+      
+      const subGuestsAttending = (guest.subGuests || []).filter(sg => 
+        sg.rsvps[eventId] === RsvpStatus.ATTENDING
+      ).length;
+      
+      const additionalGuestsAttending = guest.additionalRsvps?.[eventId] ?? 0;
+      
+      return total + mainGuestAttending + subGuestsAttending + additionalGuestsAttending;
+    }, 0);
+    
+    // Calculate total not attending (main guests + sub-guests)
+    const notAttending = eventGuests.reduce((total, guest) => {
+      const mainGuestNotAttending = guest.rsvps[eventId] === RsvpStatus.NOT_ATTENDING ? 1 : 0;
+      
+      const subGuestsNotAttending = (guest.subGuests || []).filter(sg => 
+        sg.rsvps[eventId] === RsvpStatus.NOT_ATTENDING
+      ).length;
+
+      const additionalGuestsNotAttending = (guest.additionalGuests?.[eventId] ?? 0) - (guest.additionalRsvps?.[eventId] ?? 0);
+      
+      return total + mainGuestNotAttending + subGuestsNotAttending + additionalGuestsNotAttending;
+    }, 0);
+    
+    // Calculate pending (invited - responded)
+    const pending = invited - responded;
+    
+    // Calculate not invited (total guests - invited)
+    const notInvited = totalGuests - eventGuests.length;
 
     return {
       totalGuests,

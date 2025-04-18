@@ -16,6 +16,7 @@ function RSVPContent() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [additionalGuestsCount, setAdditionalGuestsCount] = useState<Record<string, number>>({});
 
   useEffect(() => {
     const urlToken = searchParams.get('c');
@@ -103,8 +104,25 @@ function RSVPContent() {
         setGuest({ ...guest, subGuests: updatedSubGuests });
       } else {
         const updatedRsvps = { ...guest.rsvps, [eventId]: response };
-        await updateDoc(doc(db, 'guests', guest.id), { rsvps: updatedRsvps });
-        setGuest({ ...guest, rsvps: updatedRsvps });
+        const updatedAdditionalRsvps = { ...guest.additionalRsvps };
+        
+        // If the guest is now attending, ensure the event exists in additionalRsvps with default 0
+        if (response === RsvpStatus.ATTENDING) {
+          updatedAdditionalRsvps[eventId] = updatedAdditionalRsvps[eventId] ?? 0;
+        } else {
+          // If not attending, remove from additionalRsvps
+          delete updatedAdditionalRsvps[eventId];
+        }
+        
+        await updateDoc(doc(db, 'guests', guest.id), { 
+          rsvps: updatedRsvps,
+          additionalRsvps: updatedAdditionalRsvps
+        });
+        setGuest({ 
+          ...guest, 
+          rsvps: updatedRsvps,
+          additionalRsvps: updatedAdditionalRsvps
+        });
       }
     } catch (error) {
       console.error('Error updating RSVP:', error);
@@ -112,6 +130,30 @@ function RSVPContent() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleAdditionalGuestsChange = (eventId: string, count: number) => {
+    if (!guest) return;
+    
+    // Ensure the count doesn't exceed the allowed additionalGuests
+    const maxAdditionalGuests = guest.additionalGuests?.[eventId] ?? 0;
+    const validatedCount = Math.min(count, maxAdditionalGuests);
+    
+    setAdditionalGuestsCount(prev => ({
+      ...prev,
+      [eventId]: validatedCount
+    }));
+    
+    // Update the guest's additionalRsvps in Firestore
+    const updatedAdditionalRsvps = { ...guest.additionalRsvps, [eventId]: validatedCount };
+    updateDoc(doc(db, 'guests', guest.id), { additionalRsvps: updatedAdditionalRsvps })
+      .then(() => {
+        setGuest({ ...guest, additionalRsvps: updatedAdditionalRsvps });
+      })
+      .catch(error => {
+        console.error('Error updating additional guests:', error);
+        setError('Failed to update additional guests. Please try again.');
+      });
   };
 
   // Helper to format timestamp or date/time
@@ -255,32 +297,53 @@ function RSVPContent() {
     );
   }
 
-  const renderRSVPButtons = (guestId: string, rsvps: Record<string, string>, eventId: string, isSubGuest: boolean = false) => (
-    <div className="flex space-x-4">
-      <button
-        onClick={() => handleRSVP(guestId, eventId, RsvpStatus.ATTENDING, isSubGuest)}
-        disabled={saving}
-        className={`px-4 py-2 rounded ${
-          rsvps[eventId] === RsvpStatus.ATTENDING
-            ? 'bg-green-600 text-white'
-            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-        }`}
-      >
-        Attending
-      </button>
-      <button
-        onClick={() => handleRSVP(guestId, eventId, RsvpStatus.NOT_ATTENDING, isSubGuest)}
-        disabled={saving}
-        className={`px-4 py-2 rounded ${
-          rsvps[eventId] === RsvpStatus.NOT_ATTENDING
-            ? 'bg-red-600 text-white'
-            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-        }`}
-      >
-        Not Attending
-      </button>
-    </div>
-  );
+  const renderRSVPButtons = (guestId: string, rsvps: Record<string, string>, eventId: string, isSubGuest: boolean = false) => {
+    const maxAdditionalGuests = guest?.additionalGuests?.[eventId] ?? 0;
+    const currentAdditionalGuests = additionalGuestsCount[eventId] ?? 0;
+
+    return (
+      <div className="space-y-4">
+        <div className="flex space-x-4">
+          <button
+            onClick={() => handleRSVP(guestId, eventId, RsvpStatus.ATTENDING, isSubGuest)}
+            disabled={saving}
+            className={`px-4 py-2 rounded ${
+              rsvps[eventId] === RsvpStatus.ATTENDING
+                ? 'bg-green-600 text-white'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+          >
+            Attending
+          </button>
+          <button
+            onClick={() => handleRSVP(guestId, eventId, RsvpStatus.NOT_ATTENDING, isSubGuest)}
+            disabled={saving}
+            className={`px-4 py-2 rounded ${
+              rsvps[eventId] === RsvpStatus.NOT_ATTENDING
+                ? 'bg-red-600 text-white'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+          >
+            Not Attending
+          </button>
+        </div>
+        {maxAdditionalGuests > 0 && rsvps[eventId] === RsvpStatus.ATTENDING && (
+          <div className="flex items-center space-x-2">
+            <label className="text-sm text-[var(--blossom-text-dark)]">How many additional guests will you be bringing?</label>
+            <select
+              value={currentAdditionalGuests}
+              onChange={(e) => handleAdditionalGuestsChange(eventId, parseInt(e.target.value))}
+              className="px-2 py-1 border border-[var(--blossom-border)] rounded text-sm text-[var(--blossom-text-dark)] bg-white"
+            >
+              {[...Array(maxAdditionalGuests + 1)].map((_, i) => (
+                <option key={i} value={i}>{i}</option>
+              ))}
+            </select>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <BackgroundContainer>
@@ -315,11 +378,13 @@ function RSVPContent() {
                       {renderRSVPButtons(guest.id, guest.rsvps, event.id)}
                     </div>
 
-                    {(guest.subGuests || []).map((subGuest) => (
-                      <div key={subGuest.id} className="border-t border-gray-200 pt-4">
-                        <h4 className="text-gray-800 font-medium mb-2">{subGuest.firstName} {subGuest.lastName}</h4>
-                        {renderRSVPButtons(subGuest.id, subGuest.rsvps, event.id, true)}
-                      </div>
+                    {(guest.subGuests || [])
+                      .filter(subGuest => subGuest.rsvps[event.id] !== undefined)
+                      .map((subGuest) => (
+                        <div key={subGuest.id} className="border-t border-gray-200 pt-4">
+                          <h4 className="text-gray-800 font-medium mb-2">{subGuest.firstName} {subGuest.lastName}</h4>
+                          {renderRSVPButtons(subGuest.id, subGuest.rsvps, event.id, true)}
+                        </div>
                     ))}
                   </div>
                 </div>

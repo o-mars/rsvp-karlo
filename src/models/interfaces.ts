@@ -38,7 +38,6 @@ export interface SubGuest {
   firstName: string;
   lastName: string;
   rsvps: Record<string, string>;
-  dietaryRestrictions?: string;
 }
 
 export interface Guest {
@@ -54,6 +53,7 @@ export interface Guest {
   rsvps: Record<string, string>;
   subGuests: SubGuest[];
   additionalGuests?: Record<string, number>;
+  additionalRsvps?: Record<string, number>;
 }
 
 export interface EventStats {
