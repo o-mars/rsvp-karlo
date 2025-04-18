@@ -1,46 +1,51 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { db } from '../../../utils/firebase';
-import { collection, getDocs, doc, query, where, limit, writeBatch, Timestamp } from 'firebase/firestore';
+import { useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { Timestamp } from 'firebase/firestore';
 import Link from 'next/link';
 import CreateOrUpdateEventCard from '@/src/components/Events/CreateOrUpdateEventCard/CreateOrUpdateEventCard';
 import CreateOrUpdateEventSeriesCard from '@/src/components/EventSeries/CreateOrUpdateEventSeriesCard/CreateOrUpdateEventSeriesCard';
 import CreateOrUpdateGuestCard from '@/src/components/Guests/CreateOrUpdateGuestCard/CreateOrUpdateGuestCard';
-import { Event, EventSeries as EventSeriesType, Guest } from '@/src/models/interfaces';
+import { Event, Guest } from '@/src/models/interfaces';
 import { useAuth } from '../../../src/contexts/AuthContext';
 import EventCard from '@/src/components/Events/EventCard/EventCard';
 import { useEventManagement } from '@/src/hooks/useEventManagement';
 import GuestListTable from '@/src/components/Guests/GuestListTable/GuestListTable';
 import { useGuestManagement } from '@/src/hooks/useGuestManagement';
-
-interface EventSeries {
-  id: string;
-  name: string;
-  alias: string;
-  description?: string;
-  createdBy: string;
-  createdAt: Timestamp;
-}
+import EventSeriesStatusView from '@/src/components/RSVPs/EventSeriesStatusView/EventSeriesStatusView';
+import { useEventSeriesManagement } from '@/src/hooks/useEventSeriesManagement';
 
 export default function EventsPage() {
-  const [events, setEvents] = useState<Event[]>([]);
-  const [loading, setLoading] = useState(true);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
   const [isGuestModalOpen, setIsGuestModalOpen] = useState(false);
   const [editingGuest, setEditingGuest] = useState<Guest | null>(null);
-  const [eventSeries, setEventSeries] = useState<EventSeries | null>(null);
   const [activeTab, setActiveTab] = useState('events');
   const [isEditingEventSeries, setIsEditingEventSeries] = useState(false);
-  const [aliasDoc, setAliasDoc] = useState<{id: string, eventSeriesId: string} | null>(null);
   
-  const router = useRouter();
   const searchParams = useSearchParams();
   const alias = searchParams.get('a');
   const { user } = useAuth();
-  const { handleDeleteEvent, handleAddEvent, handleUpdateEvent } = useEventManagement({ useContext: false });
+  
+  const { 
+    eventSeries, 
+    loading: eventSeriesLoading, 
+    error: eventSeriesError,
+    handleUpdateEventSeries
+  } = useEventSeriesManagement({ alias, useContext: false });
+  
+  const { 
+    events, 
+    loading: eventsLoading, 
+    handleDeleteEvent, 
+    handleAddEvent, 
+    handleUpdateEvent 
+  } = useEventManagement({ 
+    eventSeriesId: eventSeries?.id,
+    useContext: false 
+  });
+  
   const { 
     guests, 
     selectedGuests, 
@@ -56,154 +61,9 @@ export default function EventsPage() {
     useContext: false 
   });
 
-  useEffect(() => {
-    if (alias) {
-      fetchEventSeries();
-      fetchEvents();
-    } else {
-      router.replace('/admin');
-    }
-  }, [alias, router]);
-
-  const fetchEventSeries = async () => {
-    if (!alias) return;
-    
-    try {
-      // Find the event series by alias
-      const eventSeriesQuery = query(
-        collection(db, 'eventSeries'), 
-        where('alias', '==', alias),
-        limit(1)
-      );
-      
-      const querySnapshot = await getDocs(eventSeriesQuery);
-      
-      if (querySnapshot.empty) {
-        router.replace('/admin');
-        return;
-      }
-      
-      // Get the first matching document
-      const eventSeriesDoc = querySnapshot.docs[0];
-      setEventSeries({
-        id: eventSeriesDoc.id,
-        ...eventSeriesDoc.data()
-      } as EventSeries);
-      
-      // Find the alias document
-      const aliasQuery = query(
-        collection(db, 'aliases'),
-        where('alias', '==', alias)
-      );
-      const aliasSnapshot = await getDocs(aliasQuery);
-      
-      if (!aliasSnapshot.empty) {
-        const aliasDocData = aliasSnapshot.docs[0];
-        setAliasDoc({
-          id: aliasDocData.id,
-          eventSeriesId: aliasDocData.data().eventSeriesId
-        });
-      }
-      
-    } catch (error) {
-      console.error('Error fetching event series:', error);
-    }
-  };
-
-  const fetchEvents = async () => {
-    if (!alias) return;
-    
-    try {
-      // Query events for this event series using the alias
-      const q = query(
-        collection(db, 'events'),
-        where('eventSeriesAlias', '==', alias)
-      );
-      const querySnapshot = await getDocs(q);
-      const eventsList = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Event[];
-      
-      // Sort by date
-      eventsList.sort((a, b) => {
-        const dateA = a.startDateTime?.toMillis ? a.startDateTime.toMillis() : 0;
-        const dateB = b.startDateTime?.toMillis ? b.startDateTime.toMillis() : 0;
-        return dateA - dateB;
-      });
-      
-      setEvents(eventsList);
-    } catch (error) {
-      console.error('Error fetching events:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleUpdateEventSeries = async (updatedEventSeries: Partial<EventSeriesType>) => {
-    if (!eventSeries || !aliasDoc) return;
-    
-    try {
-      // Create a batch to update both documents atomically
-      const batch = writeBatch(db);
-      
-      // Update the event series document
-      const eventSeriesRef = doc(db, 'eventSeries', eventSeries.id);
-      batch.update(eventSeriesRef, updatedEventSeries);
-      
-      // If alias has changed, update the alias document and all events
-      if (updatedEventSeries.alias && updatedEventSeries.alias !== alias && alias) {
-        // Update the alias in the alias document
-        const aliasDocRef = doc(db, 'aliases', aliasDoc.id);
-        batch.update(aliasDocRef, { alias: updatedEventSeries.alias });
-        
-        // Update all events that use this alias
-        const eventsQuery = query(
-          collection(db, 'events'),
-          where('eventSeriesAlias', '==', alias)
-        );
-        const eventsSnapshot = await getDocs(eventsQuery);
-        
-        eventsSnapshot.forEach(eventDoc => {
-          batch.update(doc(db, 'events', eventDoc.id), {
-            eventSeriesAlias: updatedEventSeries.alias
-          });
-        });
-      }
-      
-      // Commit the batch
-      await batch.commit();
-      
-      // Refresh data or redirect if the alias changed
-      if (updatedEventSeries.alias && updatedEventSeries.alias !== alias) {
-        router.push(`/admin/events/?a=${updatedEventSeries.alias}`);
-      } else {
-        // Update the local state
-        setEventSeries(prev => prev ? { ...prev, ...updatedEventSeries } : null);
-      }
-      
-      // Close the modal
-      setIsEditingEventSeries(false);
-    } catch (error) {
-      console.error('Error updating event series:', error);
-      alert('Failed to update event series. Please try again.');
-    }
-  };
-
-  const handleEventDelete = async (id: string) => {
-    try {
-      await handleDeleteEvent(id);
-      fetchEvents();
-    } catch (error) {
-      console.error('Error deleting event:', error);
-      alert('Failed to delete event');
-    }
-  };
-
   const handleEventSubmit = async (eventData: Partial<Event>, startDateTime: Date, endDateTime: Date | null) => {
     try {
       if (editingEvent) {
-        // For updating existing event
         await handleUpdateEvent({
           ...eventData,
           id: editingEvent.id,
@@ -211,7 +71,6 @@ export default function EventsPage() {
           ...(endDateTime ? { endDateTime: Timestamp.fromDate(endDateTime) } : {})
         });
       } else {
-        // For creating new event
         await handleAddEvent({
           ...eventData,
           startDateTime: Timestamp.fromDate(startDateTime),
@@ -220,10 +79,6 @@ export default function EventsPage() {
         });
       }
       
-      // Refresh events after adding/updating
-      fetchEvents();
-      
-      // Reset state
       setEditingEvent(null);
       setIsEventModalOpen(false);
     } catch (error) {
@@ -235,26 +90,15 @@ export default function EventsPage() {
   const handleGuestSubmit = async (guest: Partial<Guest>) => {
     try {
       if (editingGuest) {
-        // For updating existing guest
         await handleUpdateGuest({
           ...guest,
           id: editingGuest.id
         });
-        
-        console.log('Guest updated successfully:', guest.firstName, guest.lastName);
       } else {
-        // For creating new guest
-        const guestId = await handleAddGuest(guest);
-        
-        if (guestId) {
-          console.log('Guest created successfully:', guest.firstName, guest.lastName);
-        }
+        await handleAddGuest(guest);
       }
       
-      // Refresh the guest data after operation
       await fetchGuestData();
-      
-      // Reset state
       setEditingGuest(null);
       setIsGuestModalOpen(false);
     } catch (error) {
@@ -263,6 +107,8 @@ export default function EventsPage() {
     }
   };
 
+  const loading = eventSeriesLoading || eventsLoading;
+
   if (loading) return (
     <div className="p-8 text-[var(--blossom-text-dark)]">
       <div className="flex justify-center p-6">
@@ -270,6 +116,17 @@ export default function EventsPage() {
       </div>
     </div>
   );
+
+  if (eventSeriesError) {
+    return (
+      <div className="p-8 text-[var(--blossom-text-dark)]">
+        <div className="bg-red-100 border border-red-400 text-red-700 p-4 rounded-lg">
+          <h2 className="text-xl font-semibold mb-2">Error</h2>
+          <p>{eventSeriesError}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-8 text-[var(--blossom-text-dark)]">
@@ -378,7 +235,7 @@ export default function EventsPage() {
                     setEditingEvent(event);
                     setIsEventModalOpen(true);
                   }} 
-                  onDelete={handleEventDelete}
+                  onDelete={handleDeleteEvent}
                 />
               ))}
             </div>
@@ -406,10 +263,7 @@ export default function EventsPage() {
       
       {/* RSVP Tab Content */}
       {activeTab === 'rsvp' && (
-        <div className="bg-white border border-[var(--blossom-border)] shadow rounded-lg p-6">
-          <h2 className="text-xl font-semibold mb-4">RSVPs</h2>
-          <p className="text-[var(--blossom-text-dark)]/70">RSVPs and analytics coming soon...</p>
-        </div>
+        <EventSeriesStatusView />
       )}
 
       {/* Add/Edit Event Modal */}

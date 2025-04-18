@@ -1,59 +1,21 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { db } from '../../utils/firebase';
-import { collection, getDocs, query, where } from 'firebase/firestore';
 import { useAuth } from '../../src/contexts/AuthContext';
 import EventSeriesCard from '@/src/components/EventSeries/EventSeriesCard/EventSeriesCard';
-import { EventSeries } from '@/src/models/interfaces';
-
+import { useEventSeriesManagement } from '@/src/hooks/useEventSeriesManagement';
 
 export default function AdminDashboard() {
-  const [eventSeries, setEventSeries] = useState<EventSeries[]>([]);
-  const [eventSeriesLoading, setEventSeriesLoading] = useState(true);
   const { user } = useAuth();
   const router = useRouter();
-
-  useEffect(() => {
-    if (user) {
-      fetchEventSeries();
-    }
-  }, [user]);
-
-  const fetchEventSeries = async () => {
-    if (!user) return;
-
-    try {
-      setEventSeriesLoading(true);
-      
-      // Get all event series for the current user without sorting
-      const q = query(
-        collection(db, 'eventSeries'),
-        where('createdBy', '==', user.uid)
-      );
-      
-      const querySnapshot = await getDocs(q);
-      const seriesList = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as EventSeries[];
-      
-      // Sort client-side by createdAt in descending order
-      seriesList.sort((a, b) => {
-        const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : a.createdAt.toDate();
-        const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : b.createdAt.toDate();
-        return dateB.getTime() - dateA.getTime();
-      });
-      
-      setEventSeries(seriesList);
-    } catch (error) {
-      console.error('Error fetching event series:', error);
-    } finally {
-      setEventSeriesLoading(false);
-    }
-  };
+  
+  const { 
+    eventSeriesList: eventSeries, 
+    loading: eventSeriesLoading,
+    error: eventSeriesError,
+    handleDeleteEventSeries
+  } = useEventSeriesManagement({ userId: user?.uid || null, useContext: false });
 
   const handleCreateNew = () => {
     router.push('/admin/events/new/');
@@ -80,6 +42,11 @@ export default function AdminDashboard() {
           <div className="flex justify-center p-6">
             <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[var(--blossom-pink-primary)]"></div>
           </div>
+        ) : eventSeriesError ? (
+          <div className="bg-red-100 border border-red-400 text-red-700 p-4 rounded-lg">
+            <h2 className="text-xl font-semibold mb-2">Error</h2>
+            <p>{eventSeriesError}</p>
+          </div>
         ) : eventSeries.length === 0 ? (
           <div className="bg-white border border-[var(--blossom-border)] rounded-lg p-6 text-center">
             <h2 className="text-xl font-semibold mb-2">No Occasions Found</h2>
@@ -91,7 +58,7 @@ export default function AdminDashboard() {
               <EventSeriesCard 
                 key={series.id} 
                 series={series} 
-                onDelete={fetchEventSeries}
+                onDelete={handleDeleteEventSeries}
               />
             ))}
           </div>

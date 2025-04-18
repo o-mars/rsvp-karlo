@@ -28,14 +28,14 @@ export default function EventSeriesStatusView() {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-[50vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pink-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[var(--blossom-pink-primary)]"></div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-red-800 text-white p-4 rounded-lg">
+      <div className="bg-red-100 border border-red-400 text-red-700 p-4 rounded-lg">
         <h2 className="text-xl font-semibold mb-2">Error</h2>
         <p>{error}</p>
       </div>
@@ -44,8 +44,8 @@ export default function EventSeriesStatusView() {
 
   return (
     <div className="space-y-8">
-      <div className="bg-slate-800 shadow rounded-lg p-6">
-        <h2 className="text-xl font-semibold mb-4 text-white">
+      <div className="bg-[var(--blossom-card-bg-primary)] border border-[var(--blossom-border)] shadow rounded-lg p-6">
+        <h2 className="text-xl font-semibold mb-4 text-[var(--blossom-text-dark)]">
           {eventSeries ? `${eventSeries.name} Events` : 'All Events'} Status
         </h2>
         {displayEvents.length > 0 ? (
@@ -59,7 +59,7 @@ export default function EventSeriesStatusView() {
             ))}
           </div>
         ) : (
-          <div className="text-center py-8 text-slate-400">
+          <div className="text-center py-8 text-[var(--blossom-text-dark)]/70">
             <p className="text-lg font-medium">No events found</p>
             <p className="mt-1">There are no events for the selected event series</p>
           </div>
