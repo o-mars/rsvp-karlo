@@ -6,6 +6,8 @@ import { db } from '@/utils/firebase';
 import { Guest, Event } from '@/src/models/interfaces';
 import { useEventSeries } from '@/src/contexts/EventSeriesContext';
 import { useAuth } from '@/src/contexts/AuthContext';
+import { useEmailService } from './useEmailService';
+
 interface UseGuestManagementProps {
   eventSeriesId?: string;
   useContext?: boolean;
@@ -13,6 +15,7 @@ interface UseGuestManagementProps {
 
 export function useGuestManagement({ eventSeriesId, useContext = true }: UseGuestManagementProps = {}) {
   const { user } = useAuth();
+  const { sendBulkInviteEmails } = useEmailService();
   const [guests, setGuests] = useState<Guest[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
@@ -195,12 +198,8 @@ export function useGuestManagement({ eventSeriesId, useContext = true }: UseGues
     }
   };
 
-  const handleBulkEmail = async () => {
+  const handleBulkEmail = async (occasionName: string) => {
     try {
-      if (!process.env.NEXT_PUBLIC_EMAIL_SERVICE_URL) {
-        throw new Error('Email service URL is not configured');
-      }
-
       const selectedGuestsData = guests
         .filter(g => selectedGuests.includes(g.id))
         .filter(g => g.email); // Only include guests with email addresses
@@ -209,20 +208,26 @@ export function useGuestManagement({ eventSeriesId, useContext = true }: UseGues
         throw new Error('No valid email addresses selected');
       }
 
-      const response = await fetch(process.env.NEXT_PUBLIC_EMAIL_SERVICE_URL + '/send-emails', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      const emailData = selectedGuestsData.map(guest => ({
+        guestName: `${guest.firstName} ${guest.lastName}`,
+        eventName: occasionName,
+        loginCode: guest.id,
+        eCardUrl: '/WeddingGenericInvite.jpg',
+        buttonStyle: {
+          backgroundColor: '#ec4899',
+          textColor: '#ffffff',
         },
-        body: JSON.stringify({
-          guestIds: selectedGuestsData.map(g => g.id)
-        }),
-      });
+      }));
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to send emails: ${errorText}`);
-      }
+      await sendBulkInviteEmails(emailData);
+
+      const updatePromises = selectedGuestsData.map(guest =>
+        updateDoc(doc(db, 'guests', guest.id), {
+          emailSent: true,
+        })
+      );
+
+      await Promise.all(updatePromises);
 
       return selectedGuestsData.length;
     } catch (error) {
@@ -232,28 +237,26 @@ export function useGuestManagement({ eventSeriesId, useContext = true }: UseGues
   };
 
   const generateGuestId = (firstName: string, lastName: string) => {
-    // Clean and normalize names
-    const cleanFirstName = firstName.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
-    const cleanLastName = lastName.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+    const cleanFirstName = firstName.trim().replace(/[^A-Za-z0-9]/g, '');
+    const cleanLastName = lastName.trim().replace(/[^A-Za-z0-9]/g, '');
     
-    // Create name prefix
     const namePrefix = cleanFirstName && cleanLastName 
       ? `${cleanFirstName}-${cleanLastName}-`
       : '';
-      
-    // Generate 20-character random suffix (same length as Firebase)
-    const randomBytes = new Uint8Array(15); // 15 bytes = 20 base64 chars
+
+    const numCharsToGenerate = 8;
+    const bytesForBase64Chars = 6;
+    const randomBytes = new Uint8Array(bytesForBase64Chars);
     crypto.getRandomValues(randomBytes);
     const randomSuffix = btoa(String.fromCharCode(...randomBytes))
       .replace(/\+/g, '-')
       .replace(/\//g, '_')
       .replace(/=+$/, '')
-      .substring(0, 20);
+      .substring(0, numCharsToGenerate);
       
     return namePrefix + randomSuffix;
   }
 
-  // Initialize data
   useEffect(() => {
     fetchData();
   }, [eventSeriesId, eventSeriesContext?.eventSeries?.id]);

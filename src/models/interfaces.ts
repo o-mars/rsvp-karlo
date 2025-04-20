@@ -22,6 +22,7 @@ export interface Event {
   description?: string;
   createdAt: Timestamp;
   additionalFields?: Record<string, string>;
+  inviteImageUrl?: string;
 }
 
 export interface EventSeries {
