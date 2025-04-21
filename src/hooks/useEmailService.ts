@@ -1,6 +1,5 @@
 import { render } from '@react-email/render';
 import { RSVPKarloInviteEmail } from '@/src/emails/rsvp-invite';
-import { getOptimizedBase64Image } from '@/src/utils/image';
 
 interface SendInviteEmailProps {
   eventName: string;
@@ -20,8 +19,20 @@ export function useEmailService() {
     guestIds,
   }: SendInviteEmailProps) => {
     try {
-      // Convert the image to base64
-      const base64Image = await getOptimizedBase64Image(eCardImage);
+      // Convert the image to base64 using the API route
+      const response = await fetch('/api/process-image', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ imagePath: eCardImage }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to process image');
+      }
+
+      const { base64Image } = await response.json();
 
       // Render the email template to HTML
       const emailHtml = await render(
@@ -33,7 +44,7 @@ export function useEmailService() {
       );
 
       // Send to your email service
-      const response = await fetch(process.env.NEXT_PUBLIC_EMAIL_SERVICE_URL + '/send-emails', {
+      const emailResponse = await fetch(process.env.NEXT_PUBLIC_EMAIL_SERVICE_URL + '/send-emails', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -47,11 +58,11 @@ export function useEmailService() {
         }),
       });
 
-      if (!response.ok) {
+      if (!emailResponse.ok) {
         throw new Error('Failed to send email');
       }
 
-      return response.json();
+      return emailResponse.json();
     } catch (error) {
       console.error('Error sending invite email:', error);
       throw error;
