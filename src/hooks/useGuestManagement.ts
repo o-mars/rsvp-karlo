@@ -210,7 +210,7 @@ export function useGuestManagement({ eventSeriesId, useContext = true }: UseGues
 
       const emailData = {
         eventName: occasionName,
-        eCardUrl: '/WeddingGenericInvite.jpg',
+        eCardImage: '/WeddingGenericInvite.jpg',
         buttonStyle: {
           backgroundColor: '#ec4899',
           textColor: '#ffffff',

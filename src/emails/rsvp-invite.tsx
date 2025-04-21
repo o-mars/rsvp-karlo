@@ -21,7 +21,7 @@ const COLORS = {
 
 interface RSVPKarloInviteEmailProps {
   eventName: string;
-  eCardUrl: string;
+  eCardImage: string;
   buttonStyle?: {
     backgroundColor?: string;
     textColor?: string;
@@ -35,7 +35,7 @@ const defaultButtonStyle = {
 
 export const RSVPKarloInviteEmail = ({
   eventName,
-  eCardUrl,
+  eCardImage,
   buttonStyle = defaultButtonStyle,
 }: RSVPKarloInviteEmailProps) => (
   <Html>
@@ -65,7 +65,7 @@ export const RSVPKarloInviteEmail = ({
 
         <Section style={imageSection}>
           <Img
-            src={eCardUrl}
+            src={eCardImage}
             width="100%"
             height="auto"
             alt="Wedding Invitation"

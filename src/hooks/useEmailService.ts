@@ -1,9 +1,10 @@
 import { render } from '@react-email/render';
 import { RSVPKarloInviteEmail } from '@/src/emails/rsvp-invite';
+import { getOptimizedBase64Image } from '@/src/utils/image';
 
 interface SendInviteEmailProps {
   eventName: string;
-  eCardUrl: string;
+  eCardImage: string;
   buttonStyle?: {
     backgroundColor?: string;
     textColor?: string;
@@ -14,16 +15,19 @@ interface SendInviteEmailProps {
 export function useEmailService() {
   const sendInviteEmail = async ({
     eventName,
-    eCardUrl,
+    eCardImage,
     buttonStyle,
     guestIds,
   }: SendInviteEmailProps) => {
     try {
+      // Convert the image to base64
+      const base64Image = await getOptimizedBase64Image(eCardImage);
+
       // Render the email template to HTML
       const emailHtml = await render(
         RSVPKarloInviteEmail({
           eventName,
-          eCardUrl,
+          eCardImage: base64Image,
           buttonStyle,
         })
       );
