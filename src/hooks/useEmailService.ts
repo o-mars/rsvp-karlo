@@ -21,7 +21,10 @@ export function useEmailService() {
   }: SendInviteEmailProps) => {
     try {
       // Convert the image to base64 using the client-side utility
-      const base64Image = await getOptimizedBase64Image(eCardImage);
+      const base64Image = await getOptimizedBase64Image(eCardImage).catch(error => {
+        console.error('Error processing image:', error);
+        throw new Error('Failed to process image for email');
+      });
 
       // Render the email template to HTML
       const emailHtml = await render(
@@ -32,7 +35,6 @@ export function useEmailService() {
         })
       );
 
-      // Send to your email service
       const response = await fetch(process.env.NEXT_PUBLIC_EMAIL_SERVICE_URL + '/send-emails', {
         method: 'POST',
         headers: {
@@ -53,7 +55,7 @@ export function useEmailService() {
 
       return response.json();
     } catch (error) {
-      console.error('Error sending invite email:', error);
+      console.error('Error in email process:', error);
       throw error;
     }
   };

@@ -112,9 +112,9 @@ app.post('/send-emails', async (req, res) => {
 
       // Replace placeholders in the template with guest-specific data
       const personalizedHtml = template.html
-        .replace('{{firstName}}', guest.firstName)
-        .replace('{{lastName}}', guest.lastName)
-        .replace('{{loginCode}}', guest.id);
+        .replace(/__FIRST_NAME__/g, guest.firstName)
+        .replace(/__LAST_NAME__/g, guest.lastName)
+        .replace(/__LOGIN_CODE__/g, guest.id);
 
       await resend.emails.send({
         from: 'invite@rsvpkarlo.com',

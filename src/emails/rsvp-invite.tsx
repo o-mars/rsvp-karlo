@@ -44,14 +44,14 @@ export const RSVPKarloInviteEmail = ({
     <Body style={main}>
       <Container style={container}>
         <Section style={contentSection}>
-          <Heading style={h1}>Dear {"{{firstName}} {{lastName}}"},</Heading>
+          <Heading style={h1}>Dear __FIRST_NAME__ __LAST_NAME__,</Heading>
           <Text style={text}>
             We are delighted to invite you to {eventName}. Please RSVP using the button below.
           </Text>
           
           <Section style={buttonSection}>
             <Button
-              href={`https://rsvpkarlo.com/rsvp/?c={{loginCode}}`}
+              href={`https://rsvpkarlo.com/rsvp/?c=__LOGIN_CODE__`}
               style={{
                 ...button,
                 backgroundColor: buttonStyle.backgroundColor,
@@ -70,6 +70,7 @@ export const RSVPKarloInviteEmail = ({
             height="auto"
             alt="Wedding Invitation"
             style={image}
+            data-cid="wedding-invitation"
           />
         </Section>
 
@@ -78,7 +79,7 @@ export const RSVPKarloInviteEmail = ({
             <Text style={text}>
               Or use this RSVP code:
             </Text>
-            <code style={code}>{"{{loginCode}}"}</code>
+            <code style={code}>__LOGIN_CODE__</code>
           </Section>
         </Section>
       </Container>
