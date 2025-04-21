@@ -30,7 +30,6 @@ const resend = new Resend(apiKey);
 const corsOptions = {
   origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
     const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [
-      'http://localhost:3000',
       'https://rsvpkarlo.com',
       'https://api.rsvpkarlo.com',
       'https://rsvp-karlo-45828692892.us-central1.run.app'
@@ -52,15 +51,6 @@ const corsOptions = {
   optionsSuccessStatus: 204
 };
 
-// Type definitions
-interface Event {
-  id: string;
-  name: string;
-  date: string;
-  time: string;
-  location: string;
-}
-
 interface Guest {
   id: string;
   firstName: string;
@@ -70,6 +60,10 @@ interface Guest {
 }
 
 interface SendEmailsRequest {
+  template: {
+    html: string;
+    subject: string;
+  };
   guestIds: string[];
 }
 
@@ -97,18 +91,11 @@ app.options('*', cors(corsOptions));
 // Email sending endpoint
 app.post('/send-emails', async (req, res) => {
   try {
-    const { guestIds } = req.body as SendEmailsRequest;
+    const { template, guestIds } = req.body as SendEmailsRequest;
 
-    if (!guestIds || !Array.isArray(guestIds) || guestIds.length === 0) {
-      return res.status(400).json({ error: 'No guest IDs provided' });
+    if (!template || !guestIds || !Array.isArray(guestIds) || guestIds.length === 0) {
+      return res.status(400).json({ error: 'Invalid request data' });
     }
-
-    // Get all events for the email content
-    const eventsSnapshot = await admin.firestore().collection('events').get();
-    const events = eventsSnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    })) as Event[];
 
     // Get the selected guests
     const selectedGuests: Guest[] = [];
@@ -123,35 +110,17 @@ app.post('/send-emails', async (req, res) => {
     for (const guest of selectedGuests) {
       if (!guest.email) continue;
 
-      // Get the events this guest is invited to
-      const invitedEvents = events.filter(event => guest.rsvps[event.id] !== undefined);
-      
-      if (invitedEvents.length === 0) {
-        console.log(`Skipping ${guest.email} - no events invited to`);
-        continue;
-      }
-
-      const eventList = invitedEvents.map(event => `
-        <li>
-          <strong>${event.name}</strong><br>
-          ${event.date} at ${event.time}<br>
-          ${event.location}
-        </li>
-      `).join('');
+      // Replace placeholders in the template with guest-specific data
+      const personalizedHtml = template.html
+        .replace('{{firstName}}', guest.firstName)
+        .replace('{{lastName}}', guest.lastName)
+        .replace('{{loginCode}}', guest.id);
 
       await resend.emails.send({
         from: 'invite@rsvpkarlo.com',
         to: guest.email,
-        subject: 'You\'re Invited!',
-        html: `
-          <p>Hi ${guest.firstName} ${guest.lastName},</p>
-          <p>You're invited to our events! Please RSVP using the link below:</p>
-          <ul>
-            ${eventList}
-          </ul>
-          <p><a href="https://rsvpkarlo.com/rsvp?token=${guest.id}">Click here to RSVP</a></p>
-          <p>Best regards,<br>The Event Team</p>
-        `
+        subject: template.subject,
+        html: personalizedHtml
       });
     }
 

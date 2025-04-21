@@ -208,16 +208,15 @@ export function useGuestManagement({ eventSeriesId, useContext = true }: UseGues
         throw new Error('No valid email addresses selected');
       }
 
-      const emailData = selectedGuestsData.map(guest => ({
-        guestName: `${guest.firstName} ${guest.lastName}`,
+      const emailData = {
         eventName: occasionName,
-        loginCode: guest.id,
         eCardUrl: '/WeddingGenericInvite.jpg',
         buttonStyle: {
           backgroundColor: '#ec4899',
           textColor: '#ffffff',
         },
-      }));
+        guestIds: selectedGuestsData.map(guest => guest.id)
+      };
 
       await sendBulkInviteEmails(emailData);
 

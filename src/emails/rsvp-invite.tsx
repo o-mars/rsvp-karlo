@@ -20,10 +20,8 @@ const COLORS = {
 } as const;
 
 interface RSVPKarloInviteEmailProps {
-  guestName?: string;
-  eventName?: string;
-  loginCode?: string;
-  eCardUrl?: string;
+  eventName: string;
+  eCardUrl: string;
   buttonStyle?: {
     backgroundColor?: string;
     textColor?: string;
@@ -36,10 +34,8 @@ const defaultButtonStyle = {
 };
 
 export const RSVPKarloInviteEmail = ({
-  guestName = '',
-  eventName = '',
-  loginCode = '',
-  eCardUrl = '',
+  eventName,
+  eCardUrl,
   buttonStyle = defaultButtonStyle,
 }: RSVPKarloInviteEmailProps) => (
   <Html>
@@ -48,14 +44,14 @@ export const RSVPKarloInviteEmail = ({
     <Body style={main}>
       <Container style={container}>
         <Section style={contentSection}>
-          <Heading style={h1}>Dear {guestName},</Heading>
+          <Heading style={h1}>Dear {"{{firstName}} {{lastName}}"},</Heading>
           <Text style={text}>
             We are delighted to invite you to {eventName}. Please RSVP using the button below.
           </Text>
           
           <Section style={buttonSection}>
             <Button
-              href={`https://rsvpkarlo.com/rsvp/?c=${loginCode}`}
+              href={`https://rsvpkarlo.com/rsvp/?c={{loginCode}}`}
               style={{
                 ...button,
                 backgroundColor: buttonStyle.backgroundColor,
@@ -82,7 +78,7 @@ export const RSVPKarloInviteEmail = ({
             <Text style={text}>
               Or use this RSVP code:
             </Text>
-            <code style={code}>{loginCode}</code>
+            <code style={code}>{"{{loginCode}}"}</code>
           </Section>
         </Section>
       </Container>
