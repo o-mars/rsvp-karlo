@@ -15,14 +15,23 @@ const Hero = () => {
         <p className="text-xl sm:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto">
           The perfect way to manage RSVPs for all your occasions - from intimate gatherings to grand celebrations
         </p>
-        <div className="flex justify-center gap-4 mb-12">
+        <div className="flex flex-col gap-4 mb-12 max-w-sm mx-auto">
           <Button 
             size="lg" 
-            className="bg-pink-600 hover:bg-pink-700 text-white"
+            className="bg-pink-600 hover:bg-pink-700 text-white w-full"
             onClick={() => router.push("/admin/")}
           >
             Get Started
             <PartyPopper className="ml-2 h-5 w-5" />
+          </Button>
+          <Button
+            size="lg"
+            variant="outline"
+            className="border-pink-600 text-pink-600 bg-pink-50 hover:bg-pink-200 w-full"
+            onClick={() => router.push("/rsvp/")}
+          >
+            RSVP to an Event
+            <Mail className="ml-2 h-5 w-5" />
           </Button>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">

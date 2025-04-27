@@ -3,8 +3,9 @@
 import { useState, Suspense } from 'react';
 import { RsvpCode } from '@/src/components/rsvp/RsvpCode';
 import { RsvpContent } from '@/src/components/rsvp/RsvpContent';
-
+import { useRouter } from 'next/navigation';
 function RSVPContent() {
+  const router = useRouter();
   const [guestId, setGuestId] = useState<string | null>(null);
 
   const handleCodeSubmit = (code: string) => {
@@ -18,7 +19,10 @@ function RSVPContent() {
         <div className="absolute inset-0 bg-gradient-to-b from-pink-50 to-white opacity-70"></div>
         <div className="relative z-10 flex-grow flex flex-col">
           <header className="pt-20 pb-16 px-4 sm:px-6 lg:px-8 text-center">
-            <h1 className="text-3xl sm:text-5xl font-bold text-gray-900">
+            <h1 
+              className="text-3xl sm:text-5xl font-bold text-gray-900 cursor-pointer transition-colors duration-200 inline-block" 
+              onClick={() => router.push('/')}
+            >
               RSVP <span className="text-pink-600">Karlo</span>
             </h1>
           </header>
