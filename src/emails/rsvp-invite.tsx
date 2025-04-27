@@ -4,7 +4,6 @@ import {
   Head,
   Heading,
   Html,
-  Img,
   Preview,
   Text,
   Section,
@@ -21,7 +20,6 @@ const COLORS = {
 
 interface RSVPKarloInviteEmailProps {
   eventName: string;
-  eCardImage: string;
   buttonStyle?: {
     backgroundColor?: string;
     textColor?: string;
@@ -35,7 +33,6 @@ const defaultButtonStyle = {
 
 export const RSVPKarloInviteEmail = ({
   eventName,
-  eCardImage,
   buttonStyle = defaultButtonStyle,
 }: RSVPKarloInviteEmailProps) => (
   <Html>
@@ -63,17 +60,6 @@ export const RSVPKarloInviteEmail = ({
           </Section>
         </Section>
 
-        <Section style={imageSection}>
-          <Img
-            src={eCardImage}
-            width="100%"
-            height="auto"
-            alt="Wedding Invitation"
-            style={image}
-            data-cid="wedding-invitation"
-          />
-        </Section>
-
         <Section style={contentSection}>
           <Section style={codeSection}>
             <Text style={text}>
@@ -98,16 +84,6 @@ const container = {
   maxWidth: '600px',
   margin: '0 auto',
   padding: '20px',
-};
-
-const imageSection = {
-  margin: '12px 0',
-};
-
-const image = {
-  maxWidth: '600px',
-  borderRadius: '8px',
-  objectFit: 'contain' as const,
 };
 
 const contentSection = {

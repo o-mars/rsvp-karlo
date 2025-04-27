@@ -1,6 +1,5 @@
 import { render } from '@react-email/render';
 import { RSVPKarloInviteEmail } from '@/src/emails/rsvp-invite';
-import { getOptimizedBase64Image } from '@/src/utils/image';
 
 interface SendInviteEmailProps {
   eventName: string;
@@ -15,22 +14,13 @@ interface SendInviteEmailProps {
 export function useEmailService() {
   const sendInviteEmail = async ({
     eventName,
-    eCardImage,
     buttonStyle,
     guestIds,
   }: SendInviteEmailProps) => {
     try {
-      // Convert the image to base64 using the client-side utility
-      const base64Image = await getOptimizedBase64Image(eCardImage).catch(error => {
-        console.error('Error processing image:', error);
-        throw new Error('Failed to process image for email');
-      });
-
-      // Render the email template to HTML
       const emailHtml = await render(
         RSVPKarloInviteEmail({
           eventName,
-          eCardImage: base64Image,
           buttonStyle,
         })
       );
