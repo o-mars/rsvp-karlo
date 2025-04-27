@@ -23,9 +23,11 @@ export default function CreateOrUpdateOccasionCard({
   const [name, setName] = useState(editingOccasion?.name || '');
   const [alias, setAlias] = useState(editingOccasion?.alias || '');
   const [description, setDescription] = useState(editingOccasion?.description || '');
+  const [hosts, setHosts] = useState<string[]>(editingOccasion?.hosts || ['']);
   const [errors, setErrors] = useState<{
     name?: string;
     alias?: string;
+    hosts?: string;
     general?: string;
   }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -109,6 +111,7 @@ export default function CreateOrUpdateOccasionCard({
     const newErrors: {
       name?: string;
       alias?: string;
+      hosts?: string;
       general?: string;
     } = {};
     
@@ -120,6 +123,10 @@ export default function CreateOrUpdateOccasionCard({
       newErrors.alias = 'Alias is required';
     } else if (!/^[a-z0-9_-]+$/.test(alias)) {
       newErrors.alias = 'Alias can only contain lowercase letters, numbers, hyphens, and underscores';
+    }
+
+    if (hosts.length === 0 || hosts.some(h => !h.trim())) {
+      newErrors.hosts = 'At least one host is required';
     }
     
     if (Object.keys(newErrors).length > 0) {
@@ -152,6 +159,7 @@ export default function CreateOrUpdateOccasionCard({
           name: name.trim(),
           alias: alias.trim(),
           ...(description ? { description: description.trim() } : {}),
+          hosts: hosts.map(h => h.trim()),
           createdBy: userId,
           ...(editingOccasion ? {} : { createdAt: Timestamp.now() })
         };
@@ -171,6 +179,7 @@ export default function CreateOrUpdateOccasionCard({
         name: name.trim(),
         alias: alias.trim(),
         description: description.trim() || undefined,
+        hosts: hosts.map(h => h.trim()),
         createdBy: userId
       };
       
@@ -182,6 +191,20 @@ export default function CreateOrUpdateOccasionCard({
     // Allow only valid characters
     const sanitizedValue = value.toLowerCase().replace(/[^a-z0-9_-]/g, '');
     setAlias(sanitizedValue);
+  };
+
+  const addHost = () => {
+    setHosts([...hosts, '']);
+  };
+
+  const removeHost = (index: number) => {
+    setHosts(hosts.filter((_, i) => i !== index));
+  };
+
+  const updateHost = (index: number, value: string) => {
+    const newHosts = [...hosts];
+    newHosts[index] = value;
+    setHosts(newHosts);
   };
 
   if (!isOpen) return null;
@@ -275,6 +298,46 @@ export default function CreateOrUpdateOccasionCard({
                 </p>
                 {errors.alias && (
                   <p className="mt-1 text-sm text-red-500">{errors.alias}</p>
+                )}
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-[var(--blossom-text-dark)] mb-1">
+                  Hosts <span className="text-[var(--blossom-pink-primary)]">*</span>
+                </label>
+                {hosts.map((host, index) => (
+                  <div key={index} className="flex gap-4 mb-4">
+                    <div className="flex-1">
+                      <input
+                        type="text"
+                        value={host}
+                        onChange={(e) => updateHost(index, e.target.value)}
+                        className="w-full bg-[var(--blossom-pink-light)] border border-[var(--blossom-border)] rounded-md py-2 px-3 text-[var(--blossom-text-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--blossom-pink-primary)] focus:border-transparent"
+                        placeholder="Host name"
+                      />
+                    </div>
+                    {hosts.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeHost(index)}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={addHost}
+                  className="mt-2 text-[var(--blossom-pink-primary)] hover:text-[var(--blossom-pink-hover)]"
+                >
+                  + Add another host
+                </button>
+                {errors.hosts && (
+                  <p className="mt-1 text-sm text-red-500">{errors.hosts}</p>
                 )}
               </div>
               

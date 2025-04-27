@@ -120,9 +120,10 @@ export function RsvpContent({ guestId }: RsvpContentProps) {
 
   const hasSubGuests = guest?.subGuests && guest.subGuests.length > 0;
   const welcomeMessage = useCallback(() => {
+    const prefix = "Dear";
     if (!guest) return '';
     if (!hasSubGuests) {
-      return `Welcome, ${guest.firstName} ${guest.lastName}!`;
+      return `${prefix} ${guest.firstName} ${guest.lastName}!`;
     }
 
     const hasOneSubGuest = guest.subGuests.length === 1;
@@ -130,16 +131,16 @@ export function RsvpContent({ guestId }: RsvpContentProps) {
     
     if (hasOneSubGuest) {
       if (doesSubGuestShareLastName) {
-        return `Welcome, ${guest.firstName} & ${guest.subGuests[0].firstName} ${guest.lastName}!`;
+        return `${prefix} ${guest.firstName} & ${guest.subGuests[0].firstName} ${guest.lastName}!`;
       } else {
-        return `Welcome, ${guest.firstName} ${guest.lastName} & ${guest.subGuests[0].firstName} ${guest.subGuests[0].lastName}!`;
+        return `${prefix} ${guest.firstName} ${guest.lastName} & ${guest.subGuests[0].firstName} ${guest.subGuests[0].lastName}!`;
       }
     }
 
     if (doesSubGuestShareLastName) {
-      return `Welcome, ${guest.firstName} ${guest.lastName} & Family!`;
+      return `${prefix} ${guest.firstName} ${guest.lastName} & Family!`;
     } else {
-      return `Welcome, ${guest.firstName} ${guest.lastName} & Friends!`;
+      return `${prefix} ${guest.firstName} ${guest.lastName} & Friends!`;
     }
   }, [guest, hasSubGuests]);
 

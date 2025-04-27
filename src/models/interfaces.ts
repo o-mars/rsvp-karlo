@@ -32,6 +32,7 @@ export interface Occasion {
   createdBy: string;
   createdAt: Timestamp;
   description?: string;
+  hosts: string[];
 }
 
 export interface SubGuest {

@@ -74,7 +74,7 @@ export default function GuestsPage() {
         onSelectAll={toggleAllSelection}
         onEditGuest={setEditingGuest}
         onDeleteGuest={handleDeleteGuest}
-        onBulkEmail={() => handleBulkEmail('Our Event')}
+        onBulkEmail={() => handleBulkEmail('Our Event', ['Me', 'Myself'])}
         onImportGuests={() => setShowImportModal(true)}
         onExportGuests={() => console.log('Export guests clicked: TODO')}
         onAddGuest={() => console.log('Add guest clicked: TODO')}

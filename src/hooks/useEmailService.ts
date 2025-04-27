@@ -2,8 +2,8 @@ import { render } from '@react-email/render';
 import { RSVPKarloInviteEmail } from '@/src/emails/rsvp-invite';
 
 interface SendInviteEmailProps {
-  eventName: string;
-  eCardImage: string;
+  occasionName: string;
+  hosts: string[];
   buttonStyle?: {
     backgroundColor?: string;
     textColor?: string;
@@ -13,14 +13,16 @@ interface SendInviteEmailProps {
 
 export function useEmailService() {
   const sendInviteEmail = async ({
-    eventName,
+    occasionName,
+    hosts,
     buttonStyle,
     guestIds,
   }: SendInviteEmailProps) => {
     try {
       const emailHtml = await render(
         RSVPKarloInviteEmail({
-          eventName,
+          occasionName,
+          hosts,
           buttonStyle,
         })
       );
@@ -33,7 +35,7 @@ export function useEmailService() {
         body: JSON.stringify({
           template: {
             html: emailHtml,
-            subject: `You're invited to ${eventName}`,
+            subject: `You're invited to ${occasionName}`,
           },
           guestIds,
         }),

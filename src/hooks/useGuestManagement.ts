@@ -198,7 +198,7 @@ export function useGuestManagement({ occasionId, useContext = true }: UseGuestMa
     }
   };
 
-  const handleBulkEmail = async (occasionName: string) => {
+  const handleBulkEmail = async (occasionName: string, hosts: string[]) => {
     try {
       const selectedGuestsData = guests
         .filter(g => selectedGuests.includes(g.id))
@@ -209,8 +209,8 @@ export function useGuestManagement({ occasionId, useContext = true }: UseGuestMa
       }
 
       const emailData = {
-        eventName: occasionName,
-        eCardImage: '/WeddingGenericInvite.jpg',
+        occasionName,
+        hosts,
         buttonStyle: {
           backgroundColor: '#ec4899',
           textColor: '#ffffff',

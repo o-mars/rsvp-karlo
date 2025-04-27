@@ -57,6 +57,12 @@ interface Guest {
   lastName: string;
   email?: string;
   rsvps: Record<string, string>;
+  subGuests?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    rsvps: Record<string, string>;
+  }[];
 }
 
 interface SendEmailsRequest {
@@ -110,10 +116,12 @@ app.post('/send-emails', async (req, res) => {
     for (const guest of selectedGuests) {
       if (!guest.email) continue;
 
+      // Format guest names based on subguests
+      const guestNames = formatGuestNames(guest);
+
       // Replace placeholders in the template with guest-specific data
       const personalizedHtml = template.html
-        .replace(/__FIRST_NAME__/g, guest.firstName)
-        .replace(/__LAST_NAME__/g, guest.lastName)
+        .replace(/__GUEST_NAMES__/g, guestNames)
         .replace(/__LOGIN_CODE__/g, guest.id);
 
       await resend.emails.send({
@@ -130,6 +138,30 @@ app.post('/send-emails', async (req, res) => {
     res.status(500).json({ error: 'Failed to send emails' });
   }
 });
+
+// Helper function to format guest names
+function formatGuestNames(guest: Guest): string {
+  if (!guest.subGuests || guest.subGuests.length === 0) {
+    return `${guest.firstName} ${guest.lastName}`;
+  }
+
+  const hasOneSubGuest = guest.subGuests.length === 1;
+  const doesSubGuestShareLastName = guest.subGuests.some(subGuest => subGuest.lastName === guest.lastName);
+  
+  if (hasOneSubGuest) {
+    if (doesSubGuestShareLastName) {
+      return `${guest.firstName} & ${guest.subGuests[0].firstName} ${guest.lastName}`;
+    } else {
+      return `${guest.firstName} ${guest.lastName} & ${guest.subGuests[0].firstName} ${guest.subGuests[0].lastName}`;
+    }
+  }
+
+  if (doesSubGuestShareLastName) {
+    return `${guest.firstName} ${guest.lastName} & Family`;
+  } else {
+    return `${guest.firstName} ${guest.lastName} & Friends`;
+  }
+}
 
 // Start the server
 app.listen(port, () => {

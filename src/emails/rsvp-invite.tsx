@@ -19,7 +19,8 @@ const COLORS = {
 } as const;
 
 interface RSVPKarloInviteEmailProps {
-  eventName: string;
+  occasionName: string;
+  hosts: string[];
   buttonStyle?: {
     backgroundColor?: string;
     textColor?: string;
@@ -32,46 +33,56 @@ const defaultButtonStyle = {
 };
 
 export const RSVPKarloInviteEmail = ({
-  eventName,
+  occasionName,
+  hosts,
   buttonStyle = defaultButtonStyle,
-}: RSVPKarloInviteEmailProps) => (
-  <Html>
-    <Head />
-    <Preview>You&apos;re invited to {eventName}</Preview>
-    <Body style={main}>
-      <Container style={container}>
-        <Section style={contentSection}>
-          <Heading style={h1}>Dear __FIRST_NAME__ __LAST_NAME__,</Heading>
-          <Text style={text}>
-            We are delighted to invite you to {eventName}. Please RSVP using the button below.
-          </Text>
-          
-          <Section style={buttonSection}>
-            <Button
-              href={`https://rsvpkarlo.com/rsvp/?c=__LOGIN_CODE__`}
-              style={{
-                ...button,
-                backgroundColor: buttonStyle.backgroundColor,
-                color: buttonStyle.textColor,
-              }}
-            >
-              RSVP Now
-            </Button>
-          </Section>
-        </Section>
+}: RSVPKarloInviteEmailProps) => {
+  const getHostText = () => {
+    if (hosts.length === 1) {
+      return `${hosts[0]} is`;
+    }
+    return `${hosts.join(' and ')} are`;
+  };
 
-        <Section style={contentSection}>
-          <Section style={codeSection}>
+  return (
+    <Html>
+      <Head />
+      <Preview>You&apos;re invited to {occasionName}</Preview>
+      <Body style={main}>
+        <Container style={container}>
+          <Section style={contentSection}>
+            <Heading style={h1}>Dear __GUEST_NAMES__,</Heading>
             <Text style={text}>
-              Or use this RSVP code:
+              {getHostText()} delighted to invite you to {occasionName}. Please RSVP using the button below.
             </Text>
-            <code style={code}>__LOGIN_CODE__</code>
+            
+            <Section style={buttonSection}>
+              <Button
+                href={`https://rsvpkarlo.com/rsvp/?c=__LOGIN_CODE__`}
+                style={{
+                  ...button,
+                  backgroundColor: buttonStyle.backgroundColor,
+                  color: buttonStyle.textColor,
+                }}
+              >
+                RSVP Now
+              </Button>
+            </Section>
           </Section>
-        </Section>
-      </Container>
-    </Body>
-  </Html>
-);
+
+          <Section style={contentSection}>
+            <Section style={codeSection}>
+              <Text style={text}>
+                Or visit <a href="https://rsvpkarlo.com/rsvp/" style={link}>https://rsvpkarlo.com/rsvp/</a> and enter this RSVP code:
+              </Text>
+              <code style={code}>__LOGIN_CODE__</code>
+            </Section>
+          </Section>
+        </Container>
+      </Body>
+    </Html>
+  );
+};
 
 export default RSVPKarloInviteEmail;
 
@@ -139,4 +150,9 @@ const code = {
   textAlign: 'center' as const,
   margin: '12px 0 0 0',
   border: '1px solid #ddd',
+};
+
+const link = {
+  color: COLORS.blossomPinkPrimary,
+  textDecoration: 'underline',
 };
