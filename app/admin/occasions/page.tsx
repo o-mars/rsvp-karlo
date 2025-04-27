@@ -15,6 +15,7 @@ import GuestListTable from '@/src/components/Guests/GuestListTable/GuestListTabl
 import { useGuestManagement } from '@/src/hooks/useGuestManagement';
 import OccasionStatusView from '@/src/components/RSVPs/OccasionStatusView/OccasionStatusView';
 import { useOccasionManagement } from '@/src/hooks/useOccasionManagement';
+import ImportGuestsFromFile from '@/src/components/Guests/ImportGuestsFromFile/ImportGuestsFromFile';
 
 export default function EventsPage() {
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
@@ -23,6 +24,7 @@ export default function EventsPage() {
   const [editingGuest, setEditingGuest] = useState<Guest | null>(null);
   const [activeTab, setActiveTab] = useState('events');
   const [isEditingOccasion, setIsEditingOccasion] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
   
   const searchParams = useSearchParams();
   const alias = searchParams.get('a');
@@ -105,6 +107,15 @@ export default function EventsPage() {
       console.error('Error saving guest:', error);
       alert('Failed to save guest');
     }
+  };
+
+  const handleImportGuests = () => {
+    setShowImportModal(true);
+  };
+
+  const handleImportComplete = () => {
+    setShowImportModal(false);
+    // Optionally refresh the guest list if needed
   };
 
   const loading = occasionLoading || eventsLoading;
@@ -255,7 +266,7 @@ export default function EventsPage() {
           onEditGuest={setEditingGuest}
           onDeleteGuest={handleDeleteGuest}
           onBulkEmail={() => handleBulkEmail(occasion!.name, occasion!.hosts)}
-          onImportGuests={() => console.log('Import guests clicked: TODO')}
+          onImportGuests={handleImportGuests}
           onExportGuests={() => console.log('Export guests clicked: TODO')}
           onAddGuest={() => setIsGuestModalOpen(true)}
         />
@@ -300,6 +311,28 @@ export default function EventsPage() {
           editingOccasion={occasion}
           userId={user.uid}
         />
+      )}
+
+      {/* Add the import modal */}
+      {showImportModal && occasion && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-[var(--blossom-card-bg-primary)] rounded-lg p-6 max-w-2xl w-full mx-4 shadow-lg border border-[var(--blossom-border)]">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold text-[var(--blossom-text-dark)]">Import Guests</h2>
+              <button
+                onClick={() => setShowImportModal(false)}
+                className="text-[var(--blossom-text-light)] hover:text-[var(--blossom-text-dark)]"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <ImportGuestsFromFile
+              onImportComplete={handleImportComplete}
+            />
+          </div>
+        </div>
       )}
     </div>
   );

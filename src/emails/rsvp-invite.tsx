@@ -51,6 +51,11 @@ export const RSVPKarloInviteEmail = ({
       <Body style={main}>
         <Container style={container}>
           <Section style={contentSection}>
+            <Heading style={headerText}>
+              <a href="https://rsvpkarlo.com" style={{ textDecoration: 'none', color: 'inherit' }}>
+                RSVP <span style={{ color: COLORS.blossomPinkPrimary }}>Karlo</span>
+              </a>
+            </Heading>
             <Heading style={h1}>Dear __GUEST_NAMES__,</Heading>
             <Text style={text}>
               {getHostText()} delighted to invite you to {occasionName}. Please RSVP using the button below.
@@ -102,10 +107,19 @@ const contentSection = {
   marginBottom: '16px',
 };
 
+const headerText = {
+  color: COLORS.blossomTextDark,
+  fontSize: '32px',
+  fontWeight: 'bold',
+  margin: '0 0 20px 0',
+  padding: '0',
+  textAlign: 'center' as const,
+};
+
 const h1 = {
   color: COLORS.blossomTextDark,
-  fontSize: '24px',
-  fontWeight: 'bold',
+  fontSize: '20px',
+  fontWeight: '500',
   margin: '0 0 20px 0',
   padding: '0',
 };

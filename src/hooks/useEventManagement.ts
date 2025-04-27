@@ -67,6 +67,17 @@ export function useEventManagement({ occasionId, useContext = true }: UseEventMa
     }
   };
 
+  const checkDuplicateEventName = (name: string, excludeEventId?: string): void => {
+    const existingEvent = events.find(event => 
+      (!excludeEventId || event.id !== excludeEventId) && 
+      event.name === name
+    );
+
+    if (existingEvent) {
+      throw new Error(`An event named "${name}" already exists in this occasion`);
+    }
+  };
+
   const handleAddEvent = async (eventData: Partial<Event>) => {
     if (!eventData.name || !eventData.startDateTime) return;
     
@@ -77,9 +88,8 @@ export function useEventManagement({ occasionId, useContext = true }: UseEventMa
       }
       
       const occasion = occasionContext?.occasion;
-      // if (!occasion) {
-      //   throw new Error('No occasion context available');
-      // }
+
+      checkDuplicateEventName(eventData.name as string);
 
       const newEvent = {
         ...eventData,
@@ -108,6 +118,8 @@ export function useEventManagement({ occasionId, useContext = true }: UseEventMa
     if (!eventData.id || !eventData.name || !eventData.startDateTime) return;
     
     try {
+      checkDuplicateEventName(eventData.name as string, eventData.id);
+
       await updateDoc(doc(db, 'events', eventData.id), {
         name: eventData.name,
         description: eventData.description || '',
