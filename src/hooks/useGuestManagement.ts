@@ -243,17 +243,20 @@ export function useGuestManagement({ occasionId, useContext = true }: UseGuestMa
       ? `${cleanFirstName}-${cleanLastName}-`
       : '';
 
-    const numCharsToGenerate = 8;
-    const bytesForBase64Chars = 6;
-    const randomBytes = new Uint8Array(bytesForBase64Chars);
+    const numCharsToGenerate = 12;
+    const bytesForAlphaneumericChars = 9;
+    const randomBytes = new Uint8Array(bytesForAlphaneumericChars);
     crypto.getRandomValues(randomBytes);
-    const randomSuffix = btoa(String.fromCharCode(...randomBytes))
-      .replace(/\+/g, '-')
-      .replace(/\//g, '_')
-      .replace(/=+$/, '')
-      .substring(0, numCharsToGenerate);
-      
-    return namePrefix + randomSuffix;
+
+    const randomSuffix = Array.from(randomBytes)
+      .map(byte => (byte % 62))  // Modulo 62 to map to a-zA-Z0-9
+      .map(num => 
+        num < 10 ? String.fromCharCode(48 + num) :  // 0-9
+        num < 36 ? String.fromCharCode(97 + num - 10) :  // a-z
+        String.fromCharCode(65 + num - 36)  // A-Z
+      ).join('');
+
+    return namePrefix + randomSuffix.substring(0, numCharsToGenerate);
   }
 
   useEffect(() => {
