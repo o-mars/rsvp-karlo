@@ -12,9 +12,9 @@ export type RSVPStatus = RsvpStatus.ATTENDING | RsvpStatus.NOT_ATTENDING | RsvpS
 
 export interface Event {
   id: string;
-  eventSeriesId: string;
+  occasionId: string;
   createdBy: string;
-  eventSeriesAlias: string;
+  occasionAlias: string;
   name: string;
   startDateTime: Timestamp;
   endDateTime?: Timestamp;
@@ -25,7 +25,7 @@ export interface Event {
   inviteImageUrl?: string;
 }
 
-export interface EventSeries {
+export interface Occasion {
   id: string;
   name: string;
   alias: string;
@@ -43,8 +43,8 @@ export interface SubGuest {
 
 export interface Guest {
   id: string;
-  eventSeriesId: string;
-  eventSeriesAlias: string;
+  occasionId: string;
+  occasionAlias: string;
   createdBy: string;
   firstName: string;
   lastName: string;

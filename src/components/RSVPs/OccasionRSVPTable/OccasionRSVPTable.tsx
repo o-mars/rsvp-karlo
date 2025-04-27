@@ -1,19 +1,19 @@
 'use client';
 
 import { Guest, Event } from '@/src/models/interfaces';
-import EventSeriesRSVPTableRow from '../EventSeriesRSVPTableRow/EventSeriesRSVPTableRow';
+import OccasionRSVPTableRow from '../OccasionRSVPTableRow/OccasionRSVPTableRow';
 
-interface EventSeriesRSVPTableProps {
+interface OccasionRSVPTableProps {
   guests: Guest[];
   events: Event[];
   isLoading?: boolean;
 }
 
-export default function EventSeriesRSVPTable({ 
+export default function OccasionRSVPTable({ 
   guests, 
   events, 
   isLoading = false 
-}: EventSeriesRSVPTableProps) {
+}: OccasionRSVPTableProps) {
   if (isLoading) {
     return (
       <div className="bg-[var(--blossom-card-bg-primary)] border border-[var(--blossom-border)] shadow-[var(--blossom-card-shadow)] rounded-lg p-6 flex justify-center">
@@ -48,7 +48,7 @@ export default function EventSeriesRSVPTable({
           </thead>
           <tbody className="bg-[var(--blossom-card-bg-primary)] divide-y divide-[var(--blossom-divider)]">
             {guests.map((guest) => (
-              <EventSeriesRSVPTableRow
+              <OccasionRSVPTableRow
                 key={guest.id}
                 guest={guest}
                 events={events}

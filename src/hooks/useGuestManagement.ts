@@ -4,16 +4,16 @@ import { useState, useEffect } from 'react';
 import { collection, getDocs, query, doc, updateDoc, deleteDoc, setDoc, where } from 'firebase/firestore';
 import { db } from '@/utils/firebase';
 import { Guest, Event } from '@/src/models/interfaces';
-import { useEventSeries } from '@/src/contexts/EventSeriesContext';
+import { useOccasion } from '@/src/contexts/OccasionContext';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { useEmailService } from './useEmailService';
 
 interface UseGuestManagementProps {
-  eventSeriesId?: string;
+  occasionId?: string;
   useContext?: boolean;
 }
 
-export function useGuestManagement({ eventSeriesId, useContext = true }: UseGuestManagementProps = {}) {
+export function useGuestManagement({ occasionId, useContext = true }: UseGuestManagementProps = {}) {
   const { user } = useAuth();
   const { sendBulkInviteEmails } = useEmailService();
   const [guests, setGuests] = useState<Guest[]>([]);
@@ -22,14 +22,14 @@ export function useGuestManagement({ eventSeriesId, useContext = true }: UseGues
   const [selectedGuests, setSelectedGuests] = useState<string[]>([]);
   const [editingGuest, setEditingGuest] = useState<Guest | null>(null);
 
-  // Try to use the event series context if available and requested
-  let eventSeriesContext = null;
+  // Try to use the occasion context if available and requested
+  let occasionContext = null;
   
   if (useContext) {
     try {
       // This is safe because we're wrapping the actual call with try/catch
       // eslint-disable-next-line react-hooks/rules-of-hooks
-      eventSeriesContext = useEventSeries();
+      occasionContext = useOccasion();
     } catch {
       // Context not available, continue without it
     }
@@ -40,17 +40,17 @@ export function useGuestManagement({ eventSeriesId, useContext = true }: UseGues
       let eventsQuery;
       let guestsQuery;
 
-      // Create appropriate queries based on whether we're filtering by eventSeriesId
-      if (eventSeriesId || eventSeriesContext?.eventSeries?.id) {
-        const seriesId = eventSeriesId || eventSeriesContext?.eventSeries?.id;
+      // Create appropriate queries based on whether we're filtering by occasionId
+      if (occasionId || occasionContext?.occasion?.id) {
+        const seriesId = occasionId || occasionContext?.occasion?.id;
         eventsQuery = query(
           collection(db, 'events'),
-          where('eventSeriesId', '==', seriesId),
+          where('occasionId', '==', seriesId),
         );
         
         guestsQuery = query(
           collection(db, 'guests'),
-          where('eventSeriesId', '==', seriesId),
+          where('occasionId', '==', seriesId),
         );
       } else {
         eventsQuery = query(
@@ -63,10 +63,10 @@ export function useGuestManagement({ eventSeriesId, useContext = true }: UseGues
       }
 
       // Use context data if available, otherwise fetch from Firestore
-      if (eventSeriesContext && !eventSeriesId) {
-        setEvents(eventSeriesContext.events);
-        setGuests(eventSeriesContext.guests);
-        setLoading(eventSeriesContext.loading);
+      if (occasionContext && !occasionId) {
+        setEvents(occasionContext.events);
+        setGuests(occasionContext.guests);
+        setLoading(occasionContext.loading);
       } else {
         const [eventsSnapshot, guestsSnapshot] = await Promise.all([
           getDocs(eventsQuery),
@@ -94,7 +94,7 @@ export function useGuestManagement({ eventSeriesId, useContext = true }: UseGues
   };
 
   const handleAddGuest = async (guestData: Partial<Guest>) => {
-    const seriesId = eventSeriesId || eventSeriesContext?.eventSeries?.id;
+    const seriesId = occasionId || occasionContext?.occasion?.id;
     if (!user || !seriesId || !guestData.firstName || !guestData.lastName) return;
     
     const id = generateGuestId(guestData.firstName, guestData.lastName);
@@ -112,8 +112,8 @@ export function useGuestManagement({ eventSeriesId, useContext = true }: UseGues
       
       await setDoc(doc(db, 'guests', id), {
         id,
-        eventSeriesId: seriesId,
-        eventSeriesAlias: eventSeriesContext?.eventSeries?.alias || '',
+        occasionId: seriesId,
+        occasionAlias: occasionContext?.occasion?.alias || '',
         createdBy: user.uid,
         firstName: guestData.firstName,
         lastName: guestData.lastName,
@@ -126,8 +126,8 @@ export function useGuestManagement({ eventSeriesId, useContext = true }: UseGues
       });
       
       // Use context refresh if available, otherwise fetch data
-      if (eventSeriesContext && eventSeriesContext.refreshData && !eventSeriesId) {
-        await eventSeriesContext.refreshData();
+      if (occasionContext && occasionContext.refreshData && !occasionId) {
+        await occasionContext.refreshData();
       } else {
         await fetchData();
       }
@@ -164,8 +164,8 @@ export function useGuestManagement({ eventSeriesId, useContext = true }: UseGues
       });
       
       // Use context refresh if available, otherwise fetch data
-      if (eventSeriesContext && eventSeriesContext.refreshData && !eventSeriesId) {
-        await eventSeriesContext.refreshData();
+      if (occasionContext && occasionContext.refreshData && !occasionId) {
+        await occasionContext.refreshData();
       } else {
         await fetchData();
       }
@@ -182,8 +182,8 @@ export function useGuestManagement({ eventSeriesId, useContext = true }: UseGues
       await deleteDoc(doc(db, 'guests', id));
       
       // Use context refresh if available, otherwise fetch data
-      if (eventSeriesContext && eventSeriesContext.refreshData && !eventSeriesId) {
-        await eventSeriesContext.refreshData();
+      if (occasionContext && occasionContext.refreshData && !occasionId) {
+        await occasionContext.refreshData();
       } else {
         await fetchData();
       }
@@ -258,7 +258,7 @@ export function useGuestManagement({ eventSeriesId, useContext = true }: UseGues
 
   useEffect(() => {
     fetchData();
-  }, [eventSeriesId, eventSeriesContext?.eventSeries?.id]);
+  }, [occasionId, occasionContext?.occasion?.id]);
 
   return {
     guests,

@@ -18,10 +18,10 @@ interface ParseResult {
 
 interface ImportGuestsFromFileProps {
   onImportComplete?: () => void;
-  eventSeriesId?: string;
+  occasionId?: string;
 }
 
-export default function ImportGuestsFromFile({ onImportComplete, eventSeriesId }: ImportGuestsFromFileProps) {
+export default function ImportGuestsFromFile({ onImportComplete, occasionId }: ImportGuestsFromFileProps) {
   const [isImporting, setIsImporting] = useState(false);
   const [importStatus, setImportStatus] = useState<{ success: number; failed: number } | null>(null);
 
@@ -71,7 +71,7 @@ export default function ImportGuestsFromFile({ onImportComplete, eventSeriesId }
             rsvp: null,
             submittedAt: null,
             eventType: (eventType?.trim() === 'y' ? 'y' : 'x') as 'x' | 'y',
-            eventSeriesId: eventSeriesId || null,
+            occasionId: occasionId || null,
           };
 
           try {

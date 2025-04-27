@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { Timestamp } from 'firebase/firestore';
 import Link from 'next/link';
 import CreateOrUpdateEventCard from '@/src/components/Events/CreateOrUpdateEventCard/CreateOrUpdateEventCard';
-import CreateOrUpdateEventSeriesCard from '@/src/components/EventSeries/CreateOrUpdateEventSeriesCard/CreateOrUpdateEventSeriesCard';
+import CreateOrUpdateOccasionCard from '@/src/components/Occasion/CreateOrUpdateOccasionCard/CreateOrUpdateOccasionCard';
 import CreateOrUpdateGuestCard from '@/src/components/Guests/CreateOrUpdateGuestCard/CreateOrUpdateGuestCard';
 import { Event, Guest } from '@/src/models/interfaces';
 import { useAuth } from '../../../src/contexts/AuthContext';
@@ -13,8 +13,8 @@ import EventCard from '@/src/components/Events/EventCard/EventCard';
 import { useEventManagement } from '@/src/hooks/useEventManagement';
 import GuestListTable from '@/src/components/Guests/GuestListTable/GuestListTable';
 import { useGuestManagement } from '@/src/hooks/useGuestManagement';
-import EventSeriesStatusView from '@/src/components/RSVPs/EventSeriesStatusView/EventSeriesStatusView';
-import { useEventSeriesManagement } from '@/src/hooks/useEventSeriesManagement';
+import OccasionStatusView from '@/src/components/RSVPs/OccasionStatusView/OccasionStatusView';
+import { useOccasionManagement } from '@/src/hooks/useOccasionManagement';
 
 export default function EventsPage() {
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
@@ -22,18 +22,18 @@ export default function EventsPage() {
   const [isGuestModalOpen, setIsGuestModalOpen] = useState(false);
   const [editingGuest, setEditingGuest] = useState<Guest | null>(null);
   const [activeTab, setActiveTab] = useState('events');
-  const [isEditingEventSeries, setIsEditingEventSeries] = useState(false);
+  const [isEditingOccasion, setIsEditingOccasion] = useState(false);
   
   const searchParams = useSearchParams();
   const alias = searchParams.get('a');
   const { user } = useAuth();
   
   const { 
-    eventSeries, 
-    loading: eventSeriesLoading, 
-    error: eventSeriesError,
-    handleUpdateEventSeries
-  } = useEventSeriesManagement({ alias, useContext: false });
+    occasion, 
+    loading: occasionLoading, 
+    error: occasionError,
+    handleUpdateOccasion
+  } = useOccasionManagement({ alias, useContext: false });
   
   const { 
     events, 
@@ -42,7 +42,7 @@ export default function EventsPage() {
     handleAddEvent, 
     handleUpdateEvent 
   } = useEventManagement({ 
-    eventSeriesId: eventSeries?.id,
+    occasionId: occasion?.id,
     useContext: false 
   });
   
@@ -57,7 +57,7 @@ export default function EventsPage() {
     handleUpdateGuest,
     fetchData: fetchGuestData
   } = useGuestManagement({ 
-    eventSeriesId: eventSeries?.id,
+    occasionId: occasion?.id,
     useContext: false 
   });
 
@@ -107,7 +107,7 @@ export default function EventsPage() {
     }
   };
 
-  const loading = eventSeriesLoading || eventsLoading;
+  const loading = occasionLoading || eventsLoading;
 
   if (loading) return (
     <div className="p-8 text-[var(--blossom-text-dark)]">
@@ -117,12 +117,12 @@ export default function EventsPage() {
     </div>
   );
 
-  if (eventSeriesError) {
+  if (occasionError) {
     return (
       <div className="p-8 text-[var(--blossom-text-dark)]">
         <div className="bg-red-100 border border-red-400 text-red-700 p-4 rounded-lg">
           <h2 className="text-xl font-semibold mb-2">Error</h2>
-          <p>{eventSeriesError}</p>
+          <p>{occasionError}</p>
         </div>
       </div>
     );
@@ -141,12 +141,12 @@ export default function EventsPage() {
           </Link>
         </div>
         
-        {eventSeries && (
+        {occasion && (
           <div className="mb-8">
             <div className="flex items-center justify-between mb-2">
-              <h1 className="text-3xl font-bold">{eventSeries.name}</h1>
+              <h1 className="text-3xl font-bold">{occasion.name}</h1>
               <button 
-                onClick={() => setIsEditingEventSeries(true)}
+                onClick={() => setIsEditingOccasion(true)}
                 className="text-[var(--blossom-text-dark)]/70 hover:text-[var(--blossom-text-dark)] flex items-center text-sm bg-[var(--blossom-pink-light)] hover:bg-[var(--blossom-pink-medium)] px-3 py-1 rounded transition-colors"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
@@ -155,8 +155,8 @@ export default function EventsPage() {
                 Edit Occasion
               </button>
             </div>
-            {eventSeries.description && (
-              <p className="text-[var(--blossom-text-dark)]/70">{eventSeries.description}</p>
+            {occasion.description && (
+              <p className="text-[var(--blossom-text-dark)]/70">{occasion.description}</p>
             )}
           </div>
         )}
@@ -254,7 +254,7 @@ export default function EventsPage() {
           onSelectAll={toggleAllSelection}
           onEditGuest={setEditingGuest}
           onDeleteGuest={handleDeleteGuest}
-          onBulkEmail={() => handleBulkEmail(eventSeries!.name)}
+          onBulkEmail={() => handleBulkEmail(occasion!.name)}
           onImportGuests={() => console.log('Import guests clicked: TODO')}
           onExportGuests={() => console.log('Export guests clicked: TODO')}
           onAddGuest={() => setIsGuestModalOpen(true)}
@@ -263,7 +263,7 @@ export default function EventsPage() {
       
       {/* RSVP Tab Content */}
       {activeTab === 'rsvp' && (
-        <EventSeriesStatusView />
+        <OccasionStatusView />
       )}
 
       {/* Add/Edit Event Modal */}
@@ -275,8 +275,8 @@ export default function EventsPage() {
         }}
         onSubmit={handleEventSubmit}
         editingEvent={editingEvent}
-        eventSeriesId={eventSeries?.id || ''}
-        eventSeriesAlias={alias || ''}
+        occasionId={occasion?.id || ''}
+        occasionAlias={alias || ''}
       />
       
       {/* Add/Edit Guest Modal */}
@@ -291,13 +291,13 @@ export default function EventsPage() {
         onSubmit={handleGuestSubmit}
       />
       
-      {/* Edit Event Series Modal */}
+      {/* Edit Occasion Modal */}
       {user && (
-        <CreateOrUpdateEventSeriesCard
-          isOpen={isEditingEventSeries}
-          onClose={() => setIsEditingEventSeries(false)}
-          onSubmit={handleUpdateEventSeries}
-          editingEventSeries={eventSeries}
+        <CreateOrUpdateOccasionCard
+          isOpen={isEditingOccasion}
+          onClose={() => setIsEditingOccasion(false)}
+          onSubmit={handleUpdateOccasion}
+          editingOccasion={occasion}
           userId={user.uid}
         />
       )}

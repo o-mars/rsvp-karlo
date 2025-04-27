@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import Link from 'next/link';
 
 export default function Home() {
   const router = useRouter();
@@ -46,11 +47,12 @@ export default function Home() {
             </button>
           </div>
           
-          {/* Footer as overlay at the bottom of image */}
           <div className="absolute bottom-[2vh] left-0 right-0 text-center z-10">
             <p className="text-gray-600 text-[1.5vh] bg-opacity-70 py-[0.5vh] px-[1vw] rounded-full inline-block">
               Powered by{' '}
-              <span className="font-medium text-pink-500">RSVP Karlo</span>
+              <Link href="/" className="font-medium text-pink-500 hover:text-pink-600 transition-colors">
+                RSVP Karlo
+              </Link>
             </p>
           </div>
         </div>

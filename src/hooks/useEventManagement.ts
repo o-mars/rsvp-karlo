@@ -4,25 +4,26 @@ import { useState, useEffect } from 'react';
 import { collection, getDocs, query, doc, updateDoc, deleteDoc, addDoc, Timestamp, where } from 'firebase/firestore';
 import { db } from '@/utils/firebase';
 import { Event } from '@/src/models/interfaces';
-import { useEventSeries } from '@/src/contexts/EventSeriesContext';
-
+import { useOccasion } from '@/src/contexts/OccasionContext';
+import { useAuth } from '@/src/contexts/AuthContext';
 interface UseEventManagementProps {
-  eventSeriesId?: string;
+  occasionId?: string;
   useContext?: boolean;
 }
 
-export function useEventManagement({ eventSeriesId, useContext = true }: UseEventManagementProps = {}) {
+export function useEventManagement({ occasionId, useContext = true }: UseEventManagementProps = {}) {
+  const { user } = useAuth();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
 
-  // Try to use the event series context if available and requested
-  let eventSeriesContext = null;
+  // Try to use the occasion context if available and requested
+  let occasionContext = null;
   
   if (useContext) {
     try {
       // eslint-disable-next-line react-hooks/rules-of-hooks
-      eventSeriesContext = useEventSeries();
+      occasionContext = useOccasion();
     } catch {
       // Context not available, continue without it
     }
@@ -32,12 +33,12 @@ export function useEventManagement({ eventSeriesId, useContext = true }: UseEven
     try {
       let eventsQuery;
 
-      // Create appropriate query based on whether we're filtering by eventSeriesId
-      if (eventSeriesId || eventSeriesContext?.eventSeries?.id) {
-        const seriesId = eventSeriesId || eventSeriesContext?.eventSeries?.id;
+      // Create appropriate query based on whether we're filtering by occasionId
+      if (occasionId || occasionContext?.occasion?.id) {
+        const seriesId = occasionId || occasionContext?.occasion?.id;
         eventsQuery = query(
           collection(db, 'events'),
-          where('eventSeriesId', '==', seriesId),
+          where('occasionId', '==', seriesId),
         );
       } else {
         eventsQuery = query(
@@ -46,9 +47,9 @@ export function useEventManagement({ eventSeriesId, useContext = true }: UseEven
       }
 
       // Use context data if available, otherwise fetch from Firestore
-      if (eventSeriesContext && !eventSeriesId) {
-        setEvents(eventSeriesContext.events);
-        setLoading(eventSeriesContext.loading);
+      if (occasionContext && !occasionId) {
+        setEvents(occasionContext.events);
+        setLoading(occasionContext.loading);
       } else {
         const eventsSnapshot = await getDocs(eventsQuery);
 
@@ -70,21 +71,21 @@ export function useEventManagement({ eventSeriesId, useContext = true }: UseEven
     if (!eventData.name || !eventData.startDateTime) return;
     
     try {
-      const seriesId = eventSeriesId || eventSeriesContext?.eventSeries?.id;
-      if (!seriesId) {
-        throw new Error('No event series ID provided');
+      const id = occasionId || occasionContext?.occasion?.id;
+      if (!id) {
+        throw new Error('No occasion ID provided');
       }
       
-      const series = eventSeriesContext?.eventSeries;
-      if (!series) {
-        throw new Error('No event series context available');
-      }
+      const occasion = occasionContext?.occasion;
+      // if (!occasion) {
+      //   throw new Error('No occasion context available');
+      // }
 
       const newEvent = {
         ...eventData,
-        eventSeriesId: seriesId,
-        createdBy: series.createdBy,
-        eventSeriesAlias: series.alias,
+        occasionId: id,
+        createdBy: user?.uid,
+        occasionAlias: occasion?.alias ?? '',
         createdAt: new Date(),
         additionalFields: eventData.additionalFields || {}
       };
@@ -92,8 +93,8 @@ export function useEventManagement({ eventSeriesId, useContext = true }: UseEven
       await addDoc(collection(db, 'events'), newEvent);
       
       // Use context refresh if available, otherwise fetch data
-      if (eventSeriesContext && eventSeriesContext.refreshData && !eventSeriesId) {
-        await eventSeriesContext.refreshData();
+      if (occasionContext && occasionContext.refreshData && !occasionId) {
+        await occasionContext.refreshData();
       } else {
         await fetchData();
       }
@@ -117,8 +118,8 @@ export function useEventManagement({ eventSeriesId, useContext = true }: UseEven
       });
       
       // Use context refresh if available, otherwise fetch data
-      if (eventSeriesContext && eventSeriesContext.refreshData && !eventSeriesId) {
-        await eventSeriesContext.refreshData();
+      if (occasionContext && occasionContext.refreshData && !occasionId) {
+        await occasionContext.refreshData();
       } else {
         await fetchData();
       }
@@ -135,8 +136,8 @@ export function useEventManagement({ eventSeriesId, useContext = true }: UseEven
       await deleteDoc(doc(db, 'events', id));
       
       // Use context refresh if available, otherwise fetch data
-      if (eventSeriesContext && eventSeriesContext.refreshData && !eventSeriesId) {
-        await eventSeriesContext.refreshData();
+      if (occasionContext && occasionContext.refreshData && !occasionId) {
+        await occasionContext.refreshData();
       } else {
         await fetchData();
       }
@@ -176,7 +177,7 @@ export function useEventManagement({ eventSeriesId, useContext = true }: UseEven
   // Initialize data
   useEffect(() => {
     fetchData();
-  }, [eventSeriesId, eventSeriesContext?.eventSeries?.id]);
+  }, [occasionId, occasionContext?.occasion?.id]);
 
   return {
     events,

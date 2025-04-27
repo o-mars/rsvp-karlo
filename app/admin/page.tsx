@@ -1,24 +1,23 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../src/contexts/AuthContext';
-import EventSeriesCard from '@/src/components/EventSeries/EventSeriesCard/EventSeriesCard';
-import { useEventSeriesManagement } from '@/src/hooks/useEventSeriesManagement';
+import OccasionCard from '@/src/components/Occasion/OccasionCard/OccasionCard';
+import { useOccasionManagement } from '@/src/hooks/useOccasionManagement';
 
 export default function AdminDashboard() {
   const { user } = useAuth();
   const router = useRouter();
   
   const { 
-    eventSeriesList: eventSeries, 
-    loading: eventSeriesLoading,
-    error: eventSeriesError,
-    handleDeleteEventSeries
-  } = useEventSeriesManagement({ userId: user?.uid || null, useContext: false });
+    occasionList: occasion, 
+    loading: occasionLoading,
+    error: occasionError,
+    handleDeleteOccasion,
+  } = useOccasionManagement({ userId: user?.uid || null, useContext: false });
 
   const handleCreateNew = () => {
-    router.push('/admin/events/new/');
+    router.push('/admin/occasions/new/');
   };
 
   return (
@@ -38,27 +37,27 @@ export default function AdminDashboard() {
           </button>
         </div>
 
-        {eventSeriesLoading ? (
+        {occasionLoading ? (
           <div className="flex justify-center p-6">
             <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[var(--blossom-pink-primary)]"></div>
           </div>
-        ) : eventSeriesError ? (
+        ) : occasionError ? (
           <div className="bg-red-100 border border-red-400 text-red-700 p-4 rounded-lg">
             <h2 className="text-xl font-semibold mb-2">Error</h2>
-            <p>{eventSeriesError}</p>
+            <p>{occasionError}</p>
           </div>
-        ) : eventSeries.length === 0 ? (
+        ) : occasion.length === 0 ? (
           <div className="bg-white border border-[var(--blossom-border)] rounded-lg p-6 text-center">
             <h2 className="text-xl font-semibold mb-2">No Occasions Found</h2>
             <p className="text-[var(--blossom-text-dark)]/70">Create your first occasion to get started</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {eventSeries.map((series) => (
-              <EventSeriesCard 
-                key={series.id} 
-                series={series} 
-                onDelete={handleDeleteEventSeries}
+            {occasion.map((occasion) => (
+              <OccasionCard 
+                key={occasion.id} 
+                occasion={occasion} 
+                onDelete={handleDeleteOccasion}
               />
             ))}
           </div>

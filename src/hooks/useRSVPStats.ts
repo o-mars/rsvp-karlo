@@ -6,7 +6,7 @@ import { db } from '@/utils/firebase';
 import { Guest, Event, EventStats, RsvpStatus } from '@/src/models/interfaces';
 
 interface UseRSVPStatsProps {
-  eventSeriesId?: string;
+  occasionId?: string;
 }
 
 // Define a more specific interface for Firestore Timestamp
@@ -100,7 +100,7 @@ const sortByLastName = (guests: Guest[]): Guest[] => {
   });
 };
 
-export function useRSVPStats({ eventSeriesId }: UseRSVPStatsProps = {}) {
+export function useRSVPStats({ occasionId }: UseRSVPStatsProps = {}) {
   const [events, setEvents] = useState<Event[]>([]);
   const [guests, setGuests] = useState<Guest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -114,16 +114,16 @@ export function useRSVPStats({ eventSeriesId }: UseRSVPStatsProps = {}) {
       let eventsQuery;
       let guestsQuery;
 
-      // Create queries based on whether we're filtering by eventSeriesId, but without orderBy
-      if (eventSeriesId) {
+      // Create queries based on whether we're filtering by occasionId, but without orderBy
+      if (occasionId) {
         eventsQuery = query(
           collection(db, 'events'),
-          where('eventSeriesId', '==', eventSeriesId)
+          where('occasionId', '==', occasionId)
         );
         
         guestsQuery = query(
           collection(db, 'guests'),
-          where('eventSeriesId', '==', eventSeriesId)
+          where('occasionId', '==', occasionId)
         );
       } else {
         eventsQuery = query(
@@ -278,7 +278,7 @@ export function useRSVPStats({ eventSeriesId }: UseRSVPStatsProps = {}) {
   // Initialize data
   useEffect(() => {
     fetchData();
-  }, [eventSeriesId]);
+  }, [occasionId]);
 
   return {
     events,

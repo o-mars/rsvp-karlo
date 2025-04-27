@@ -3,26 +3,26 @@
 import { useState, useEffect } from 'react';
 import { Timestamp, query, collection, where, getDocs } from 'firebase/firestore';
 import { db } from '@/utils/firebase';
-import { EventSeries } from '@/src/models/interfaces';
+import { Occasion } from '@/src/models/interfaces';
 
-interface CreateOrUpdateEventSeriesCardProps {
+interface CreateOrUpdateOccasionCardProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (eventSeries: Partial<EventSeries>) => void;
-  editingEventSeries?: EventSeries | null;
+  onSubmit: (occasion: Partial<Occasion>) => void;
+  editingOccasion?: Occasion | null;
   userId: string;
 }
 
-export default function CreateOrUpdateEventSeriesCard({
+export default function CreateOrUpdateOccasionCard({
   isOpen,
   onClose,
   onSubmit,
-  editingEventSeries,
+  editingOccasion,
   userId
-}: CreateOrUpdateEventSeriesCardProps) {
-  const [name, setName] = useState(editingEventSeries?.name || '');
-  const [alias, setAlias] = useState(editingEventSeries?.alias || '');
-  const [description, setDescription] = useState(editingEventSeries?.description || '');
+}: CreateOrUpdateOccasionCardProps) {
+  const [name, setName] = useState(editingOccasion?.name || '');
+  const [alias, setAlias] = useState(editingOccasion?.alias || '');
+  const [description, setDescription] = useState(editingOccasion?.description || '');
   const [errors, setErrors] = useState<{
     name?: string;
     alias?: string;
@@ -55,7 +55,7 @@ export default function CreateOrUpdateEventSeriesCard({
       }
       
       // Skip uniqueness check if we're editing and alias is the same
-      if (editingEventSeries && alias === editingEventSeries.alias) {
+      if (editingOccasion && alias === editingOccasion.alias) {
         return;
       }
       
@@ -68,7 +68,7 @@ export default function CreateOrUpdateEventSeriesCard({
     return () => {
       if (timeoutId) clearTimeout(timeoutId);
     };
-  }, [alias, editingEventSeries]);
+  }, [alias, editingOccasion]);
 
   const checkAliasUniqueness = async (aliasToCheck: string) => {
     if (!aliasToCheck) return;
@@ -128,7 +128,7 @@ export default function CreateOrUpdateEventSeriesCard({
     }
     
     // If we got here and we're editing with the same alias, skip final check
-    if (!(editingEventSeries && alias === editingEventSeries.alias)) {
+    if (!(editingOccasion && alias === editingOccasion.alias)) {
       // If we got here, we need to check alias uniqueness one more time
       setIsSubmitting(true);
       
@@ -148,17 +148,17 @@ export default function CreateOrUpdateEventSeriesCard({
           return;
         }
         
-        const eventSeriesData = {
+        const occasionData = {
           name: name.trim(),
           alias: alias.trim(),
           ...(description ? { description: description.trim() } : {}),
           createdBy: userId,
-          ...(editingEventSeries ? {} : { createdAt: Timestamp.now() })
+          ...(editingOccasion ? {} : { createdAt: Timestamp.now() })
         };
         
-        onSubmit(eventSeriesData);
+        onSubmit(occasionData);
       } catch (error) {
-        console.error('Error with event series:', error);
+        console.error('Error with occasion:', error);
         setErrors({
           general: 'An error occurred. Please try again.'
         });
@@ -167,14 +167,14 @@ export default function CreateOrUpdateEventSeriesCard({
       }
     } else {
       // If editing with same alias, just submit the data
-      const eventSeriesData = {
+      const occasionData = {
         name: name.trim(),
         alias: alias.trim(),
         description: description.trim() || undefined,
         createdBy: userId
       };
       
-      onSubmit(eventSeriesData);
+      onSubmit(occasionData);
     }
   };
 
@@ -200,7 +200,7 @@ export default function CreateOrUpdateEventSeriesCard({
         <div className="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl sm:p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xl font-semibold text-[var(--blossom-text-dark)]" id="modal-title">
-              {editingEventSeries ? 'Edit Event Series' : 'Create New Event Series'}
+              {editingOccasion ? 'Edit Occasion' : 'Create New Occasion'}
             </h3>
             <button
               onClick={onClose}
@@ -222,7 +222,7 @@ export default function CreateOrUpdateEventSeriesCard({
             <div className="space-y-6">
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-[var(--blossom-text-dark)] mb-1">
-                  Series Name <span className="text-[var(--blossom-pink-primary)]">*</span>
+                  Occasion Name <span className="text-[var(--blossom-pink-primary)]">*</span>
                 </label>
                 <input
                   type="text"
@@ -252,7 +252,7 @@ export default function CreateOrUpdateEventSeriesCard({
                     onChange={(e) => handleAliasChange(e.target.value)}
                     className="w-full bg-[var(--blossom-pink-light)] border border-[var(--blossom-border)] rounded-md py-2 px-3 text-[var(--blossom-text-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--blossom-pink-primary)] focus:border-transparent"
                     placeholder="e.g. smith-wedding"
-                    disabled={editingEventSeries !== null && editingEventSeries !== undefined}
+                    disabled={editingOccasion !== null && editingOccasion !== undefined}
                   />
                   {isCheckingAlias && (
                     <div className="absolute right-3 top-2.5">
@@ -281,7 +281,7 @@ export default function CreateOrUpdateEventSeriesCard({
                   onChange={(e) => setDescription(e.target.value)}
                   rows={3}
                   className="w-full bg-[var(--blossom-pink-light)] border border-[var(--blossom-border)] rounded-md py-2 px-3 text-[var(--blossom-text-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--blossom-pink-primary)] focus:border-transparent"
-                  placeholder="A brief description of this event series"
+                  placeholder="A brief description of this occasion"
                 ></textarea>
               </div>
               
@@ -308,10 +308,10 @@ export default function CreateOrUpdateEventSeriesCard({
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>
-                      {editingEventSeries ? 'Updating...' : 'Creating...'}
+                      {editingOccasion ? 'Updating...' : 'Creating...'}
                     </span>
                   ) : (
-                    editingEventSeries ? 'Update Event Series' : 'Create Event Series'
+                    editingOccasion ? 'Update Occasion' : 'Create Occasion'
                   )}
                 </button>
               </div>

@@ -53,7 +53,7 @@ export default function CreateOrUpdateGuestCard({
           rsvps: { ...sg.rsvps },
         })),
       });
-      setRsvpLink(`https://rsvpkarlo.com/rsvp/?a=${guest.eventSeriesAlias || ''}&c=${guest.id || ''}`);
+      setRsvpLink(`https://rsvpkarlo.com/rsvp/?a=${guest.occasionAlias || ''}&c=${guest.id || ''}`);
     } else {
       resetForm();
     }

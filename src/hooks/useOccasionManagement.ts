@@ -3,35 +3,35 @@
 import { useState, useEffect } from 'react';
 import { collection, getDocs, doc, query, where, limit, writeBatch } from 'firebase/firestore';
 import { db } from '@/utils/firebase';
-import { EventSeries } from '@/src/models/interfaces';
-import { useEventSeries } from '@/src/contexts/EventSeriesContext';
+import { Occasion } from '@/src/models/interfaces';
+import { useOccasion } from '@/src/contexts/OccasionContext';
 
-interface UseEventSeriesManagementProps {
+interface UseOccasionManagementProps {
   alias?: string | null;
   useContext?: boolean;
   userId?: string | null;
 }
 
-export function useEventSeriesManagement({ alias, useContext = true, userId = null }: UseEventSeriesManagementProps = {}) {
-  const [eventSeries, setEventSeries] = useState<EventSeries | null>(null);
-  const [eventSeriesList, setEventSeriesList] = useState<EventSeries[]>([]);
+export function useOccasionManagement({ alias, useContext = true, userId = null }: UseOccasionManagementProps = {}) {
+  const [occasion, setOccasion] = useState<Occasion | null>(null);
+  const [occasionList, setOccasionList] = useState<Occasion[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [aliasDoc, setAliasDoc] = useState<{id: string, eventSeriesId: string} | null>(null);
+  const [aliasDoc, setAliasDoc] = useState<{id: string, occasionId: string} | null>(null);
 
-  // Try to use the event series context if available and requested
-  let eventSeriesContext = null;
+  // Try to use the occasion context if available and requested
+  let occasionContext = null;
   
   if (useContext) {
     try {
       // eslint-disable-next-line react-hooks/rules-of-hooks
-      eventSeriesContext = useEventSeries();
+      occasionContext = useOccasion();
     } catch {
       // Context not available, continue without it
     }
   }
 
-  const fetchEventSeries = async () => {
+  const fetchOccasion = async () => {
     if (!alias) return;
     
     setLoading(true);
@@ -39,28 +39,28 @@ export function useEventSeriesManagement({ alias, useContext = true, userId = nu
     
     try {
       // Find the event series by alias
-      const eventSeriesQuery = query(
-        collection(db, 'eventSeries'), 
+      const occasionQuery = query(
+        collection(db, 'occasions'), 
         where('alias', '==', alias),
         limit(1)
       );
       
-      const querySnapshot = await getDocs(eventSeriesQuery);
+      const querySnapshot = await getDocs(occasionQuery);
       
       if (querySnapshot.empty) {
-        setError('Event series not found');
+        setError('Occasion not found');
         setLoading(false);
         return;
       }
       
       // Get the first matching document
-      const eventSeriesDoc = querySnapshot.docs[0];
-      const seriesData = {
-        id: eventSeriesDoc.id,
-        ...eventSeriesDoc.data()
-      } as EventSeries;
+      const occasionDoc = querySnapshot.docs[0];
+      const occasionData = {
+        id: occasionDoc.id,
+        ...occasionDoc.data()
+      } as Occasion;
       
-      setEventSeries(seriesData);
+      setOccasion(occasionData);
       
       // Find the alias document
       const aliasQuery = query(
@@ -73,78 +73,78 @@ export function useEventSeriesManagement({ alias, useContext = true, userId = nu
         const aliasDocData = aliasSnapshot.docs[0];
         setAliasDoc({
           id: aliasDocData.id,
-          eventSeriesId: aliasDocData.data().eventSeriesId
+          occasionId: aliasDocData.data().occasionId
         });
       }
     } catch (err) {
-      console.error('Error fetching event series:', err);
-      setError('Error loading event series. Please try again.');
+      console.error('Error fetching occasion:', err);
+      setError('Error loading occasion. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchAllEventSeries = async () => {
+  const fetchAllOccasions = async () => {
     if (!userId) return;
     
     setLoading(true);
     setError(null);
     
     try {
-      const eventSeriesQuery = query(
-        collection(db, 'eventSeries'), 
+      const occasionQuery = query(
+        collection(db, 'occasions'), 
         where('createdBy', '==', userId)
       );
       
-      const querySnapshot = await getDocs(eventSeriesQuery);
-      const seriesList = querySnapshot.docs.map(doc => ({
+      const querySnapshot = await getDocs(occasionQuery);
+      const occasionList = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
-      })) as EventSeries[];
+      })) as Occasion[];
       
       // Sort by createdAt in descending order
-      seriesList.sort((a, b) => {
+      occasionList.sort((a, b) => {
         const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : a.createdAt.toDate();
         const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : b.createdAt.toDate();
         return dateB.getTime() - dateA.getTime();
       });
       
-      setEventSeriesList(seriesList);
+      setOccasionList(occasionList);
     } catch (err) {
-      console.error('Error fetching event series list:', err);
-      setError('Error loading event series list. Please try again.');
+      console.error('Error fetching occasion list:', err);
+      setError('Error loading occasion list. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleUpdateEventSeries = async (updatedEventSeries: Partial<EventSeries>) => {
-    if (!eventSeries || !aliasDoc) return;
+  const handleUpdateOccasion = async (updatedOccasion: Partial<Occasion>) => {
+    if (!occasion || !aliasDoc) return;
     
     try {
       // Create a batch to update both documents atomically
       const batch = writeBatch(db);
       
-      // Update the event series document
-      const eventSeriesRef = doc(db, 'eventSeries', eventSeries.id);
-      batch.update(eventSeriesRef, updatedEventSeries);
+      // Update the occasion document
+      const occasionRef = doc(db, 'occasions', occasion.id);
+      batch.update(occasionRef, updatedOccasion);
       
       // If alias has changed, update the alias document and all events
-      if (updatedEventSeries.alias && updatedEventSeries.alias !== alias && alias) {
+      if (updatedOccasion.alias && updatedOccasion.alias !== alias && alias) {
         // Update the alias in the alias document
         const aliasDocRef = doc(db, 'aliases', aliasDoc.id);
-        batch.update(aliasDocRef, { alias: updatedEventSeries.alias });
+        batch.update(aliasDocRef, { alias: updatedOccasion.alias });
         
         // Update all events that use this alias
         const eventsQuery = query(
           collection(db, 'events'),
-          where('eventSeriesAlias', '==', alias)
+          where('occasionAlias', '==', alias)
         );
         const eventsSnapshot = await getDocs(eventsQuery);
         
         eventsSnapshot.forEach(eventDoc => {
           batch.update(doc(db, 'events', eventDoc.id), {
-            eventSeriesAlias: updatedEventSeries.alias
+            occasionAlias: updatedOccasion.alias
           });
         });
       }
@@ -153,29 +153,29 @@ export function useEventSeriesManagement({ alias, useContext = true, userId = nu
       await batch.commit();
       
       // Use context refresh if available, otherwise update local state
-      if (eventSeriesContext && eventSeriesContext.refreshData && !alias) {
-        await eventSeriesContext.refreshData();
+      if (occasionContext && occasionContext.refreshData && !alias) {
+        await occasionContext.refreshData();
       } else {
-        setEventSeries(prev => prev ? { ...prev, ...updatedEventSeries } : null);
+        setOccasion(prev => prev ? { ...prev, ...updatedOccasion } : null);
       }
       
       return true;
     } catch (error) {
-      console.error('Error updating event series:', error);
+      console.error('Error updating occasion:', error);
       throw error;
     }
   };
 
-  const handleDeleteEventSeries = async () => {
-    if (!eventSeries || !aliasDoc) return;
+  const handleDeleteOccasion = async () => {
+    if (!occasion || !aliasDoc) return;
     
     try {
       // Create a batch to delete all related documents atomically
       const batch = writeBatch(db);
       
-      // Delete the event series document
-      const eventSeriesRef = doc(db, 'eventSeries', eventSeries.id);
-      batch.delete(eventSeriesRef);
+      // Delete the occasion document
+      const occasionRef = doc(db, 'occasions', occasion.id);
+      batch.delete(occasionRef);
       
       // Delete the alias document
       const aliasDocRef = doc(db, 'aliases', aliasDoc.id);
@@ -184,7 +184,7 @@ export function useEventSeriesManagement({ alias, useContext = true, userId = nu
       // Delete all events in this series
       const eventsQuery = query(
         collection(db, 'events'),
-        where('eventSeriesId', '==', eventSeries.id)
+        where('occasionId', '==', occasion.id)
       );
       const eventsSnapshot = await getDocs(eventsQuery);
       
@@ -195,7 +195,7 @@ export function useEventSeriesManagement({ alias, useContext = true, userId = nu
       // Delete all guests in this series
       const guestsQuery = query(
         collection(db, 'guests'),
-        where('eventSeriesId', '==', eventSeries.id)
+        where('occasionId', '==', occasion.id)
       );
       const guestsSnapshot = await getDocs(guestsQuery);
       
@@ -207,32 +207,32 @@ export function useEventSeriesManagement({ alias, useContext = true, userId = nu
       await batch.commit();
       
       // Use context refresh if available, otherwise update local state
-      if (eventSeriesContext && eventSeriesContext.refreshData && !alias) {
-        await eventSeriesContext.refreshData();
+      if (occasionContext && occasionContext.refreshData && !alias) {
+        await occasionContext.refreshData();
       } else {
-        setEventSeries(null);
+        setOccasion(null);
         setAliasDoc(null);
       }
       
       return true;
     } catch (error) {
-      console.error('Error deleting event series:', error);
+      console.error('Error deleting occasion:', error);
       throw error;
     }
   };
 
-  const handleAddEventSeries = async (newEventSeries: Partial<EventSeries>) => {
+  const handleAddOccasion = async (newOccasion: Partial<Occasion>) => {
     if (!userId) return;
     
     try {
-      if (!newEventSeries.alias) {
+      if (!newOccasion.alias) {
         throw new Error('Alias is required');
       }
 
       // Perform final alias uniqueness check
       const aliasQuery = query(
         collection(db, 'aliases'),
-        where('alias', '==', newEventSeries.alias)
+        where('alias', '==', newOccasion.alias)
       );
       const aliasSnapshot = await getDocs(aliasQuery);
       
@@ -240,16 +240,16 @@ export function useEventSeriesManagement({ alias, useContext = true, userId = nu
         throw new Error('This alias is already taken. Please choose another.');
       }
       
-      // Create a new event series document reference with auto-generated ID
-      const newEventSeriesRef = doc(collection(db, 'eventSeries'));
-      const eventSeriesId = newEventSeriesRef.id;
+      // Create a new occasion document reference with auto-generated ID
+      const newOccasionRef = doc(collection(db, 'occasions'));
+      const occasionId = newOccasionRef.id;
       
       // Create a batch to perform both operations atomically
       const batch = writeBatch(db);
       
-      // Add the event series document
-      batch.set(newEventSeriesRef, {
-        ...newEventSeries,
+      // Add the occasion document
+      batch.set(newOccasionRef, {
+        ...newOccasion,
         createdBy: userId,
         createdAt: new Date()
       });
@@ -257,8 +257,8 @@ export function useEventSeriesManagement({ alias, useContext = true, userId = nu
       // Add the alias document with an auto-generated ID
       const aliasDocRef = doc(collection(db, 'aliases'));
       batch.set(aliasDocRef, {
-        alias: newEventSeries.alias,
-        eventSeriesId,
+        alias: newOccasion.alias,
+        occasionId,
         createdBy: userId,
         createdAt: new Date()
       });
@@ -268,12 +268,12 @@ export function useEventSeriesManagement({ alias, useContext = true, userId = nu
       
       // Refresh the list if we're in list mode
       if (!alias) {
-        await fetchAllEventSeries();
+        await fetchAllOccasions();
       }
       
-      return eventSeriesId;
+      return occasionId;
     } catch (error) {
-      console.error('Error creating event series:', error);
+      console.error('Error creating occasion:', error);
       throw error;
     }
   };
@@ -281,22 +281,22 @@ export function useEventSeriesManagement({ alias, useContext = true, userId = nu
   // Initialize data
   useEffect(() => {
     if (alias) {
-      fetchEventSeries();
+      fetchOccasion();
     } else if (userId) {
-      fetchAllEventSeries();
+      fetchAllOccasions();
     }
   }, [alias, userId]);
 
   return {
-    eventSeries,
-    eventSeriesList,
+    occasion,
+    occasionList,
     loading,
     error,
     aliasDoc,
-    fetchEventSeries,
-    fetchAllEventSeries,
-    handleUpdateEventSeries,
-    handleDeleteEventSeries,
-    handleAddEventSeries
+    fetchOccasion,
+    fetchAllOccasions,
+    handleUpdateOccasion,
+    handleDeleteOccasion,
+    handleAddOccasion
   };
 } 

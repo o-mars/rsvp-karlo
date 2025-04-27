@@ -13,7 +13,7 @@ const Hero = () => {
           RSVP <span className="text-pink-600">Karlo</span>
         </h1>
         <p className="text-xl sm:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto">
-          The perfect way to manage RSVPs for your South Asian celebrations - from intimate mehndis to grand shaadis
+          The perfect way to manage RSVPs for all your occasions - from intimate gatherings to grand celebrations
         </p>
         <div className="flex justify-center gap-4 mb-12">
           <Button 

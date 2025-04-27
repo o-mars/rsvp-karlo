@@ -10,8 +10,8 @@ interface CreateOrUpdateEventCardProps {
   onClose: () => void;
   onSubmit: (event: Partial<Event>, startDateTime: Date, endDateTime: Date | null) => void;
   editingEvent: Event | null;
-  eventSeriesId: string;
-  eventSeriesAlias: string;
+  occasionId: string;
+  occasionAlias: string;
 }
 
 export default function CreateOrUpdateEventCard({
@@ -19,8 +19,8 @@ export default function CreateOrUpdateEventCard({
   onClose,
   onSubmit,
   editingEvent,
-  eventSeriesId,
-  eventSeriesAlias
+  occasionId,
+  occasionAlias
 }: CreateOrUpdateEventCardProps) {
   const [date, setDate] = useState('');
   const [startTime, setStartTime] = useState('');
@@ -85,12 +85,12 @@ export default function CreateOrUpdateEventCard({
       const startDateTime = new Date(`${date}T${startTime}`);
       const endDateTime = endTime ? new Date(`${date}T${endTime}`) : null;
       
-      // Include eventSeriesId and eventSeriesAlias for new events
+      // Include occasionId and occasionAlias for new events
       const eventData = {
         ...newEvent,
         ...(editingEvent ? {} : { 
-          eventSeriesId,
-          eventSeriesAlias
+          occasionId,
+          occasionAlias
         })
       };
       

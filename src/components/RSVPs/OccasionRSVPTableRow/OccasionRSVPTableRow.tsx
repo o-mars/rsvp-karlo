@@ -3,12 +3,12 @@
 import { Guest, Event } from '@/src/models/interfaces';
 import RsvpStatusBadge from '@/src/components/shared/RsvpStatusBadge';
 
-interface EventSeriesRSVPTableRowProps {
+interface OccasionRSVPTableRowProps {
   guest: Guest;
   events: Event[];
 }
 
-export default function EventSeriesRSVPTableRow({ guest, events }: EventSeriesRSVPTableRowProps) {
+export default function OccasionRSVPTableRow({ guest, events }: OccasionRSVPTableRowProps) {
   return (
     <tr className="hover:bg-[var(--blossom-card-bg-secondary)]">
       <td className="px-6 py-4 whitespace-nowrap text-[var(--blossom-text-dark)]">

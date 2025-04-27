@@ -1,12 +1,12 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { EventSeries, Event, Guest } from '../models/interfaces';
+import { Occasion, Event, Guest } from '../models/interfaces';
 import { collection, getDocs, doc, getDoc, query, where } from 'firebase/firestore';
 import { db } from '../../utils/firebase';
 
-interface EventSeriesContextType {
-  eventSeries: EventSeries | null;
+interface OccasionContextType {
+  occasion: Occasion | null;
   events: Event[];
   guests: Guest[];
   loading: boolean;
@@ -15,17 +15,17 @@ interface EventSeriesContextType {
   alias: string | null;
 }
 
-const EventSeriesContext = createContext<EventSeriesContextType | undefined>(undefined);
+const OccasionContext = createContext<OccasionContextType | undefined>(undefined);
 
-export function EventSeriesProvider({ children, initialAlias }: { children: ReactNode, initialAlias: string | null }) {
-  const [eventSeries, setEventSeries] = useState<EventSeries | null>(null);
+export function OccasionProvider({ children, initialAlias }: { children: ReactNode, initialAlias: string | null }) {
+  const [occasion, setOccasion] = useState<Occasion | null>(null);
   const [events, setEvents] = useState<Event[]>([]);
   const [guests, setGuests] = useState<Guest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [alias] = useState<string | null>(initialAlias);
 
-  const fetchEventSeriesData = async () => {
+  const fetchOccasionData = async () => {
     if (!alias) return;
     
     setLoading(true);
@@ -42,22 +42,22 @@ export function EventSeriesProvider({ children, initialAlias }: { children: Reac
         return;
       }
       
-      const { eventSeriesId } = aliasDoc.data();
+      const { occasionId } = aliasDoc.data();
       
-      // Then, get the event series details
-      const eventSeriesRef = doc(db, 'eventSeries', eventSeriesId);
-      const eventSeriesDoc = await getDoc(eventSeriesRef);
+      // Then, get the occasion details
+      const occasionRef = doc(db, 'occasions', occasionId);
+      const occasionDoc = await getDoc(occasionRef);
       
-      if (eventSeriesDoc.exists()) {
-        setEventSeries({
-          id: eventSeriesDoc.id,
-          ...eventSeriesDoc.data()
-        } as EventSeries);
+      if (occasionDoc.exists()) {
+        setOccasion({
+          id: occasionDoc.id,
+          ...occasionDoc.data()
+        } as Occasion);
         
         // Fetch the events for this series
         const eventsQuery = query(
           collection(db, 'events'), 
-          where('eventSeriesId', '==', eventSeriesId)
+          where('occasionId', '==', occasionId)
         );
         
         const eventsSnapshot = await getDocs(eventsQuery);
@@ -76,7 +76,7 @@ export function EventSeriesProvider({ children, initialAlias }: { children: Reac
         // Fetch guests for this series
         const guestsQuery = query(
           collection(db, 'guests'),
-          where('eventSeriesId', '==', eventSeriesId)
+          where('occasionId', '==', occasionId)
         );
         
         const guestsSnapshot = await getDocs(guestsQuery);
@@ -90,7 +90,7 @@ export function EventSeriesProvider({ children, initialAlias }: { children: Reac
         setError('Event series not found');
       }
     } catch (err) {
-      console.error('Error fetching event series data:', err);
+      console.error('Error fetching occasion data:', err);
       setError('Error loading data. Please try again.');
     } finally {
       setLoading(false);
@@ -99,18 +99,18 @@ export function EventSeriesProvider({ children, initialAlias }: { children: Reac
 
   useEffect(() => {
     if (alias) {
-      fetchEventSeriesData();
+      fetchOccasionData();
     }
   }, [alias]);
 
   const refreshData = async () => {
-    await fetchEventSeriesData();
+    await fetchOccasionData();
   };
 
   return (
-    <EventSeriesContext.Provider 
+    <OccasionContext.Provider 
       value={{ 
-        eventSeries, 
+        occasion, 
         events, 
         guests, 
         loading, 
@@ -120,14 +120,14 @@ export function EventSeriesProvider({ children, initialAlias }: { children: Reac
       }}
     >
       {children}
-    </EventSeriesContext.Provider>
+    </OccasionContext.Provider>
   );
 }
 
-export function useEventSeries() {
-  const context = useContext(EventSeriesContext);
+export function useOccasion() {
+  const context = useContext(OccasionContext);
   if (context === undefined) {
-    throw new Error('useEventSeries must be used within an EventSeriesProvider');
+    throw new Error('useOccasion must be used within an OccasionProvider');
   }
   return context;
 } 

@@ -1,28 +1,28 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import { useEventSeriesManagement } from '@/src/hooks/useEventSeriesManagement';
+import { useOccasionManagement } from '@/src/hooks/useOccasionManagement';
 import { useEventManagement } from '@/src/hooks/useEventManagement';
 import { useGuestManagement } from '@/src/hooks/useGuestManagement';
 import RSVPStatsForEvent from '@/src/components/RSVPs/RSVPStatsForEvent/RSVPStatsForEvent';
-import EventSeriesRSVPTable from '@/src/components/RSVPs/EventSeriesRSVPTable/EventSeriesRSVPTable';
+import OccasionRSVPTable from '@/src/components/RSVPs/OccasionRSVPTable/OccasionRSVPTable';
 import { useRSVPStats } from '@/src/hooks/useRSVPStats';
 
-export default function EventSeriesStatusView() {
+export default function OccasionStatusView() {
   const searchParams = useSearchParams();
   const alias = searchParams.get('a');
   
   const { 
-    eventSeries, 
-    loading: eventSeriesLoading, 
-    error: eventSeriesError 
-  } = useEventSeriesManagement({ alias, useContext: false });
+    occasion, 
+    loading: occasionLoading, 
+    error: occasionError 
+  } = useOccasionManagement({ alias, useContext: false });
   
   const { 
     events, 
     loading: eventsLoading 
   } = useEventManagement({ 
-    eventSeriesId: eventSeries?.id,
+    occasionId: occasion?.id,
     useContext: false 
   });
   
@@ -30,7 +30,7 @@ export default function EventSeriesStatusView() {
     guests, 
     loading: guestsLoading 
   } = useGuestManagement({ 
-    eventSeriesId: eventSeries?.id,
+    occasionId: occasion?.id,
     useContext: false 
   });
 
@@ -39,9 +39,9 @@ export default function EventSeriesStatusView() {
     guests: rsvpGuests, 
     loading: rsvpLoading,
     getEventStats
-  } = useRSVPStats({ eventSeriesId: eventSeries?.id });
+  } = useRSVPStats({ occasionId: occasion?.id });
 
-  const loading = eventSeriesLoading || eventsLoading || guestsLoading || rsvpLoading;
+  const loading = occasionLoading || eventsLoading || guestsLoading || rsvpLoading;
 
   if (loading) {
     return (
@@ -51,16 +51,16 @@ export default function EventSeriesStatusView() {
     );
   }
 
-  if (eventSeriesError) {
+  if (occasionError) {
     return (
       <div className="bg-red-100 border border-red-400 text-red-700 p-4 rounded-lg">
         <h2 className="text-xl font-semibold mb-2">Error</h2>
-        <p>{eventSeriesError}</p>
+        <p>{occasionError}</p>
       </div>
     );
   }
 
-  if (!eventSeries || !events || !guests) {
+  if (!occasion || !events || !guests) {
     return (
       <div className="text-center p-6">
         <p className="text-[var(--blossom-text-dark)]/70">No data available</p>
@@ -84,7 +84,7 @@ export default function EventSeriesStatusView() {
         ))}
       </div>
 
-      <EventSeriesRSVPTable
+      <OccasionRSVPTable
         guests={displayGuests}
         events={displayEvents}
         isLoading={loading}

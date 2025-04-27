@@ -3,50 +3,50 @@
 import { useState, useEffect } from 'react';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { db } from '@/utils/firebase';
-import { EventSeries } from '@/src/models/interfaces';
-import { EventSeriesProvider } from '@/src/contexts/EventSeriesContext';
-import EventSeriesStatusView from '@/src/components/RSVPs/EventSeriesStatusView/EventSeriesStatusView';
+import { Occasion } from '@/src/models/interfaces';
+import { OccasionProvider } from '@/src/contexts/OccasionContext';
+import OccasionStatusView from '@/src/components/RSVPs/OccasionStatusView/OccasionStatusView';
 
 export default function StatusPage() {
-  const [allSeries, setAllSeries] = useState<EventSeries[]>([]);
-  const [selectedSeriesAlias, setSelectedSeriesAlias] = useState<string | undefined>();
-  const [isLoadingSeries, setIsLoadingSeries] = useState(true);
+  const [allOccasions, setAllOccasions] = useState<Occasion[]>([]);
+  const [selectedOccasionAlias, setSelectedOccasionAlias] = useState<string | undefined>();
+  const [isLoadingOccasion, setIsLoadingOccasion] = useState(true);
   
   // Fetch all event series
   useEffect(() => {
-    const fetchAllSeries = async () => {
+    const fetchAllOccasions = async () => {
       try {
-        setIsLoadingSeries(true);
-        const seriesQuery = query(collection(db, 'eventSeries'), orderBy('name'));
-        const snapshot = await getDocs(seriesQuery);
+        setIsLoadingOccasion(true);
+        const occasionQuery = query(collection(db, 'occasions'), orderBy('name'));
+        const snapshot = await getDocs(occasionQuery);
         
-        const seriesList = snapshot.docs.map(doc => ({
+        const occasionList = snapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
-        })) as EventSeries[];
+        })) as Occasion[];
         
-        setAllSeries(seriesList);
+        setAllOccasions(occasionList);
         
         // Set default to first series if there is one
-        if (seriesList.length > 0 && !selectedSeriesAlias) {
-          setSelectedSeriesAlias(seriesList[0].alias);
+        if (occasionList.length > 0 && !selectedOccasionAlias) {
+          setSelectedOccasionAlias(occasionList[0].alias);
         }
       } catch (error) {
-        console.error('Error fetching event series:', error);
+        console.error('Error fetching occasion:', error);
       } finally {
-        setIsLoadingSeries(false);
+        setIsLoadingOccasion(false);
       }
     };
     
-    fetchAllSeries();
-  }, [selectedSeriesAlias]);
+    fetchAllOccasions();
+  }, [selectedOccasionAlias]);
 
-  const handleSeriesChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleOccasionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
-    setSelectedSeriesAlias(value === "all" ? undefined : value);
+    setSelectedOccasionAlias(value === "all" ? undefined : value);
   };
 
-  if (isLoadingSeries) {
+  if (isLoadingOccasion) {
     return (
       <div className="flex justify-center items-center min-h-[50vh]">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pink-500"></div>
@@ -57,22 +57,22 @@ export default function StatusPage() {
   return (
     <div className="space-y-8">
       {/* Series selector */}
-      {allSeries.length > 0 && (
+      {allOccasions.length > 0 && (
         <div className="bg-slate-800 shadow rounded-lg p-6">
           <div className="flex items-center space-x-4">
-            <label htmlFor="eventSeries" className="text-white font-medium">
+            <label htmlFor="occasion" className="text-white font-medium">
               Event Series:
             </label>
             <select
-              id="eventSeries"
-              value={selectedSeriesAlias || "all"}
-              onChange={handleSeriesChange}
+              id="occasion"
+              value={selectedOccasionAlias || "all"}
+              onChange={handleOccasionChange}
               className="bg-slate-700 border border-slate-600 text-white p-2 rounded focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
             >
-              <option value="all">All Event Series</option>
-              {allSeries.map((series) => (
-                <option key={series.id} value={series.alias}>
-                  {series.name}
+              <option value="all">All Occasions</option>
+              {allOccasions.map((occasion) => (
+                <option key={occasion.id} value={occasion.alias}>
+                  {occasion.name}
                 </option>
               ))}
             </select>
@@ -80,10 +80,9 @@ export default function StatusPage() {
         </div>
       )}
 
-      {/* Wrap the child component with the EventSeriesProvider */}
-      <EventSeriesProvider initialAlias={selectedSeriesAlias || null}>
-        <EventSeriesStatusView />
-      </EventSeriesProvider>
+      <OccasionProvider initialAlias={selectedOccasionAlias || null}>
+        <OccasionStatusView />
+      </OccasionProvider>
     </div>
   );
 } 
