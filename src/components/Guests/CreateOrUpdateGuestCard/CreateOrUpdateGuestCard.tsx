@@ -285,13 +285,14 @@ export default function CreateOrUpdateGuestCard({
                   placeholder="Enter first name"
                   value={guestData.firstName || ''}
                   onChange={(e) => setGuestData({ ...guestData, firstName: e.target.value })}
-                  className={`bg-white border text-[var(--blossom-text-dark)] p-2 rounded focus:ring-2 focus:ring-[var(--blossom-pink-primary)] focus:border-[var(--blossom-pink-primary)] w-full ${
+                  className={`border text-[var(--blossom-text-dark)] p-2 rounded focus:ring-2 focus:ring-[var(--blossom-pink-primary)] focus:border-[var(--blossom-pink-primary)] w-full ${
                     errors.mainGuest.includes('First name is required') 
                       ? 'border-red-500' 
                       : 'border-[var(--blossom-border)]'
-                  }`}
+                  } ${guest ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'}`}
                   aria-invalid={errors.mainGuest.includes('First name is required')}
                   required
+                  disabled={!!guest}
                 />
                 {errors.mainGuest.includes('First name is required') && (
                   <p className="mt-1 text-sm text-red-500">First name is required</p>
@@ -308,13 +309,14 @@ export default function CreateOrUpdateGuestCard({
                   placeholder="Enter last name"
                   value={guestData.lastName || ''}
                   onChange={(e) => setGuestData({ ...guestData, lastName: e.target.value })}
-                  className={`bg-white border text-[var(--blossom-text-dark)] p-2 rounded focus:ring-2 focus:ring-[var(--blossom-pink-primary)] focus:border-[var(--blossom-pink-primary)] w-full ${
+                  className={`border text-[var(--blossom-text-dark)] p-2 rounded focus:ring-2 focus:ring-[var(--blossom-pink-primary)] focus:border-[var(--blossom-pink-primary)] w-full ${
                     errors.mainGuest.includes('Last name is required') 
                       ? 'border-red-500' 
                       : 'border-[var(--blossom-border)]'
-                  }`}
+                  } ${guest ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'}`}
                   aria-invalid={errors.mainGuest.includes('Last name is required')}
                   required
+                  disabled={!!guest}
                 />
                 {errors.mainGuest.includes('Last name is required') && (
                   <p className="mt-1 text-sm text-red-500">Last name is required</p>

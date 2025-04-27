@@ -243,6 +243,11 @@ export default function CreateOrUpdateOccasionCard({
                   <span className="ml-2 text-xs text-[var(--blossom-text-dark)]/70">
                     (Used in URLs, must be unique)
                   </span>
+                  {!editingOccasion && (
+                    <span className="ml-2 text-xs text-red-500">
+                      (Cannot be changed after creation)
+                    </span>
+                  )}
                 </label>
                 <div className="relative">
                   <input
@@ -250,9 +255,11 @@ export default function CreateOrUpdateOccasionCard({
                     id="alias"
                     value={alias}
                     onChange={(e) => handleAliasChange(e.target.value)}
-                    className="w-full bg-[var(--blossom-pink-light)] border border-[var(--blossom-border)] rounded-md py-2 px-3 text-[var(--blossom-text-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--blossom-pink-primary)] focus:border-transparent"
+                    className={`w-full border border-[var(--blossom-border)] rounded-md py-2 px-3 text-[var(--blossom-text-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--blossom-pink-primary)] focus:border-transparent ${
+                      editingOccasion ? 'bg-gray-100 cursor-not-allowed' : 'bg-[var(--blossom-pink-light)]'
+                    }`}
                     placeholder="e.g. smith-wedding"
-                    disabled={editingOccasion !== null && editingOccasion !== undefined}
+                    disabled={!!editingOccasion}
                   />
                   {isCheckingAlias && (
                     <div className="absolute right-3 top-2.5">
