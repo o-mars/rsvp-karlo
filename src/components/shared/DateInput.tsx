@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import CustomDatePicker from './CustomDatePicker';
 
 interface DateInputProps {
   id: string;
@@ -19,14 +20,13 @@ export default function DateInput({
   required = false,
   className = ''
 }: DateInputProps) {
+  const [isOpen, setIsOpen] = useState(false);
   const datePickerRef = useRef<HTMLDivElement>(null);
-  const hiddenInputRef = useRef<HTMLInputElement>(null);
 
   // Format date for display
   const formatDateForDisplay = (dateStr: string): string => {
     if (!dateStr) return '';
     try {
-      // Add time to ensure we're working with the correct day in local timezone
       const date = new Date(`${dateStr}T12:00:00`);
       return date.toLocaleDateString('en-US', {
         weekday: 'long',
@@ -40,17 +40,14 @@ export default function DateInput({
   };
 
   const handleDateClick = () => {
-    // Directly open the browser's native date picker
-    if (hiddenInputRef.current) {
-      hiddenInputRef.current.showPicker?.();
-    }
+    setIsOpen(true);
   };
 
-  // Close date picker on outside click (for browsers where showPicker isn't supported)
+  // Close date picker on outside click
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (datePickerRef.current && !datePickerRef.current.contains(event.target as Node)) {
-        // If we need future functionality for closing custom date pickers
+        setIsOpen(false);
       }
     };
 
@@ -61,11 +58,11 @@ export default function DateInput({
   }, []);
 
   return (
-    <div className={className}>
+    <div className={className} ref={datePickerRef}>
       <label htmlFor={id} className="block text-sm font-medium text-[var(--blossom-text-dark)]/70 mb-1">
         {label}
       </label>
-      <div ref={datePickerRef} className="relative">
+      <div className="relative">
         {/* Visible display field with calendar icon */}
         <div
           onClick={handleDateClick}
@@ -92,17 +89,25 @@ export default function DateInput({
           </div>
         </div>
 
-        {/* Hidden input that handles the actual date selection */}
+        {/* Hidden input for form submission */}
         <input
-          ref={hiddenInputRef}
           id={id}
           type="date"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="sr-only" // Hidden from view but still functional
+          className="sr-only"
           required={required}
           aria-hidden="true"
         />
+
+        {/* Custom Date Picker */}
+        {isOpen && (
+          <CustomDatePicker
+            value={value}
+            onChange={onChange}
+            onClose={() => setIsOpen(false)}
+          />
+        )}
       </div>
     </div>
   );

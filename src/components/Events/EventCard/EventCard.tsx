@@ -17,14 +17,6 @@ export default function EventCard({ event, onEdit, onDelete }: EventCardProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const { handleDeleteEvent } = useEventManagement({ useContext: false });
   
-  const handleEditClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (onEdit) {
-      onEdit(event);
-    }
-  };
-  
   const handleDeleteClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -103,25 +95,8 @@ export default function EventCard({ event, onEdit, onDelete }: EventCardProps) {
           <h2 className="text-xl font-semibold text-[var(--blossom-text-dark)] group-hover:text-[var(--blossom-text-dark)] transition-colors">{event.name}</h2>
           <div className="flex space-x-2">
             <button 
-              onClick={handleEditClick}
-              className="h-6 w-6 flex items-center justify-center rounded-full bg-white/0 group-hover:bg-[var(--blossom-pink-light)]/20 text-[var(--blossom-text-dark)]/70 group-hover:text-[var(--blossom-text-dark)] hover:bg-[var(--blossom-pink-light)]/30 transition-colors z-10"
-              aria-label="Edit event"
-              disabled={isDeleting}
-            >
-              <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                className="h-4 w-4" 
-                fill="none"
-                viewBox="0 0 24 24" 
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-              </svg>
-            </button>
-            <button 
               onClick={handleDeleteClick}
-              className="h-6 w-6 flex items-center justify-center rounded-full bg-white/0 group-hover:bg-red-500/20 text-red-500 group-hover:text-red-600 hover:bg-red-500/30 transition-colors z-10"
+              className="h-6 w-6 flex items-center justify-center rounded-full bg-white/0 text-red-500 group-hover:text-red-600 hover:bg-red-500/30 transition-colors z-10"
               aria-label="Delete event"
               disabled={isDeleting}
             >

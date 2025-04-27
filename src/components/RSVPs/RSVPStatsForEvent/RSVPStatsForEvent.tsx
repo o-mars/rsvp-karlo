@@ -10,7 +10,7 @@ interface RSVPStatsForEventProps {
 
 export default function RSVPStatsForEvent({ event, stats }: RSVPStatsForEventProps) {
   return (
-    <div className="bg-[var(--blossom-card-bg-secondary)] border border-[var(--blossom-border)] shadow-[var(--blossom-card-shadow)] p-4 rounded-lg">
+    <div className="bg-white border border-[var(--blossom-border)] shadow-[var(--blossom-card-shadow)] p-4 rounded-lg">
       <h3 className="text-lg font-medium text-[var(--blossom-text-dark)] mb-2">{event.name}</h3>
       <div className="space-y-2">
         <div className="flex justify-between text-[var(--blossom-text-dark)]/70">

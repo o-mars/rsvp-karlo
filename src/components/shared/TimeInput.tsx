@@ -1,6 +1,7 @@
 'use client';
 
-import { useRef, useState, useEffect, KeyboardEvent } from 'react';
+import { useRef, useState, useEffect } from 'react';
+import CustomTimePicker from './CustomTimePicker';
 
 interface TimeInputProps {
   id: string;
@@ -19,30 +20,8 @@ export default function TimeInput({
   required = false,
   className = ''
 }: TimeInputProps) {
-  const [isFocused, setIsFocused] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   const displayRef = useRef<HTMLDivElement>(null);
-  const hiddenInputRef = useRef<HTMLInputElement>(null);
-
-  const handleTimeClick = () => {
-    // Focus the time input to open the native time picker
-    if (hiddenInputRef.current) {
-      hiddenInputRef.current.showPicker?.();
-    }
-    setIsFocused(true);
-  };
-
-  const handleClearClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent the parent's onClick from firing
-    onChange('');
-  };
-
-  // Handle keyboard events on the display div
-  const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
-    // If backspace is pressed and the field is optional, clear the value
-    if (e.key === 'Backspace' && !required) {
-      onChange('');
-    }
-  };
 
   // Format time for display
   const formatTimeForDisplay = (timeStr: string): string => {
@@ -62,11 +41,20 @@ export default function TimeInput({
     }
   };
 
-  // Handle clicks outside to remove focus
+  const handleTimeClick = () => {
+    setIsOpen(true);
+  };
+
+  const handleClearClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onChange('');
+  };
+
+  // Close time picker on outside click
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (displayRef.current && !displayRef.current.contains(event.target as Node)) {
-        setIsFocused(false);
+        setIsOpen(false);
       }
     };
 
@@ -77,25 +65,19 @@ export default function TimeInput({
   }, []);
 
   return (
-    <div className={className}>
+    <div className={className} ref={displayRef}>
       <label htmlFor={id} className="block text-sm font-medium text-[var(--blossom-text-dark)]/70 mb-1">
         {label}
       </label>
-      <div className="relative" ref={displayRef}>
+      <div className="relative">
         {/* Visible display field with clock icon */}
         <div
           onClick={handleTimeClick}
-          onKeyDown={handleKeyDown}
           className="bg-white border border-[var(--blossom-border)] text-[var(--blossom-text-dark)] p-2 pr-10 rounded cursor-pointer hover:border-[var(--blossom-pink-primary)] focus:ring-2 focus:ring-[var(--blossom-pink-primary)] focus:border-[var(--blossom-pink-primary)] w-full flex items-center group"
-          tabIndex={0} // Make div focusable for keyboard events
-          role="button"
-          aria-label={`Select ${label}`}
         >
           <span className={`flex-grow ${value ? 'text-[var(--blossom-text-dark)]' : 'text-[var(--blossom-text-dark)]/50'}`}>
             {value ? formatTimeForDisplay(value) : 'Select a time'}
           </span>
-
-          {/* Clock icon or X icon for clearing */}
           <div className="absolute inset-y-0 right-0 flex items-center pr-3">
             {!required && value && (
               <button
@@ -132,29 +114,24 @@ export default function TimeInput({
           </div>
         </div>
 
-        {/* Hidden input that handles the actual time selection */}
+        {/* Hidden input for form submission */}
         <input
-          ref={hiddenInputRef}
           id={id}
           type="time"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="sr-only" // Hidden from view but still functional
+          className="sr-only"
           required={required}
           aria-hidden="true"
         />
-        
-        {/* Optional clear button below input when focused (mobile-friendly) */}
-        {!required && value && isFocused && (
-          <div className="absolute right-0 mt-1 z-10">
-            <button
-              type="button"
-              onClick={handleClearClick}
-              className="bg-slate-800 text-white px-3 py-1 rounded-md text-sm shadow-md hover:bg-slate-700 transition-colors"
-            >
-              Clear
-            </button>
-          </div>
+
+        {/* Custom Time Picker */}
+        {isOpen && (
+          <CustomTimePicker
+            value={value}
+            onChange={onChange}
+            onClose={() => setIsOpen(false)}
+          />
         )}
       </div>
     </div>

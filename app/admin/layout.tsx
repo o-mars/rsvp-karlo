@@ -29,7 +29,8 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-white">
-      <div className="max-w-7xl mx-auto py-2 sm:px-6 lg:px-8">
+      <div className="absolute inset-0 bg-gradient-to-b from-pink-50 to-white opacity-70"></div>
+      <div className="relative z-10 max-w-7xl mx-auto py-2 sm:px-6 lg:px-8">
         {children}
       </div>
     </div>

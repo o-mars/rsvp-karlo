@@ -40,13 +40,13 @@ export default function OccasionCard({
       <Link 
         href={`/admin/occasions/?a=${occasion.alias}`} 
         key={occasion.id}
-        className="bg-[var(--blossom-pink-light)] rounded-lg p-6 hover:bg-[var(--blossom-border)] transition-colors shadow-[var(--blossom-card-shadow)] group relative"
+        className="bg-white border border-[var(--blossom-border)] rounded-lg p-6 hover:bg-[var(--blossom-pink-light)] transition-colors shadow-[var(--blossom-card-shadow)] group relative"
       >
         <div className="flex items-center justify-between mb-2">
           <h2 className="text-xl font-semibold text-[var(--blossom-text-dark)] group-hover:text-[var(--blossom-text-dark)] transition-colors">{occasion.name}</h2>
           <button 
             onClick={handleDeleteClick}
-            className="h-6 w-6 flex items-center justify-center text-red-500 hover:text-red-600 transition-colors z-10"
+            className="h-6 w-6 flex items-center justify-center rounded-full hover:bg-red-500/20 text-red-500 hover:text-red-600 hover:bg-red-500/30 transition-colors z-10"
             aria-label="Delete occasion"
           >
             <svg 

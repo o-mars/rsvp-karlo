@@ -1,12 +1,48 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useCallback, memo, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { db } from '../../utils/firebase';
 import { doc, updateDoc, collection, getDocs, getDoc } from 'firebase/firestore';
-import Image from 'next/image';
 import { Guest, Event, RsvpStatus } from '@/src/models/interfaces';
+import { Input } from '@/src/components/ui/input';
 
+const TokenInput = memo(({
+  value, 
+  onChange, 
+  error 
+}: { 
+  value: string;
+  onChange: (value: string) => void;
+  error: string | null;
+}) => {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, []);
+
+  return (
+    <div className="space-y-4">
+      <Input
+        ref={inputRef}
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="Enter your RSVP code"
+        className="text-gray-900 placeholder-gray-400 bg-white border-pink-300 focus-visible:ring-[var(--blossom-pink-primary)] focus-visible:ring-1 focus-visible:ring-offset-0"
+      />
+
+      {error && (
+        <p className="text-red-500 text-sm text-center">{error}</p>
+      )}
+    </div>
+  );
+});
+
+TokenInput.displayName = 'TokenInput';
 
 function RSVPContent() {
   const searchParams = useSearchParams();
@@ -25,7 +61,7 @@ function RSVPContent() {
     }
   }, [searchParams]);
 
-  const handleTokenSubmit = async (submittedToken: string) => {
+  const handleTokenSubmit = useCallback(async (submittedToken: string) => {
     setLoading(true);
     setError(null);
     
@@ -83,7 +119,7 @@ function RSVPContent() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const handleRSVP = async (guestId: string, eventId: string, response: string, isSubGuest: boolean = false) => {
     if (!guest) return;
@@ -213,22 +249,8 @@ function RSVPContent() {
   // Background image container
   const BackgroundContainer = ({ children }: { children: React.ReactNode }) => {
     return (
-      <div className="min-h-screen flex flex-col relative">
-        {/* Background image */}
-        <div className="fixed inset-0 z-0">
-          <div className="relative h-full w-full">
-            <Image 
-              src="/Background1.jpg" 
-              alt="Background" 
-              fill 
-              priority
-              style={{ objectFit: 'cover' }}
-              quality={100}
-            />
-          </div>
-        </div>
-        
-        {/* Content positioned over the background */}
+      <div className="min-h-screen flex flex-col relative bg-white">
+        <div className="absolute inset-0 bg-gradient-to-b from-pink-50 to-white opacity-70"></div>
         <div className="relative z-10 flex-grow flex flex-col">
           {children}
         </div>
@@ -262,34 +284,26 @@ function RSVPContent() {
               Please enter your RSVP code from your invitation
             </p>
 
-            <div className="space-y-4">
-              <input
-                type="text"
-                value={inputToken}
-                onChange={(e) => setInputToken(e.target.value)}
-                placeholder="Enter your RSVP code"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-              />
+            <TokenInput
+              value={inputToken}
+              onChange={setInputToken}
+              error={error}
+            />
 
-              {error && (
-                <p className="text-red-500 text-sm text-center">{error}</p>
-              )}
-
-              <button
-                onClick={() => handleTokenSubmit(inputToken)}
-                disabled={loading || !inputToken}
-                className={`w-full py-3 px-4 rounded-lg text-white font-medium ${
-                  loading || !inputToken
-                    ? 'bg-gray-400 cursor-not-allowed'
-                    : 'bg-pink-500 hover:bg-pink-600'
-                }`}
-              >
-                {loading ? 'Checking...' : 'Continue'}
-              </button>
-            </div>
+            <button
+              onClick={() => handleTokenSubmit(inputToken)}
+              disabled={loading || !inputToken}
+              className={`w-full py-3 px-4 rounded-lg text-white font-medium mt-4 ${
+                loading || !inputToken
+                  ? 'bg-gray-400 cursor-not-allowed'
+                  : 'bg-pink-500 hover:bg-pink-600'
+              }`}
+            >
+              {loading ? 'Checking...' : 'Continue'}
+            </button>
 
             <p className="mt-6 text-sm text-gray-500 text-center">
-              Having trouble? Contact the couple directly
+              Having trouble? Contact the host directly
             </p>
           </div>
         </div>
