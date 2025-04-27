@@ -94,7 +94,7 @@ export default function GuestListTable({
           ) : (
             <button
               onClick={onImportGuests}
-              className="bg-[var(--blossom-pink-light)] hover:bg-[var(--blossom-pink-light)]/80 text-[var(--blossom-text-dark)] py-1.5 px-3 rounded transition-colors flex items-center text-sm"
+              className="bg-[var(--blossom-pink-light)] hover:bg-pink-200 text-[var(--blossom-text-dark)] py-1.5 px-3 rounded transition-colors flex items-center text-sm"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" />
@@ -105,7 +105,7 @@ export default function GuestListTable({
           <button
             onClick={onBulkEmail}
             disabled={selectedGuests.length === 0}
-            className="bg-[var(--blossom-pink-light)] hover:bg-[var(--blossom-pink-light)]/80 text-[var(--blossom-text-dark)] py-1.5 px-3 rounded transition-colors flex items-center text-sm disabled:opacity-50"
+            className="bg-[var(--blossom-pink-light)] hover:bg-pink-200 text-[var(--blossom-text-dark)] py-1.5 px-3 rounded transition-colors flex items-center text-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-200 disabled:hover:bg-gray-200 disabled:text-gray-400"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
               <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />

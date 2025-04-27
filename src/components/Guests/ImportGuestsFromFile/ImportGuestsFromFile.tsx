@@ -4,7 +4,6 @@ import { useState } from 'react';
 import Papa from 'papaparse';
 import { useGuestManagement } from '@/src/hooks/useGuestManagement';
 import { Guest } from '@/src/models/interfaces';
-import { useOccasionManagement } from '@/src/hooks/useOccasionManagement';
 
 interface ParseResult {
   data: string[][];
@@ -18,14 +17,14 @@ interface ParseResult {
 }
 
 interface ImportGuestsFromFileProps {
+  occasionId: string;
   onImportComplete?: () => void;
 }
 
-export default function ImportGuestsFromFile({ onImportComplete }: ImportGuestsFromFileProps) {
+export default function ImportGuestsFromFile({ occasionId, onImportComplete }: ImportGuestsFromFileProps) {
   const [isImporting, setIsImporting] = useState(false);
   const [importStatus, setImportStatus] = useState<{ success: number; failed: number } | null>(null);
-  const { occasion } = useOccasionManagement();
-  const { handleAddGuest, events } = useGuestManagement({ occasionId: occasion?.id });
+  const { handleAddGuest, events } = useGuestManagement({ occasionId });
 
   // Create a map of event names to IDs
   const eventNameToId = new Map<string, string>();
@@ -74,7 +73,7 @@ export default function ImportGuestsFromFile({ onImportComplete }: ImportGuestsF
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
-    link.setAttribute('download', `${occasion?.alias}_guest_import_template.csv`);
+    link.setAttribute('download', `guest_import_template.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
@@ -148,26 +147,20 @@ export default function ImportGuestsFromFile({ onImportComplete }: ImportGuestsF
     
     Papa.parse(file, {
       complete: async (results: ParseResult) => {
-        // Skip the header row and process the data
-        const data = results.data.slice(1) as string[][];
+        
+        const data = results.data.slice(2) as string[][];
         
         console.log('Parsed data:', data);
         
         for (const row of data) {
           console.log('Processing row:', row);
           
-          // Convert row object to array if needed and ensure string values
+          // Convert row to array if it's an object
           const rowArray = Array.isArray(row) 
-            ? row.map(String) 
+            ? row.map(String)
             : Object.values(row).map(String);
-          
-          // If the first value contains a comma, split it
-          const firstValue = rowArray[0];
-          if (firstValue.includes(',')) {
-            const splitValues = firstValue.split(',');
-            rowArray[0] = splitValues[0];
-            rowArray.splice(1, 0, ...splitValues.slice(1));
-          }
+            
+          console.log('Row array:', rowArray);
           
           const [firstName, lastName, email, ...rest] = rowArray;
           
@@ -212,6 +205,7 @@ export default function ImportGuestsFromFile({ onImportComplete }: ImportGuestsF
 
           try {
             await handleAddGuest(guestData);
+            console.log('Guest added successfully:', guestData);
             successCount++;
           } catch (error) {
             console.error('Error adding guest from CSV:', error);
@@ -226,12 +220,12 @@ export default function ImportGuestsFromFile({ onImportComplete }: ImportGuestsF
           onImportComplete();
         }
       },
-      header: true,
-      dynamicTyping: false, // Keep everything as strings
-      skipEmptyLines: true, // Skip empty lines
-      transformHeader: (header: string) => header.trim(), // Trim header whitespace
-      transform: (value: string) => value.trim(), // Trim cell values
-      delimiter: ',', // Explicitly set delimiter
+      header: false,
+      dynamicTyping: false,
+      skipEmptyLines: true,
+      transformHeader: (header: string) => header.trim(),
+      transform: (value: string) => value.trim(),
+      delimiter: ',',
       error: (error) => {
         console.error('Error parsing CSV:', error);
         setImportStatus({ success: 0, failed: 1 });

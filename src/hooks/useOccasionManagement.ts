@@ -280,10 +280,10 @@ export function useOccasionManagement({ alias, useContext = true, userId = null 
 
   // Initialize data
   useEffect(() => {
-    if (alias) {
-      fetchOccasion();
-    } else if (userId) {
+    if (userId) {
       fetchAllOccasions();
+    } else if (alias) {
+      fetchOccasion();
     }
   }, [alias, userId]);
 

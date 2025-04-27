@@ -329,6 +329,7 @@ export default function EventsPage() {
               </button>
             </div>
             <ImportGuestsFromFile
+              occasionId={occasion?.id || ''}
               onImportComplete={handleImportComplete}
             />
           </div>
