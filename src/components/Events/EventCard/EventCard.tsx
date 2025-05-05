@@ -144,8 +144,8 @@ export default function EventCard({ event, onEdit, onDelete }: EventCardProps) {
             <div className="flex flex-wrap gap-2">
               {Object.entries(event.additionalFields).map(([key, value]) => (
                 <div key={key} className="text-xs bg-[var(--blossom-pink-light)]/50 px-2 py-1 rounded">
-                  <span className="font-medium text-[var(--blossom-text-dark)]/70">{key}:</span>
-                  <span className="ml-1 text-[var(--blossom-text-dark)]/70">{value}</span>
+                  <span className="font-medium text-[var(--blossom-text-dark)]/70">{key}</span>
+                  {value && value !== '' && <span className="ml-1 text-[var(--blossom-text-dark)]/70">: {value}</span>}
                 </div>
               ))}
             </div>

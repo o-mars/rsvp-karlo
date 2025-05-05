@@ -49,7 +49,7 @@ export interface Guest {
   createdBy: string;
   firstName: string;
   lastName: string;
-  email: string;
+  email: string[];
   emailSent: boolean;
   token: string;
   rsvps: Record<string, string>;

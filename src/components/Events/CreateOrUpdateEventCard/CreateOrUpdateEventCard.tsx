@@ -106,7 +106,7 @@ export default function CreateOrUpdateEventCard({
   };
 
   const addCustomField = () => {
-    if (!newFieldKey || !newFieldValue) return;
+    if (!newFieldKey) return;
     
     setNewEvent({
       ...newEvent,
@@ -235,7 +235,7 @@ export default function CreateOrUpdateEventCard({
               <div className="flex space-x-2">
                 <div className="flex-grow">
                   <label htmlFor="detail-name" className="block text-sm font-medium text-[var(--blossom-text-dark)]/70 mb-1">
-                    Detail Name
+                    Detail
                   </label>
                   <input
                     id="detail-name"
@@ -248,7 +248,7 @@ export default function CreateOrUpdateEventCard({
                 </div>
                 <div className="flex-grow">
                   <label htmlFor="detail-value" className="block text-sm font-medium text-[var(--blossom-text-dark)]/70 mb-1">
-                    Detail Value
+                    Additional Info (Optional)
                   </label>
                   <input
                     id="detail-value"
@@ -263,7 +263,12 @@ export default function CreateOrUpdateEventCard({
                   <button
                     type="button"
                     onClick={addCustomField}
-                    className="bg-[var(--blossom-pink-primary)] text-white px-4 py-2 rounded hover:bg-[var(--blossom-pink-hover)]"
+                    disabled={!newFieldKey}
+                    className={`px-4 py-2 rounded ${
+                      newFieldKey 
+                        ? 'bg-[var(--blossom-pink-primary)] text-white hover:bg-[var(--blossom-pink-hover)]' 
+                        : 'bg-[var(--blossom-pink-light)] text-[var(--blossom-text-dark)]/50 cursor-not-allowed'
+                    }`}
                   >
                     Add
                   </button>
@@ -274,8 +279,8 @@ export default function CreateOrUpdateEventCard({
                 {Object.entries(newEvent.additionalFields || {}).map(([key, value]) => (
                   <div key={key} className="inline-flex items-center bg-[var(--blossom-pink-light)] px-3 py-1.5 rounded">
                     <div>
-                      <span className="font-medium text-[var(--blossom-text-dark)]">{key}:</span>
-                      <span className="ml-1 text-[var(--blossom-text-dark)]/70">{value}</span>
+                      <span className="font-medium text-[var(--blossom-text-dark)]">{key}</span>
+                      {value && value !== '' && <span className="ml-1 text-[var(--blossom-text-dark)]/70">: {value}</span>}
                     </div>
                     <button
                       type="button"

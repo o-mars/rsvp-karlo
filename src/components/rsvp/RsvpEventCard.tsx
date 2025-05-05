@@ -81,18 +81,24 @@ export function RsvpEventCard({
           </div>
         </div>
         {maxAdditionalGuests > 0 && rsvps[eventId] === RsvpStatus.ATTENDING && isShowingAdditionalGuests && (
-          <div className="flex justify-center">
-            <div className="flex items-center space-x-2">
-              <label className="text-sm text-[var(--blossom-text-dark)]">How many additional guests will you be bringing?</label>
-              <select
-                value={currentAdditionalGuests}
-                onChange={(e) => onAdditionalGuestsChange(eventId, parseInt(e.target.value))}
-                className="px-2 py-1 border border-[var(--blossom-border)] rounded text-sm text-[var(--blossom-text-dark)] bg-white"
-              >
-                {[...Array(maxAdditionalGuests + 1)].map((_, i) => (
-                  <option key={i} value={i}>{i}</option>
-                ))}
-              </select>
+          <div className="mt-6 p-4 bg-[var(--blossom-pink-light)] rounded-lg border border-[var(--blossom-border)]">
+            <div className="flex flex-col items-center space-y-3">
+              <h4 className="text-lg font-medium text-[var(--blossom-text-dark)]">Additional Guests</h4>
+              <p className="text-sm text-[var(--blossom-text-light)] text-center">
+                You can bring up to {maxAdditionalGuests} additional guest{maxAdditionalGuests > 1 ? 's' : ''} to this event.
+              </p>
+              <div className="flex items-center space-x-3">
+                <label className="text-[var(--blossom-text-dark)] font-medium">Number of additional guests:</label>
+                <select
+                  value={currentAdditionalGuests}
+                  onChange={(e) => onAdditionalGuestsChange(eventId, parseInt(e.target.value))}
+                  className="px-3 py-2 border border-[var(--blossom-border)] rounded text-[var(--blossom-text-dark)] bg-white focus:ring-2 focus:ring-[var(--blossom-pink-primary)] focus:border-[var(--blossom-pink-primary)]"
+                >
+                  {[...Array(maxAdditionalGuests + 1)].map((_, i) => (
+                    <option key={i} value={i}>{i}</option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
         )}
@@ -120,7 +126,20 @@ export function RsvpEventCard({
       </div>
       
       {event.description && (
-        <p className="text-[var(--blossom-text-light)] mb-8 text-sm">{event.description}</p>
+        <p className="text-[var(--blossom-text-light)] mb-4 text-sm">{event.description}</p>
+      )}
+
+      {event.additionalFields && Object.keys(event.additionalFields).length > 0 && (
+        <div className="mb-4 p-3 bg-[var(--blossom-pink-light)]/30 rounded-lg">
+          <div className="space-y-2">
+            {Object.entries(event.additionalFields).map(([key, value]) => (
+              <div key={key} className="flex text-sm">
+                <span className="text-[var(--blossom-text-light)]">{key}</span>
+                {value && value !== '' && <span className="text-[var(--blossom-text-dark)] font-medium">: {value}</span>}
+              </div>
+            ))}
+          </div>
+        </div>
       )}
       
       <div className="space-y-8 pb-4">

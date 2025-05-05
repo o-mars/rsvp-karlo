@@ -21,7 +21,7 @@ export default function CreateOrUpdateGuestCard({
   const [guestData, setGuestData] = useState<Partial<Guest>>({
     firstName: '',
     lastName: '',
-    email: '',
+    email: [],
     rsvps: {} as Record<string, string>,
     additionalGuests: {} as Record<string, number>,
     subGuests: [],
@@ -52,6 +52,8 @@ export default function CreateOrUpdateGuestCard({
           ...sg,
           rsvps: { ...sg.rsvps },
         })),
+        // Convert single email to array if needed
+        email: Array.isArray(guest.email) ? [...guest.email] : guest.email ? [guest.email] : [],
       });
       setRsvpLink(`https://rsvpkarlo.com/rsvp/?a=${guest.occasionAlias || ''}&c=${guest.id || ''}`);
     } else {
@@ -86,7 +88,7 @@ export default function CreateOrUpdateGuestCard({
     setGuestData({
       firstName: '',
       lastName: '',
-      email: '',
+      email: [],
       rsvps: {} as Record<string, string>,
       additionalGuests: {} as Record<string, number>,
       subGuests: [],
@@ -244,6 +246,29 @@ export default function CreateOrUpdateGuestCard({
       subGuests: (guestData.subGuests || []).filter((_, i) => i !== index)
     });
   };
+
+  const handleAddEmail = () => {
+    setGuestData({
+      ...guestData,
+      email: [...(guestData.email || []), '']
+    });
+  };
+
+  const handleRemoveEmail = (index: number) => {
+    setGuestData({
+      ...guestData,
+      email: (guestData.email || []).filter((_, i) => i !== index)
+    });
+  };
+
+  const handleEmailChange = (index: number, value: string) => {
+    const updatedEmails = [...(guestData.email || [])];
+    updatedEmails[index] = value;
+    setGuestData({
+      ...guestData,
+      email: updatedEmails
+    });
+  };
   
   if (!isOpen) return null;
 
@@ -276,13 +301,13 @@ export default function CreateOrUpdateGuestCard({
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
-                <label htmlFor="first-name" className="block text-sm font-medium text-slate-300 mb-1">
+                <label htmlFor="first-name" className="block text-sm font-medium text-[var(--blossom-text-dark)] mb-1">
                   First Name <span className="text-pink-500">*</span>
                 </label>
                 <input
                   id="first-name"
                   type="text"
-                  placeholder="Enter first name"
+                  placeholder="First name"
                   value={guestData.firstName || ''}
                   onChange={(e) => setGuestData({ ...guestData, firstName: e.target.value })}
                   className={`border text-[var(--blossom-text-dark)] p-2 rounded focus:ring-2 focus:ring-[var(--blossom-pink-primary)] focus:border-[var(--blossom-pink-primary)] w-full ${
@@ -300,13 +325,13 @@ export default function CreateOrUpdateGuestCard({
               </div>
               
               <div>
-                <label htmlFor="last-name" className="block text-sm font-medium text-slate-300 mb-1">
+                <label htmlFor="last-name" className="block text-sm font-medium text-[var(--blossom-text-dark)] mb-1">
                   Last Name <span className="text-pink-500">*</span>
                 </label>
                 <input
                   id="last-name"
                   type="text"
-                  placeholder="Enter last name"
+                  placeholder="Last name"
                   value={guestData.lastName || ''}
                   onChange={(e) => setGuestData({ ...guestData, lastName: e.target.value })}
                   className={`border text-[var(--blossom-text-dark)] p-2 rounded focus:ring-2 focus:ring-[var(--blossom-pink-primary)] focus:border-[var(--blossom-pink-primary)] w-full ${
@@ -324,17 +349,46 @@ export default function CreateOrUpdateGuestCard({
               </div>
               
               <div className="sm:col-span-2">
-                <label htmlFor="email" className="block text-sm font-medium text-[var(--blossom-text-dark)]/70 mb-1">
-                  Email
-                </label>
-                <input
-                  id="email"
-                  type="email"
-                  placeholder="Enter email address"
-                  value={guestData.email || ''}
-                  onChange={(e) => setGuestData({ ...guestData, email: e.target.value })}
-                  className="bg-white border border-[var(--blossom-border)] text-[var(--blossom-text-dark)] p-2 rounded focus:ring-2 focus:ring-[var(--blossom-pink-primary)] focus:border-[var(--blossom-pink-primary)] w-full"
-                />
+                <div className="flex justify-between items-center mb-2">
+                  <label className="block text-sm font-medium text-[var(--blossom-text-dark)]">
+                    Email Address(es)
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handleAddEmail}
+                    className="text-[var(--blossom-pink-primary)] hover:text-[var(--blossom-pink-hover)] text-sm flex items-center"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+                    </svg>
+                    Add Email
+                  </button>
+                </div>
+                <div className="space-y-2">
+                  {(guestData.email || ['']).map((email, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <input
+                        type="email"
+                        placeholder="Email address"
+                        value={email}
+                        onChange={(e) => handleEmailChange(index, e.target.value)}
+                        className="bg-white border border-[var(--blossom-border)] text-[var(--blossom-text-dark)] p-2 rounded focus:ring-2 focus:ring-[var(--blossom-pink-primary)] focus:border-[var(--blossom-pink-primary)] w-full"
+                      />
+                      {index > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveEmail(index)}
+                          className="text-red-500 hover:text-red-600 p-2"
+                          title="Remove email"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
 

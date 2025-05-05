@@ -202,7 +202,7 @@ export function useGuestManagement({ occasionId, useContext = true }: UseGuestMa
     try {
       const selectedGuestsData = guests
         .filter(g => selectedGuests.includes(g.id))
-        .filter(g => g.email); // Only include guests with email addresses
+        .filter(g => g.email && g.email.length > 0); // Only include guests with email addresses
       
       if (selectedGuestsData.length === 0) {
         throw new Error('No valid email addresses selected');
