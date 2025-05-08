@@ -37,7 +37,7 @@ export default function ImportGuestsFromFile({ occasionId, onImportComplete }: I
     const headers = [
       'First Name',
       'Last Name',
-      'Email',
+      'Emails (comma separated)',
       ...events.map(event => `${event.name}:additionalGuests`),
       'Sub Guest 1 First Name',
       'Sub Guest 1 Last Name',
@@ -52,7 +52,7 @@ export default function ImportGuestsFromFile({ occasionId, onImportComplete }: I
     const sampleRow = [
       'John',
       'Doe',
-      'john@example.com',
+      'john@example.com,jane@example.com',
       ...events.map(event => `${event.name}:1`),
       'Jane',
       'Doe',
@@ -162,12 +162,18 @@ export default function ImportGuestsFromFile({ occasionId, onImportComplete }: I
             
           console.log('Row array:', rowArray);
           
-          const [firstName, lastName, email, ...rest] = rowArray;
+          const [firstName, lastName, emailStr, ...rest] = rowArray;
           
           if (!firstName?.trim() || !lastName?.trim()) {
             failedCount++;
             continue;
           }
+
+          // Parse emails into array
+          const emails = emailStr
+            ?.split(',')
+            .map(email => email.trim())
+            .filter(email => email.length > 0) || [];
 
           // Parse event invitations and additional guests
           const rsvps: Record<string, string> = {};
@@ -197,7 +203,7 @@ export default function ImportGuestsFromFile({ occasionId, onImportComplete }: I
           const guestData: Partial<Guest> = {
             firstName: firstName.trim(),
             lastName: lastName.trim(),
-            email: email?.trim() || '',
+            email: emails,
             rsvps,
             additionalGuests,
             subGuests
