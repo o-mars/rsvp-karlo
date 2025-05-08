@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Event } from '@/src/models/interfaces';
 import DateInput from '@/src/components/shared/DateInput';
 import TimeInput from '@/src/components/shared/TimeInput';
+import TimezonePicker from '@/src/components/shared/TimezonePicker';
 import Image from 'next/image';
 import { useEventManagement } from '@/src/hooks/useEventManagement';
 import { toast } from 'react-hot-toast';
@@ -26,8 +27,11 @@ export default function CreateOrUpdateEventCard({
   occasionAlias
 }: CreateOrUpdateEventCardProps) {
   const [date, setDate] = useState('');
-  const [startTime, setStartTime] = useState('');
-  const [endTime, setEndTime] = useState('');
+  const [time, setTime] = useState('');
+  const [timezone, setTimezone] = useState(() => {
+    // Default to user's local timezone
+    return Intl.DateTimeFormat().resolvedOptions().timeZone;
+  });
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   
@@ -38,6 +42,7 @@ export default function CreateOrUpdateEventCard({
     location: '',
     description: '',
     additionalFields: {},
+    timezone: timezone,
   });
   const [newFieldKey, setNewFieldKey] = useState('');
   const [newFieldValue, setNewFieldValue] = useState('');
@@ -52,26 +57,24 @@ export default function CreateOrUpdateEventCard({
         location: editingEvent.location || '',
         description: editingEvent.description || '',
         additionalFields: editingEvent.additionalFields || {},
-        inviteImageUrl: editingEvent.inviteImageUrl
+        inviteImageUrl: editingEvent.inviteImageUrl,
+        timezone: editingEvent.timezone || timezone
       });
       
       // Set date and time values
       if (editingEvent.startDateTime) {
         const startDate = editingEvent.startDateTime.toDate();
         setDate(startDate.toISOString().split('T')[0]);
-        setStartTime(startDate.toISOString().split('T')[1].substring(0, 5));
+        setTime(startDate.toISOString().split('T')[1].substring(0, 5));
       }
       
-      if (editingEvent.endDateTime) {
-        const endDate = editingEvent.endDateTime.toDate();
-        setEndTime(endDate.toISOString().split('T')[1].substring(0, 5));
-      } else {
-        setEndTime('');
+      if (editingEvent.timezone) {
+        setTimezone(editingEvent.timezone);
       }
     } else {
       resetForm();
     }
-  }, [editingEvent]);
+  }, [editingEvent, timezone]);
   
   const resetForm = () => {
     setNewEvent({
@@ -79,10 +82,10 @@ export default function CreateOrUpdateEventCard({
       location: '',
       description: '',
       additionalFields: {},
+      timezone: timezone,
     });
     setDate('');
-    setStartTime('');
-    setEndTime('');
+    setTime('');
     setNewFieldKey('');
     setNewFieldValue('');
     setUploadError(null);
@@ -92,21 +95,20 @@ export default function CreateOrUpdateEventCard({
     e.preventDefault();
     
     try {
-      const startDateTime = new Date(`${date}T${startTime}`);
-      const endDateTime = endTime ? new Date(`${date}T${endTime}`) : null;
+      const startDateTime = new Date(`${date}T${time}`);
+      // No endDateTime anymore since we removed the end time field
       
       // Include occasionId and occasionAlias for new events
       const eventData = {
         ...newEvent,
+        timezone,
         ...(editingEvent ? {} : { 
           occasionId,
           occasionAlias
         })
       };
       
-      console.log('handleSubmit eventData', eventData);
-
-      onSubmit(eventData, startDateTime, endDateTime);
+      onSubmit(eventData, startDateTime, null);
       
       if (!editingEvent) {
         resetForm();
@@ -218,32 +220,43 @@ export default function CreateOrUpdateEventCard({
                 />
               </div>
               
-              <DateInput 
-                id="event-date"
-                label="When"
-                value={date}
-                onChange={setDate}
-                required={true}
-              />
+              <div className="col-span-1 sm:col-span-1">
+                <DateInput 
+                  id="event-date"
+                  label="When"
+                  value={date}
+                  onChange={setDate}
+                  required={true}
+                  className="w-full"
+                />
+              </div>
               
               <div className="col-span-1">
                 <div className="flex gap-4">
-                  <TimeInput
-                    id="start-time"
-                    label="From"
-                    value={startTime}
-                    onChange={setStartTime}
-                    required={true}
-                    className="flex-1"
-                  />
+                  <div className="w-32">
+                    <TimeInput
+                      id="event-time"
+                      label="At"
+                      value={time}
+                      onChange={setTime}
+                      required={true}
+                      className="w-full"
+                    />
+                  </div>
                   
-                  <TimeInput
-                    id="end-time"
-                    label="Till (Optional)"
-                    value={endTime}
-                    onChange={setEndTime}
-                    className="flex-1"
-                  />
+                  <div className="flex-1">
+                    <label htmlFor="timezone" className="block text-sm font-medium text-[var(--blossom-text-dark)]/70 mb-1">
+                      Timezone
+                    </label>
+                    <TimezonePicker
+                      value={timezone}
+                      onChange={(newTimezone) => {
+                        setTimezone(newTimezone);
+                        setNewEvent(prev => ({ ...prev, timezone: newTimezone }));
+                      }}
+                      className="w-full"
+                    />
+                  </div>
                 </div>
               </div>
               

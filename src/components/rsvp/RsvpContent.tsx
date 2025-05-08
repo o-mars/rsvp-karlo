@@ -180,7 +180,11 @@ export function RsvpContent({ guestId }: RsvpContentProps) {
         </p>
 
         <div className="space-y-6">
-          {events.map((event) => {
+          {[...events].sort((a, b) => {
+            const dateA = a.startDateTime?.toDate() || new Date(0);
+            const dateB = b.startDateTime?.toDate() || new Date(0);
+            return dateA.getTime() - dateB.getTime();
+          }).map((event) => {
             if (!guest.rsvps[event.id]) return null;
             
             return (

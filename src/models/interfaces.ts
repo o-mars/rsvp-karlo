@@ -23,6 +23,7 @@ export interface Event {
   createdAt: Timestamp;
   additionalFields?: Record<string, string>;
   inviteImageUrl?: string;
+  timezone: string;
 }
 
 export interface Occasion {

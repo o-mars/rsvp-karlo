@@ -144,7 +144,9 @@ export function useEventManagement({ occasionId, useContext = true }: UseEventMa
         description: eventData.description || '',
         location: eventData.location || '',
         additionalFields: eventData.additionalFields || {},
-        inviteImageUrl: eventData.inviteImageUrl
+        inviteImageUrl: eventData.inviteImageUrl,
+        startDateTime: eventData.startDateTime,
+        timezone: eventData.timezone
       });
       
       if (occasionContext && occasionContext.refreshData && !occasionId) {
