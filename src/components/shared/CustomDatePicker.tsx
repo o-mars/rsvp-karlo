@@ -26,6 +26,11 @@ export default function CustomDatePicker({ value, onChange, onClose }: CustomDat
     end: endOfMonth(currentMonth)
   });
 
+  // Calculate padding days for the start of the month
+  const firstDayOfMonth = startOfMonth(currentMonth);
+  const startingDayIndex = firstDayOfMonth.getDay(); // 0 for Sunday, 1 for Monday, etc.
+  const paddingDays = Array(startingDayIndex).fill(null);
+
   const handleDateClick = (date: Date) => {
     // Preserve the time from the selected date if it exists
     const newDate = new Date(date);
@@ -100,6 +105,9 @@ export default function CustomDatePicker({ value, onChange, onClose }: CustomDat
           <div key={day} className="text-center text-sm text-[var(--blossom-text-dark)]/70 py-1">
             {day}
           </div>
+        ))}
+        {paddingDays.map((_, index) => (
+          <div key={`padding-${index}`} className="p-2" />
         ))}
         {days.map((day) => {
           const isSelected = selectedDate && isSameDay(day, selectedDate);
