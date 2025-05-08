@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from 'react';
 
-// Get all IANA timezones and group them by region
 const TIMEZONE_GROUPS = {
   'US & Canada': [
     'America/New_York',      // GMT-4 (EDT) / GMT-5 (EST)
@@ -97,7 +96,7 @@ const TIMEZONE_GROUPS = {
     'Asia/Jakarta',          // GMT+7 (WIB)
     'Asia/Kuala_Lumpur',     // GMT+8 (MYT)
     'Asia/Ho_Chi_Minh',      // GMT+7 (ICT)
-    'Asia/Hanoi',            // GMT+7 (ICT)
+    // 'Asia/Hanoi',            // GMT+7 (ICT)
     'Asia/Baghdad',          // GMT+3 (AST)
     'Asia/Tehran',           // GMT+3:30 (IRST)
     'Asia/Dubai',            // GMT+4 (GST)
@@ -195,7 +194,7 @@ const TIMEZONE_GROUPS = {
     'America/Recife',        // GMT-3 (BRT)
     'America/Araguaina',     // GMT-3 (BRT)
     'America/Maceio',        // GMT-3 (BRT)
-    'America/Salvador',      // GMT-3 (BRT)
+    // 'America/Salvador',      // GMT-3 (BRT)
     'America/Bahia',         // GMT-3 (BRT)
     'America/Campo_Grande',  // GMT-4 (AMT)
     'America/Cuiaba',        // GMT-4 (AMT)
@@ -240,16 +239,19 @@ const TIMEZONE_GROUPS = {
 // Helper function to format timezone label
 const formatTimezoneLabel = (timezone: string): string => {
   try {
-    const date = new Date();
-    const formatter = new Intl.DateTimeFormat('en-US', {
-      timeZone: timezone,
-      timeZoneName: 'long',
-    });
+    // const date = new Date();
+    // const formatter = new Intl.DateTimeFormat('en-US', {
+    //   timeZone: timezone,
+    //   timeZoneName: 'short',
+    // });
     
-    const parts = formatter.formatToParts(date);
-    const timeZoneName = parts.find(part => part.type === 'timeZoneName')?.value || timezone;
+    // const parts = formatter.formatToParts(date);
+    // const timeZoneName = parts.find(part => part.type === 'timeZoneName')?.value || '';
     
-    return `${timezone} (${timeZoneName})`;
+    // Extract the GMT offset from the timezone name (e.g., "GMT-4" from "EDT")
+    // const offset = timeZoneName.replace(/[^+-0-9:]/g, '');
+    const parts = timezone.split('/');
+    return parts.length < 3 ? `${timezone}` : `${parts[0]}/${parts[parts.length - 1]}`;
   } catch (error) {
     console.error('Error formatting timezone label:', error);
     return timezone;
