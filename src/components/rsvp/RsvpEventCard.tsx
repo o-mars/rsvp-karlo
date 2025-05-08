@@ -143,7 +143,7 @@ export function RsvpEventCard({
       </div>
       
       {event.description && (
-        <p className="text-[var(--blossom-text-light)] mb-4 text-sm">{event.description}</p>
+        <div className="text-[var(--blossom-text-light)] mb-4 text-sm whitespace-pre-wrap">{event.description}</div>
       )}
 
       {event.additionalFields && Object.keys(event.additionalFields).length > 0 && (
