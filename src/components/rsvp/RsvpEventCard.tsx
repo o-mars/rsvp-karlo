@@ -1,6 +1,6 @@
 import { Guest, Event, RsvpStatus } from '@/src/models/interfaces';
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
+import ImagePreviewModal from '@/src/components/shared/ImagePreviewModal';
 
 interface RsvpEventCardProps {
   event: Event;
@@ -190,41 +190,13 @@ export function RsvpEventCard({
         ))}
       </div>
 
-      {isInviteModalOpen && event.inviteImageUrl && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div 
-            className="fixed inset-0 bg-black/50 transition-opacity" 
-            onClick={() => setIsInviteModalOpen(false)}
-            aria-hidden="true"
-          ></div>
-          
-          <div className="flex min-h-full items-center justify-center p-4 text-center">
-            <div className="relative transform overflow-hidden rounded-lg bg-white p-4 shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-semibold text-[var(--blossom-text-dark)]">
-                  Event Invitation
-                </h3>
-                <button
-                  onClick={() => setIsInviteModalOpen(false)}
-                  className="text-[var(--blossom-text-dark)]/70 hover:text-[var(--blossom-text-dark)]"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-              
-              <div className="relative w-full aspect-[3/4] rounded overflow-hidden">
-                <Image
-                  src={event.inviteImageUrl}
-                  alt="Event invitation"
-                  fill
-                  className="object-contain"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
+      {event.inviteImageUrl && (
+        <ImagePreviewModal
+          isOpen={isInviteModalOpen}
+          onClose={() => setIsInviteModalOpen(false)}
+          imageUrl={event.inviteImageUrl}
+          alt="Event invitation"
+        />
       )}
     </div>
   );

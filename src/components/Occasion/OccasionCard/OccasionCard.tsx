@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Occasion } from '@/src/models/interfaces';
 import DeleteConfirmationModal from '@/src/components/shared/DeleteConfirmationModal';
-import Image from 'next/image';
+import ImagePreviewModal from '@/src/components/shared/ImagePreviewModal';
 
 interface OccasionCardProps {
   occasion: Occasion;
@@ -105,38 +105,13 @@ export default function OccasionCard({
         onConfirm={handleDeleteConfirm}
       />
 
-      {/* Invitation Preview Modal */}
-      {isInviteModalOpen && occasion.inviteImageUrl && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="fixed inset-0 bg-black/50 transition-opacity" aria-hidden="true"></div>
-          
-          <div className="flex min-h-full items-center justify-center p-4 text-center">
-            <div className="relative transform overflow-hidden rounded-lg bg-white p-4 shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-semibold text-[var(--blossom-text-dark)]">
-                  Occasion Invitation
-                </h3>
-                <button
-                  onClick={() => setIsInviteModalOpen(false)}
-                  className="text-[var(--blossom-text-dark)]/70 hover:text-[var(--blossom-text-dark)]"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-              
-              <div className="relative w-full aspect-[3/4] rounded overflow-hidden">
-                <Image
-                  src={occasion.inviteImageUrl}
-                  alt="Occasion invitation"
-                  fill
-                  className="object-contain"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
+      {occasion.inviteImageUrl && (
+        <ImagePreviewModal
+          isOpen={isInviteModalOpen}
+          onClose={() => setIsInviteModalOpen(false)}
+          imageUrl={occasion.inviteImageUrl}
+          alt="Occasion invitation"
+        />
       )}
     </>
   );
