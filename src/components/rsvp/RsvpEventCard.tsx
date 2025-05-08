@@ -1,5 +1,6 @@
 import { Guest, Event, RsvpStatus } from '@/src/models/interfaces';
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 
 interface RsvpEventCardProps {
   event: Event;
@@ -20,6 +21,7 @@ export function RsvpEventCard({
 }: RsvpEventCardProps) {
   const hasSubGuests = guest.subGuests && guest.subGuests.length > 0;
   const [showingAdditionalGuests, setShowingAdditionalGuests] = useState<string | null>(null);
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
 
   // Update which guest should show additional guests dropdown
   useEffect(() => {
@@ -109,6 +111,21 @@ export function RsvpEventCard({
   return (
     <div className="bg-white rounded-lg p-4 border border-[var(--blossom-border)] transition-all duration-200 hover:shadow-md">
       <h3 className="text-xl font-bold text-[var(--blossom-text-dark)] mb-4 text-center">{event.name}</h3>
+      
+      {event.inviteImageUrl && (
+        <div className="mb-4 flex justify-center">
+          <button
+            onClick={() => setIsInviteModalOpen(true)}
+            className="flex items-center gap-2 px-6 py-2.5 text-[var(--blossom-pink-primary)] hover:text-[var(--blossom-pink-hover)] border border-[var(--blossom-pink-primary)] hover:border-[var(--blossom-pink-hover)] rounded-lg transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+            View Invitation
+          </button>
+        </div>
+      )}
+
       <div className="flex flex-col gap-2 mb-4">
         <div className="flex items-center text-[var(--blossom-text-light)]">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-[var(--blossom-pink-primary)] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -172,6 +189,43 @@ export function RsvpEventCard({
             </div>
         ))}
       </div>
+
+      {isInviteModalOpen && event.inviteImageUrl && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div 
+            className="fixed inset-0 bg-black/50 transition-opacity" 
+            onClick={() => setIsInviteModalOpen(false)}
+            aria-hidden="true"
+          ></div>
+          
+          <div className="flex min-h-full items-center justify-center p-4 text-center">
+            <div className="relative transform overflow-hidden rounded-lg bg-white p-4 shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-semibold text-[var(--blossom-text-dark)]">
+                  Event Invitation
+                </h3>
+                <button
+                  onClick={() => setIsInviteModalOpen(false)}
+                  className="text-[var(--blossom-text-dark)]/70 hover:text-[var(--blossom-text-dark)]"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              <div className="relative w-full aspect-[3/4] rounded overflow-hidden">
+                <Image
+                  src={event.inviteImageUrl}
+                  alt="Event invitation"
+                  fill
+                  className="object-contain"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
