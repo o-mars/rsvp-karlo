@@ -123,7 +123,7 @@ export function RsvpContent({ guestId }: RsvpContentProps) {
     const prefix = "Dear";
     if (!guest) return '';
     if (!hasSubGuests) {
-      return `${prefix} ${guest.firstName} ${guest.lastName}!`;
+      return `${prefix} ${guest.firstName} ${guest.lastName},`;
     }
 
     const hasOneSubGuest = guest.subGuests.length === 1;
