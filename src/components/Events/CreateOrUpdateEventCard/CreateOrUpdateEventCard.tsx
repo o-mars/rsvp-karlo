@@ -4,6 +4,9 @@ import { useState, useEffect } from 'react';
 import { Event } from '@/src/models/interfaces';
 import DateInput from '@/src/components/shared/DateInput';
 import TimeInput from '@/src/components/shared/TimeInput';
+import Image from 'next/image';
+import { useEventManagement } from '@/src/hooks/useEventManagement';
+import { toast } from 'react-hot-toast';
 
 interface CreateOrUpdateEventCardProps {
   isOpen: boolean;
@@ -25,6 +28,10 @@ export default function CreateOrUpdateEventCard({
   const [date, setDate] = useState('');
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  
+  const { uploadEventInvite } = useEventManagement({ occasionId });
   
   const [newEvent, setNewEvent] = useState<Partial<Event>>({
     name: '',
@@ -38,12 +45,14 @@ export default function CreateOrUpdateEventCard({
   // Update form values when editingEvent changes
   useEffect(() => {
     if (editingEvent) {
-      // Set event details
+      console.log('editingEvent', editingEvent);
+
       setNewEvent({
         name: editingEvent.name || '',
         location: editingEvent.location || '',
         description: editingEvent.description || '',
         additionalFields: editingEvent.additionalFields || {},
+        inviteImageUrl: editingEvent.inviteImageUrl
       });
       
       // Set date and time values
@@ -76,6 +85,7 @@ export default function CreateOrUpdateEventCard({
     setEndTime('');
     setNewFieldKey('');
     setNewFieldValue('');
+    setUploadError(null);
   };
   
   const handleSubmit = (e: React.FormEvent) => {
@@ -94,6 +104,8 @@ export default function CreateOrUpdateEventCard({
         })
       };
       
+      console.log('handleSubmit eventData', eventData);
+
       onSubmit(eventData, startDateTime, endDateTime);
       
       if (!editingEvent) {
@@ -124,6 +136,41 @@ export default function CreateOrUpdateEventCard({
     const fields = { ...newEvent.additionalFields };
     delete fields[key];
     setNewEvent({ ...newEvent, additionalFields: fields });
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Store previous state in case of error
+    const previousEventState = { ...newEvent };
+
+    setIsUploading(true);
+    setUploadError(null);
+
+    try {
+      const downloadUrl = await uploadEventInvite(file, newEvent.name || 'untitled-event');
+      
+      setNewEvent(prev => ({
+        ...prev,
+        inviteImageUrl: downloadUrl
+      }));
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      setNewEvent(previousEventState);
+      toast.error('Failed to upload image. Please try again.');      
+      setUploadError('Failed to upload image. Please try again.');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const removeImage = () => {
+    setNewEvent(prev => ({
+      ...prev,
+      inviteImageUrl: undefined
+    }));
+    setUploadError(null);
   };
 
   if (!isOpen) return null;
@@ -291,6 +338,75 @@ export default function CreateOrUpdateEventCard({
                     </button>
                   </div>
                 ))}
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="font-medium text-[var(--blossom-text-dark)]">Event Invitation</h3>
+              <div className="flex flex-col gap-4">
+                {newEvent.inviteImageUrl ? (
+                  <div className="relative">
+                    <div className="relative w-full h-48 rounded overflow-hidden">
+                      <Image
+                        src={newEvent.inviteImageUrl}
+                        alt="Event invitation preview"
+                        fill
+                        className="object-contain"
+                      />
+                    </div>
+                    <div className="absolute top-2 right-2 flex gap-2">
+                      <label className="bg-yellow-500 text-white p-1 rounded-full hover:bg-yellow-600 transition-colors cursor-pointer">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageUpload}
+                          className="hidden"
+                          disabled={isUploading}
+                        />
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      </label>
+                      <button
+                        type="button"
+                        onClick={removeImage}
+                        className="bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition-colors"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-4">
+                    <label className="flex-1">
+                      <div className={`bg-white border ${uploadError ? 'border-red-500' : 'border-[var(--blossom-border)]'} rounded p-4 text-center cursor-pointer hover:bg-[var(--blossom-pink-light)] transition-colors`}>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageUpload}
+                          className="hidden"
+                          disabled={isUploading}
+                        />
+                        <div className="flex flex-col items-center gap-2">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-[var(--blossom-pink-primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          <span className="text-[var(--blossom-text-dark)]">
+                            {isUploading ? 'Uploading...' : 'Upload Invitation Image'}
+                          </span>
+                        </div>
+                      </div>
+                    </label>
+                  </div>
+                )}
+                
+                {uploadError && (
+                  <div className="text-red-500 text-sm">
+                    {uploadError}
+                  </div>
+                )}
               </div>
             </div>
 

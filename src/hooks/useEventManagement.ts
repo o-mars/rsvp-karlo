@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { collection, getDocs, query, doc, updateDoc, deleteDoc, addDoc, Timestamp, where } from 'firebase/firestore';
-import { db } from '@/utils/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { db, storage } from '@/utils/firebase';
 import { Event } from '@/src/models/interfaces';
 import { useOccasion } from '@/src/contexts/OccasionContext';
 import { useAuth } from '@/src/contexts/AuthContext';
+
 interface UseEventManagementProps {
   occasionId?: string;
   useContext?: boolean;
@@ -33,7 +35,6 @@ export function useEventManagement({ occasionId, useContext = true }: UseEventMa
     try {
       let eventsQuery;
 
-      // Create appropriate query based on whether we're filtering by occasionId
       if (occasionId || occasionContext?.occasion?.id) {
         const seriesId = occasionId || occasionContext?.occasion?.id;
         eventsQuery = query(
@@ -46,7 +47,6 @@ export function useEventManagement({ occasionId, useContext = true }: UseEventMa
         );
       }
 
-      // Use context data if available, otherwise fetch from Firestore
       if (occasionContext && !occasionId) {
         setEvents(occasionContext.events);
         setLoading(occasionContext.loading);
@@ -78,6 +78,25 @@ export function useEventManagement({ occasionId, useContext = true }: UseEventMa
     }
   };
 
+  const uploadEventInvite = async (file: File, eventName: string): Promise<string> => {
+    try {
+      const id = occasionId || occasionContext?.occasion?.id;
+      if (!id) {
+        throw new Error('No occasion ID provided');
+      }
+
+      const sanitizedEventName = eventName.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
+      const fileExtension = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+      const storageRef = ref(storage, `event-invites/${id}/${sanitizedEventName}/invite.${fileExtension}`);
+      
+      const snapshot = await uploadBytes(storageRef, file);
+      return await getDownloadURL(snapshot.ref);
+    } catch (error) {
+      console.error('Error uploading event invite:', error);
+      throw error;
+    }
+  };
+
   const handleAddEvent = async (eventData: Partial<Event>) => {
     if (!eventData.name || !eventData.startDateTime) return;
     
@@ -96,13 +115,13 @@ export function useEventManagement({ occasionId, useContext = true }: UseEventMa
         occasionId: id,
         createdBy: user?.uid,
         occasionAlias: occasion?.alias ?? '',
-        createdAt: new Date(),
-        additionalFields: eventData.additionalFields || {}
+        createdAt: Timestamp.now(),
+        additionalFields: eventData.additionalFields || {},
+        inviteImageUrl: eventData.inviteImageUrl || null
       };
       
       await addDoc(collection(db, 'events'), newEvent);
       
-      // Use context refresh if available, otherwise fetch data
       if (occasionContext && occasionContext.refreshData && !occasionId) {
         await occasionContext.refreshData();
       } else {
@@ -124,12 +143,10 @@ export function useEventManagement({ occasionId, useContext = true }: UseEventMa
         name: eventData.name,
         description: eventData.description || '',
         location: eventData.location || '',
-        startDateTime: eventData.startDateTime,
-        endDateTime: eventData.endDateTime || null,
-        additionalFields: eventData.additionalFields || {}
+        additionalFields: eventData.additionalFields || {},
+        inviteImageUrl: eventData.inviteImageUrl
       });
       
-      // Use context refresh if available, otherwise fetch data
       if (occasionContext && occasionContext.refreshData && !occasionId) {
         await occasionContext.refreshData();
       } else {
@@ -201,6 +218,7 @@ export function useEventManagement({ occasionId, useContext = true }: UseEventMa
     handleUpdateEvent,
     handleDeleteEvent,
     formatEventDate,
-    formatEventTime
+    formatEventTime,
+    uploadEventInvite
   };
 } 

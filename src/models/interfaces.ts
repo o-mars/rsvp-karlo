@@ -33,6 +33,7 @@ export interface Occasion {
   createdAt: Timestamp;
   description?: string;
   hosts: string[];
+  inviteImageUrl?: string;
 }
 
 export interface SubGuest {

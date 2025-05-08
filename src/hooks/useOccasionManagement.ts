@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { collection, getDocs, doc, query, where, limit, writeBatch } from 'firebase/firestore';
-import { db } from '@/utils/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { db, storage } from '@/utils/firebase';
 import { Occasion } from '@/src/models/interfaces';
 import { useOccasion } from '@/src/contexts/OccasionContext';
 
@@ -115,6 +116,22 @@ export function useOccasionManagement({ alias, useContext = true, userId = null 
       setError('Error loading occasion list. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const uploadOccasionImage = async (file: File, occasionName: string): Promise<string> => {
+    try {
+      if (!userId) {
+        throw new Error('User ID is required');
+      }
+
+      const sanitizedOccasionName = occasionName.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
+      const storageRef = ref(storage, `occasion-images/${userId}/${sanitizedOccasionName}/${Date.now()}-${file.name}`);
+      const snapshot = await uploadBytes(storageRef, file);
+      return await getDownloadURL(snapshot.ref);
+    } catch (error) {
+      console.error('Error uploading occasion image:', error);
+      throw error;
     }
   };
 
@@ -297,6 +314,7 @@ export function useOccasionManagement({ alias, useContext = true, userId = null 
     fetchAllOccasions,
     handleUpdateOccasion,
     handleDeleteOccasion,
-    handleAddOccasion
+    handleAddOccasion,
+    uploadOccasionImage
   };
 } 

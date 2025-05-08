@@ -5,6 +5,7 @@ import { Event } from '@/src/models/interfaces';
 import { useEventManagement } from '@/src/hooks/useEventManagement';
 import { timestampToDate, formatDate } from '@/src/hooks/useRSVPStats';
 import DeleteConfirmationModal from '@/src/components/shared/DeleteConfirmationModal';
+import Image from 'next/image';
 
 interface EventCardProps {
   event: Event;
@@ -15,6 +16,7 @@ interface EventCardProps {
 export default function EventCard({ event, onEdit, onDelete }: EventCardProps) {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const { handleDeleteEvent } = useEventManagement({ useContext: false });
   
   const handleDeleteClick = (e: React.MouseEvent) => {
@@ -132,23 +134,42 @@ export default function EventCard({ event, onEdit, onDelete }: EventCardProps) {
           {event.location && renderLocation()}
         </div>
         
-        {event.description && (
-          <div className="text-[var(--blossom-text-dark)]/70 text-sm line-clamp-3 group-hover:text-[var(--blossom-text-dark)]/80 transition-colors mb-auto overflow-y-auto max-h-32 whitespace-pre-line">
-            {event.description}
-          </div>
-        )}
-        
-        {/* Additional fields if any */}
-        {event.additionalFields && Object.keys(event.additionalFields).length > 0 && (
-          <div className="mt-4 pt-3 border-t border-[var(--blossom-border)]">
-            <div className="flex flex-wrap gap-2">
-              {Object.entries(event.additionalFields).map(([key, value]) => (
-                <div key={key} className="text-xs bg-[var(--blossom-pink-light)]/50 px-2 py-1 rounded">
-                  <span className="font-medium text-[var(--blossom-text-dark)]/70">{key}</span>
-                  {value && value !== '' && <span className="ml-1 text-[var(--blossom-text-dark)]/70">: {value}</span>}
-                </div>
-              ))}
+        <div className="flex flex-col flex-grow">
+          {event.description && (
+            <div className="text-[var(--blossom-text-dark)]/70 text-sm line-clamp-3 group-hover:text-[var(--blossom-text-dark)]/80 transition-colors mb-4 overflow-y-auto max-h-32 whitespace-pre-line">
+              {event.description}
             </div>
+          )}
+          
+          {/* Additional fields if any */}
+          {event.additionalFields && Object.keys(event.additionalFields).length > 0 && (
+            <div className="mt-auto pt-3">
+              <div className="flex flex-wrap gap-2">
+                {Object.entries(event.additionalFields).map(([key, value]) => (
+                  <div key={key} className="text-xs bg-[var(--blossom-pink-light)]/50 px-2 py-1 rounded">
+                    <span className="font-medium text-[var(--blossom-text-dark)]/70">{key}</span>
+                    {value && value !== '' && <span className="ml-1 text-[var(--blossom-text-dark)]/70">: {value}</span>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {event.inviteImageUrl && (
+          <div className="flex justify-center mt-4 pt-3 border-t border-[var(--blossom-border)]">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsInviteModalOpen(true);
+              }}
+              className="text-[var(--blossom-pink-primary)] hover:text-[var(--blossom-pink-hover)] flex items-center gap-2"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              View Invitation
+            </button>
           </div>
         )}
       </div>
@@ -161,6 +182,40 @@ export default function EventCard({ event, onEdit, onDelete }: EventCardProps) {
         onCancel={() => setIsDeleteModalOpen(false)}
         onConfirm={handleDeleteConfirm}
       />
+
+      {/* Invitation Preview Modal */}
+      {isInviteModalOpen && event.inviteImageUrl && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="fixed inset-0 bg-black/50 transition-opacity" aria-hidden="true"></div>
+          
+          <div className="flex min-h-full items-center justify-center p-4 text-center">
+            <div className="relative transform overflow-hidden rounded-lg bg-white p-4 shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-semibold text-[var(--blossom-text-dark)]">
+                  Event Invitation
+                </h3>
+                <button
+                  onClick={() => setIsInviteModalOpen(false)}
+                  className="text-[var(--blossom-text-dark)]/70 hover:text-[var(--blossom-text-dark)]"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              <div className="relative w-full aspect-[3/4] rounded overflow-hidden">
+                <Image
+                  src={event.inviteImageUrl}
+                  alt="Event invitation"
+                  fill
+                  className="object-contain"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 } 

@@ -4,6 +4,9 @@ import { useState, useEffect } from 'react';
 import { Timestamp, query, collection, where, getDocs } from 'firebase/firestore';
 import { db } from '@/utils/firebase';
 import { Occasion } from '@/src/models/interfaces';
+import { useOccasionManagement } from '@/src/hooks/useOccasionManagement';
+import Image from 'next/image';
+import { toast } from 'react-hot-toast';
 
 interface CreateOrUpdateOccasionCardProps {
   isOpen: boolean;
@@ -24,6 +27,12 @@ export default function CreateOrUpdateOccasionCard({
   const [alias, setAlias] = useState(editingOccasion?.alias || '');
   const [description, setDescription] = useState(editingOccasion?.description || '');
   const [hosts, setHosts] = useState<string[]>(editingOccasion?.hosts || ['']);
+  const [isUploading, setIsUploading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(editingOccasion?.inviteImageUrl || null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  
+  const { uploadOccasionImage } = useOccasionManagement({ userId });
+  
   const [errors, setErrors] = useState<{
     name?: string;
     alias?: string;
@@ -207,6 +216,62 @@ export default function CreateOrUpdateOccasionCard({
     setHosts(newHosts);
   };
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Store previous state in case of error
+    const previousPreviewUrl = previewUrl;
+
+    setIsUploading(true);
+    setUploadError(null);
+
+    try {
+      const downloadUrl = await uploadOccasionImage(file, name || 'untitled-occasion');
+      
+      // Update the form data with the new image URL
+      const occasionData = {
+        name: name.trim(),
+        alias: alias.trim(),
+        description: description.trim() || undefined,
+        hosts: hosts.map(h => h.trim()),
+        createdBy: userId,
+        inviteImageUrl: downloadUrl
+      };
+      
+      setPreviewUrl(downloadUrl);
+      onSubmit(occasionData);
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      
+      // Reset to previous state
+      setPreviewUrl(previousPreviewUrl);
+      
+      // Show error toast
+      toast.error('Failed to upload image. Please try again.');
+      
+      setUploadError('Failed to upload image. Please try again.');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const removeImage = () => {
+    setPreviewUrl(null);
+    setUploadError(null);
+    
+    // Update the form data to remove the image URL
+    const occasionData = {
+      name: name.trim(),
+      alias: alias.trim(),
+      description: description.trim() || undefined,
+      hosts: hosts.map(h => h.trim()),
+      createdBy: userId,
+    };
+    
+    onSubmit(occasionData);
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -355,6 +420,61 @@ export default function CreateOrUpdateOccasionCard({
                 ></textarea>
               </div>
               
+              <div className="space-y-3">
+                <h3 className="font-medium text-[var(--blossom-text-dark)]">Occasion Image</h3>
+                <div className="flex flex-col gap-4">
+                  <div className="flex items-center gap-4">
+                    <label className="flex-1">
+                      <div className={`bg-white border ${uploadError ? 'border-red-500' : 'border-[var(--blossom-border)]'} rounded p-4 text-center cursor-pointer hover:bg-[var(--blossom-pink-light)] transition-colors`}>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageUpload}
+                          className="hidden"
+                          disabled={isUploading}
+                        />
+                        <div className="flex flex-col items-center gap-2">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-[var(--blossom-pink-primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          <span className="text-[var(--blossom-text-dark)]">
+                            {isUploading ? 'Uploading...' : 'Upload Occasion Image'}
+                          </span>
+                        </div>
+                      </div>
+                    </label>
+                  </div>
+                  
+                  {uploadError && (
+                    <div className="text-red-500 text-sm">
+                      {uploadError}
+                    </div>
+                  )}
+                  
+                  {previewUrl && (
+                    <div className="relative">
+                      <div className="relative w-full h-48 rounded overflow-hidden">
+                        <Image
+                          src={previewUrl}
+                          alt="Occasion image preview"
+                          fill
+                          className="object-contain"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={removeImage}
+                        className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition-colors"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
               <div className="pt-4 flex justify-end space-x-4">
                 <button
                   type="button"
