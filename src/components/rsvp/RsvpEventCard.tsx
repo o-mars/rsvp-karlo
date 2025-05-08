@@ -1,6 +1,7 @@
 import { Guest, Event, RsvpStatus } from '@/src/models/interfaces';
 import { useState, useEffect } from 'react';
 import ImagePreviewModal from '@/src/components/shared/ImagePreviewModal';
+import { formatDateInTimezone } from '@/src/utils/dateUtils';
 
 interface RsvpEventCardProps {
   event: Event;
@@ -206,46 +207,19 @@ export function RsvpEventCard({
 const formatEventDateTime = (event: Event): string => {
   if (event.startDateTime) {
     try {
-      if (typeof event.startDateTime === 'object' && 'toDate' in event.startDateTime && typeof event.startDateTime.toDate === 'function') {
-        return event.startDateTime.toDate().toLocaleDateString('en-US', {
-          weekday: 'long',
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-          hour: 'numeric',
-          minute: '2-digit',
-          hour12: true
-        });
-      }
-      
-      if (event.startDateTime instanceof Date) {
-        return event.startDateTime.toLocaleDateString('en-US', {
-          weekday: 'long',
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-          hour: 'numeric',
-          minute: '2-digit',
-          hour12: true
-        });
-      }
-      
-      if (typeof event.startDateTime === 'number' || typeof event.startDateTime === 'string') {
-        const date = new Date(event.startDateTime);
-        return date.toLocaleDateString('en-US', {
-          weekday: 'long',
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-          hour: 'numeric',
-          minute: '2-digit',
-          hour12: true
-        });
-      }
+      return formatDateInTimezone(event.startDateTime, event.timezone, {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+      });
     } catch (error) {
       console.error('Error formatting date:', error);
     }
   }
   
-  return "Sunday, August 10th, 2025, 7:00 PM";
+  return "Invalid date";
 }; 

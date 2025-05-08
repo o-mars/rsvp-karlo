@@ -3,9 +3,9 @@
 import { useState } from 'react';
 import { Event } from '@/src/models/interfaces';
 import { useEventManagement } from '@/src/hooks/useEventManagement';
-import { timestampToDate, formatDate } from '@/src/hooks/useRSVPStats';
 import DeleteConfirmationModal from '@/src/components/shared/DeleteConfirmationModal';
 import ImagePreviewModal from '@/src/components/shared/ImagePreviewModal';
+import { formatDateInTimezone } from '@/src/utils/dateUtils';
 
 interface EventCardProps {
   event: Event;
@@ -49,21 +49,32 @@ export default function EventCard({ event, onEdit, onDelete }: EventCardProps) {
 
   // Format date/time using our helper functions
   const getEventDate = (): string => {
-    return formatDate(timestampToDate(event.startDateTime), 'long');
+    return formatDateInTimezone(event.startDateTime, event.timezone, {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
   };
   
   const getTimeDisplay = (): string => {
-    const startDate = timestampToDate(event.startDateTime);
-    if (!startDate) return 'Invalid time';
+    if (!event.startDateTime) return 'Invalid time';
     
-    const startTime = formatDate(startDate, 'time');
+    const startTime = formatDateInTimezone(event.startDateTime, event.timezone, {
+      hour: 'numeric',
+      minute: 'numeric',
+      hour12: true
+    });
     
     if (!event.endDateTime) return startTime;
     
-    const endDate = timestampToDate(event.endDateTime);
-    if (!endDate) return startTime;
+    const endTime = formatDateInTimezone(event.endDateTime, event.timezone, {
+      hour: 'numeric',
+      minute: 'numeric',
+      hour12: true
+    });
     
-    return `${startTime} - ${formatDate(endDate, 'time')}`;
+    return `${startTime} - ${endTime}`;
   };
   
   // Split location by commas for better display

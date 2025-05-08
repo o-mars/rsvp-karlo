@@ -8,6 +8,7 @@ import TimezonePicker from '@/src/components/shared/TimezonePicker';
 import Image from 'next/image';
 import { useEventManagement } from '@/src/hooks/useEventManagement';
 import { toast } from 'react-hot-toast';
+import { createDateInTimezone } from '@/src/utils/dateUtils';
 
 interface CreateOrUpdateEventCardProps {
   isOpen: boolean;
@@ -28,10 +29,6 @@ export default function CreateOrUpdateEventCard({
 }: CreateOrUpdateEventCardProps) {
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
-  const [timezone, setTimezone] = useState(() => {
-    // Default to user's local timezone
-    return Intl.DateTimeFormat().resolvedOptions().timeZone;
-  });
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   
@@ -42,7 +39,7 @@ export default function CreateOrUpdateEventCard({
     location: '',
     description: '',
     additionalFields: {},
-    timezone: timezone,
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
   });
   const [newFieldKey, setNewFieldKey] = useState('');
   const [newFieldValue, setNewFieldValue] = useState('');
@@ -58,7 +55,7 @@ export default function CreateOrUpdateEventCard({
         description: editingEvent.description || '',
         additionalFields: editingEvent.additionalFields || {},
         inviteImageUrl: editingEvent.inviteImageUrl,
-        timezone: editingEvent.timezone || timezone
+        timezone: editingEvent.timezone
       });
       
       // Set date and time values
@@ -67,14 +64,10 @@ export default function CreateOrUpdateEventCard({
         setDate(startDate.toISOString().split('T')[0]);
         setTime(startDate.toISOString().split('T')[1].substring(0, 5));
       }
-      
-      if (editingEvent.timezone) {
-        setTimezone(editingEvent.timezone);
-      }
     } else {
       resetForm();
     }
-  }, [editingEvent, timezone]);
+  }, [editingEvent]);
   
   const resetForm = () => {
     setNewEvent({
@@ -82,7 +75,7 @@ export default function CreateOrUpdateEventCard({
       location: '',
       description: '',
       additionalFields: {},
-      timezone: timezone,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     });
     setDate('');
     setTime('');
@@ -95,13 +88,11 @@ export default function CreateOrUpdateEventCard({
     e.preventDefault();
     
     try {
-      const startDateTime = new Date(`${date}T${time}`);
-      // No endDateTime anymore since we removed the end time field
+      const startDateTime = createDateInTimezone(date, time, newEvent.timezone || '');
       
       // Include occasionId and occasionAlias for new events
       const eventData = {
         ...newEvent,
-        timezone,
         ...(editingEvent ? {} : { 
           occasionId,
           occasionAlias
@@ -249,9 +240,8 @@ export default function CreateOrUpdateEventCard({
                       Timezone
                     </label>
                     <TimezonePicker
-                      value={timezone}
+                      value={newEvent.timezone || ''}
                       onChange={(newTimezone) => {
-                        setTimezone(newTimezone);
                         setNewEvent(prev => ({ ...prev, timezone: newTimezone }));
                       }}
                       className="w-full"

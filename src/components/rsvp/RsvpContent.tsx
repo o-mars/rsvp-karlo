@@ -131,16 +131,16 @@ export function RsvpContent({ guestId }: RsvpContentProps) {
     
     if (hasOneSubGuest) {
       if (doesSubGuestShareLastName) {
-        return `${prefix} ${guest.firstName} & ${guest.subGuests[0].firstName} ${guest.lastName}!`;
+        return `${prefix} ${guest.firstName} & ${guest.subGuests[0].firstName} ${guest.lastName},`;
       } else {
-        return `${prefix} ${guest.firstName} ${guest.lastName} & ${guest.subGuests[0].firstName} ${guest.subGuests[0].lastName}!`;
+        return `${prefix} ${guest.firstName} ${guest.lastName} & ${guest.subGuests[0].firstName} ${guest.subGuests[0].lastName},`;
       }
     }
 
     if (doesSubGuestShareLastName) {
-      return `${prefix} ${guest.firstName} ${guest.lastName} & Family!`;
+      return `${prefix} ${guest.firstName} ${guest.lastName} & Family,`;
     } else {
-      return `${prefix} ${guest.firstName} ${guest.lastName} & Friends!`;
+      return `${prefix} ${guest.firstName} ${guest.lastName} & Friends,`;
     }
   }, [guest, hasSubGuests]);
 
