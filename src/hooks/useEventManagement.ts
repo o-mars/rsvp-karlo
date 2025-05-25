@@ -32,6 +32,8 @@ export function useEventManagement({ occasionId, useContext = true }: UseEventMa
   }
 
   const fetchData = async () => {
+    if (!user?.uid) return;
+
     try {
       let eventsQuery;
 
@@ -39,11 +41,13 @@ export function useEventManagement({ occasionId, useContext = true }: UseEventMa
         const seriesId = occasionId || occasionContext?.occasion?.id;
         eventsQuery = query(
           collection(db, 'events'),
+          where('createdBy', '==', user.uid),
           where('occasionId', '==', seriesId),
         );
       } else {
         eventsQuery = query(
           collection(db, 'events'),
+          where('createdBy', '==', user.uid),
         );
       }
 
@@ -98,7 +102,7 @@ export function useEventManagement({ occasionId, useContext = true }: UseEventMa
   };
 
   const handleAddEvent = async (eventData: Partial<Event>) => {
-    if (!eventData.name || !eventData.startDateTime) return;
+    if (!eventData.name || !eventData.date || !eventData.time) return;
     
     try {
       const id = occasionId || occasionContext?.occasion?.id;
@@ -134,7 +138,7 @@ export function useEventManagement({ occasionId, useContext = true }: UseEventMa
   };
 
   const handleUpdateEvent = async (eventData: Partial<Event>) => {
-    if (!eventData.id || !eventData.name || !eventData.startDateTime) return;
+    if (!eventData.id || !eventData.name || !eventData.date || !eventData.time) return;
     
     try {
       checkDuplicateEventName(eventData.name as string, eventData.id);
@@ -145,8 +149,8 @@ export function useEventManagement({ occasionId, useContext = true }: UseEventMa
         location: eventData.location || '',
         additionalFields: eventData.additionalFields || {},
         inviteImageUrl: eventData.inviteImageUrl,
-        startDateTime: eventData.startDateTime,
-        timezone: eventData.timezone
+        date: eventData.date,
+        time: eventData.time
       });
       
       if (occasionContext && occasionContext.refreshData && !occasionId) {
@@ -161,8 +165,6 @@ export function useEventManagement({ occasionId, useContext = true }: UseEventMa
   };
 
   const handleDeleteEvent = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this event?')) return;
-    
     try {
       await deleteDoc(doc(db, 'events', id));
       
@@ -175,33 +177,6 @@ export function useEventManagement({ occasionId, useContext = true }: UseEventMa
     } catch (error) {
       console.error('Error deleting event:', error);
       throw error;
-    }
-  };
-
-  const formatEventDate = (timestamp: Timestamp) => {
-    try {
-      const date = timestamp.toDate();
-      return new Intl.DateTimeFormat('en-US', { 
-        weekday: 'short',
-        month: 'short', 
-        day: 'numeric',
-        year: 'numeric'
-      }).format(date);
-    } catch {
-      return 'Invalid date';
-    }
-  };
-  
-  const formatEventTime = (timestamp: Timestamp) => {
-    try {
-      const date = timestamp.toDate();
-      return new Intl.DateTimeFormat('en-US', { 
-        hour: 'numeric',
-        minute: 'numeric',
-        hour12: true
-      }).format(date);
-    } catch {
-      return 'Invalid time';
     }
   };
 
@@ -219,8 +194,6 @@ export function useEventManagement({ occasionId, useContext = true }: UseEventMa
     handleAddEvent,
     handleUpdateEvent,
     handleDeleteEvent,
-    formatEventDate,
-    formatEventTime,
     uploadEventInvite
   };
 } 

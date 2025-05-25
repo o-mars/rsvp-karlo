@@ -4,16 +4,14 @@ import { useState, useEffect } from 'react';
 import { Event } from '@/src/models/interfaces';
 import DateInput from '@/src/components/shared/DateInput';
 import TimeInput from '@/src/components/shared/TimeInput';
-import TimezonePicker from '@/src/components/shared/TimezonePicker';
 import Image from 'next/image';
 import { useEventManagement } from '@/src/hooks/useEventManagement';
 import { toast } from 'react-hot-toast';
-import { createDateInTimezone } from '@/src/utils/dateUtils';
 
 interface CreateOrUpdateEventCardProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (event: Partial<Event>, startDateTime: Date, endDateTime: Date | null) => void;
+  onSubmit: (event: Partial<Event>) => void;
   editingEvent: Event | null;
   occasionId: string;
   occasionAlias: string;
@@ -39,7 +37,6 @@ export default function CreateOrUpdateEventCard({
     location: '',
     description: '',
     additionalFields: {},
-    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
   });
   const [newFieldKey, setNewFieldKey] = useState('');
   const [newFieldValue, setNewFieldValue] = useState('');
@@ -55,15 +52,11 @@ export default function CreateOrUpdateEventCard({
         description: editingEvent.description || '',
         additionalFields: editingEvent.additionalFields || {},
         inviteImageUrl: editingEvent.inviteImageUrl,
-        timezone: editingEvent.timezone
       });
       
       // Set date and time values
-      if (editingEvent.startDateTime) {
-        const startDate = editingEvent.startDateTime.toDate();
-        setDate(startDate.toISOString().split('T')[0]);
-        setTime(startDate.toISOString().split('T')[1].substring(0, 5));
-      }
+      setDate(editingEvent.date);
+      setTime(editingEvent.time);
     } else {
       resetForm();
     }
@@ -75,7 +68,6 @@ export default function CreateOrUpdateEventCard({
       location: '',
       description: '',
       additionalFields: {},
-      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     });
     setDate('');
     setTime('');
@@ -88,18 +80,18 @@ export default function CreateOrUpdateEventCard({
     e.preventDefault();
     
     try {
-      const startDateTime = createDateInTimezone(date, time, newEvent.timezone || '');
-      
       // Include occasionId and occasionAlias for new events
       const eventData = {
         ...newEvent,
+        date,
+        time,
         ...(editingEvent ? {} : { 
           occasionId,
           occasionAlias
         })
       };
       
-      onSubmit(eventData, startDateTime, null);
+      onSubmit(eventData);
       
       if (!editingEvent) {
         resetForm();
@@ -231,20 +223,7 @@ export default function CreateOrUpdateEventCard({
                       value={time}
                       onChange={setTime}
                       required={true}
-                      className="w-[130px]"
-                    />
-                  </div>
-                  
-                  <div className="flex-1 min-w-0">
-                    <label htmlFor="timezone" className="block text-sm font-medium text-[var(--blossom-text-dark)]/70 mb-1">
-                      Timezone
-                    </label>
-                    <TimezonePicker
-                      value={newEvent.timezone || ''}
-                      onChange={(newTimezone) => {
-                        setNewEvent(prev => ({ ...prev, timezone: newTimezone }));
-                      }}
-                      className="w-full"
+                      className="w-[200px]"
                     />
                   </div>
                 </div>

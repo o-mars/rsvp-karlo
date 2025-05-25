@@ -41,4 +41,32 @@ export const createDateInTimezone = (
   date.setMinutes(date.getMinutes() + offsetDiff);
   
   return date;
+};
+
+export const formatEventDate = (date: string): string => {
+  try {
+    return new Intl.DateTimeFormat('en-US', { 
+      weekday: 'short',
+      month: 'short', 
+      day: 'numeric',
+      year: 'numeric'
+    }).format(new Date(date));
+  } catch {
+    return 'Invalid date';
+  }
+};
+
+export const formatEventTime = (time: string): string => {
+  try {
+    const [hours, minutes] = time.split(':');
+    const date = new Date();
+    date.setHours(parseInt(hours), parseInt(minutes));
+    return new Intl.DateTimeFormat('en-US', { 
+      hour: 'numeric',
+      minute: 'numeric',
+      hour12: true
+    }).format(date);
+  } catch {
+    return 'Invalid time';
+  }
 }; 

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { db } from '@/utils/firebase';
-import { doc, updateDoc, collection, getDocs, getDoc } from 'firebase/firestore';
+import { doc, updateDoc, getDoc } from 'firebase/firestore';
 import { Guest, Event, RsvpStatus } from '@/src/models/interfaces';
 import { RsvpEventCard } from './RsvpEventCard';
 
@@ -23,7 +23,6 @@ export function RsvpContent({ guestId }: RsvpContentProps) {
         // Get guest data
         const guestRef = doc(db, 'guests', guestId);
         const guestSnap = await getDoc(guestRef);
-        
         if (!guestSnap.exists()) {
           setError('Invalid RSVP code. Please check your invitation and try again.');
           return;
@@ -32,12 +31,17 @@ export function RsvpContent({ guestId }: RsvpContentProps) {
         const guestData = { id: guestSnap.id, ...guestSnap.data() } as Guest;
         setGuest(guestData);
 
-        // Get all events
-        const eventsSnapshot = await getDocs(collection(db, 'events'));
-        const eventsList = eventsSnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data()
-        })) as Event[];
+        const eventIds = Object.keys(guestData.rsvps || {});
+        const eventsList: Event[] = [];
+        
+        for (const eventId of eventIds) {
+          const eventRef = doc(db, 'events', eventId);
+          const eventSnap = await getDoc(eventRef);
+          if (eventSnap.exists()) {
+            eventsList.push({ id: eventSnap.id, ...eventSnap.data() } as Event);
+          }
+        }
+        
         setEvents(eventsList);
 
       } catch (err) {
@@ -181,9 +185,10 @@ export function RsvpContent({ guestId }: RsvpContentProps) {
 
         <div className="space-y-6">
           {[...events].sort((a, b) => {
-            const dateA = a.startDateTime?.toDate() || new Date(0);
-            const dateB = b.startDateTime?.toDate() || new Date(0);
-            return dateA.getTime() - dateB.getTime();
+            // Combine date and time for comparison
+            const dateTimeA = new Date(`${a.date}T${a.time}`);
+            const dateTimeB = new Date(`${b.date}T${b.time}`);
+            return dateTimeA.getTime() - dateTimeB.getTime();
           }).map((event) => {
             if (!guest.rsvps[event.id]) return null;
             

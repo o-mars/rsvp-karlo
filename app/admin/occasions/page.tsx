@@ -63,20 +63,16 @@ export default function EventsPage() {
     useContext: false 
   });
 
-  const handleEventSubmit = async (eventData: Partial<Event>, startDateTime: Date, endDateTime: Date | null) => {
+  const handleEventSubmit = async (eventData: Partial<Event>) => {
     try {
       if (editingEvent) {
         await handleUpdateEvent({
           ...eventData,
-          id: editingEvent.id,
-          startDateTime: Timestamp.fromDate(startDateTime),
-          ...(endDateTime ? { endDateTime: Timestamp.fromDate(endDateTime) } : {})
+          id: editingEvent.id
         });
       } else {
         await handleAddEvent({
           ...eventData,
-          startDateTime: Timestamp.fromDate(startDateTime),
-          ...(endDateTime ? { endDateTime: Timestamp.fromDate(endDateTime) } : {}),
           createdAt: Timestamp.fromDate(new Date())
         });
       }
@@ -239,9 +235,10 @@ export default function EventsPage() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {[...events].sort((a, b) => {
-                const dateA = a.startDateTime?.toDate() || new Date(0);
-                const dateB = b.startDateTime?.toDate() || new Date(0);
-                return dateA.getTime() - dateB.getTime();
+                // Combine date and time for comparison
+                const dateTimeA = new Date(`${a.date}T${a.time}`);
+                const dateTimeB = new Date(`${b.date}T${b.time}`);
+                return dateTimeA.getTime() - dateTimeB.getTime();
               }).map((event) => (
                 <EventCard 
                   key={event.id} 

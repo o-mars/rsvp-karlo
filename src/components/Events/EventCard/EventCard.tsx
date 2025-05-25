@@ -5,7 +5,7 @@ import { Event } from '@/src/models/interfaces';
 import { useEventManagement } from '@/src/hooks/useEventManagement';
 import DeleteConfirmationModal from '@/src/components/shared/DeleteConfirmationModal';
 import ImagePreviewModal from '@/src/components/shared/ImagePreviewModal';
-import { formatDateInTimezone } from '@/src/utils/dateUtils';
+import { formatEventDate, formatEventTime } from '@/src/utils/dateUtils';
 
 interface EventCardProps {
   event: Event;
@@ -49,32 +49,11 @@ export default function EventCard({ event, onEdit, onDelete }: EventCardProps) {
 
   // Format date/time using our helper functions
   const getEventDate = (): string => {
-    return formatDateInTimezone(event.startDateTime, event.timezone, {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+    return formatEventDate(event.date);
   };
   
   const getTimeDisplay = (): string => {
-    if (!event.startDateTime) return 'Invalid time';
-    
-    const startTime = formatDateInTimezone(event.startDateTime, event.timezone, {
-      hour: 'numeric',
-      minute: 'numeric',
-      hour12: true
-    });
-    
-    if (!event.endDateTime) return startTime;
-    
-    const endTime = formatDateInTimezone(event.endDateTime, event.timezone, {
-      hour: 'numeric',
-      minute: 'numeric',
-      hour12: true
-    });
-    
-    return `${startTime} - ${endTime}`;
+    return formatEventTime(event.time);
   };
   
   // Split location by commas for better display

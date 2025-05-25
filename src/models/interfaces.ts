@@ -16,14 +16,13 @@ export interface Event {
   createdBy: string;
   occasionAlias: string;
   name: string;
-  startDateTime: Timestamp;
-  endDateTime?: Timestamp;
+  date: string;  // ISO date string (YYYY-MM-DD)
+  time: string;  // 24-hour time string (HH:mm)
   location: string;
   description?: string;
   createdAt: Timestamp;
   additionalFields?: Record<string, string>;
   inviteImageUrl?: string;
-  timezone: string;
 }
 
 export interface Occasion {

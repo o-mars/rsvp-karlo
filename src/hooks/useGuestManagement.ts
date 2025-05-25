@@ -36,6 +36,8 @@ export function useGuestManagement({ occasionId, useContext = true }: UseGuestMa
   }
 
   const fetchData = async () => {
+    if (!user?.uid) return;
+
     try {
       let eventsQuery;
       let guestsQuery;
@@ -45,20 +47,24 @@ export function useGuestManagement({ occasionId, useContext = true }: UseGuestMa
         const seriesId = occasionId || occasionContext?.occasion?.id;
         eventsQuery = query(
           collection(db, 'events'),
+          where('createdBy', '==', user.uid),
           where('occasionId', '==', seriesId),
         );
         
         guestsQuery = query(
           collection(db, 'guests'),
+          where('createdBy', '==', user.uid),
           where('occasionId', '==', seriesId),
         );
       } else {
         eventsQuery = query(
           collection(db, 'events'),
+          where('createdBy', '==', user.uid),
         );
         
         guestsQuery = query(
           collection(db, 'guests'),
+          where('createdBy', '==', user.uid),
         );
       }
 

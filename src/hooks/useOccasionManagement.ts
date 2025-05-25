@@ -6,14 +6,15 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '@/utils/firebase';
 import { Occasion } from '@/src/models/interfaces';
 import { useOccasion } from '@/src/contexts/OccasionContext';
+import { useAuth } from '@/src/contexts/AuthContext';
 
 interface UseOccasionManagementProps {
   alias?: string | null;
   useContext?: boolean;
-  userId?: string | null;
 }
 
-export function useOccasionManagement({ alias, useContext = true, userId = null }: UseOccasionManagementProps = {}) {
+export function useOccasionManagement({ alias, useContext = true }: UseOccasionManagementProps = {}) {
+  const { user } = useAuth();
   const [occasion, setOccasion] = useState<Occasion | null>(null);
   const [occasionList, setOccasionList] = useState<Occasion[]>([]);
   const [loading, setLoading] = useState(true);
@@ -33,7 +34,7 @@ export function useOccasionManagement({ alias, useContext = true, userId = null 
   }
 
   const fetchOccasion = async () => {
-    if (!alias) return;
+    if (!alias || !user?.uid) return;
     
     setLoading(true);
     setError(null);
@@ -41,19 +42,20 @@ export function useOccasionManagement({ alias, useContext = true, userId = null 
     try {
       // Find the event series by alias
       const occasionQuery = query(
-        collection(db, 'occasions'), 
+        collection(db, 'occasions'),
+        where('createdBy', '==', user.uid),
         where('alias', '==', alias),
         limit(1)
       );
-      
+
       const querySnapshot = await getDocs(occasionQuery);
-      
+
       if (querySnapshot.empty) {
         setError('Occasion not found');
         setLoading(false);
         return;
       }
-      
+
       // Get the first matching document
       const occasionDoc = querySnapshot.docs[0];
       const occasionData = {
@@ -86,15 +88,15 @@ export function useOccasionManagement({ alias, useContext = true, userId = null 
   };
 
   const fetchAllOccasions = async () => {
-    if (!userId) return;
+    if (!user?.uid) return;
     
     setLoading(true);
     setError(null);
     
     try {
       const occasionQuery = query(
-        collection(db, 'occasions'), 
-        where('createdBy', '==', userId)
+        collection(db, 'occasions'),
+        where('createdBy', '==', user.uid)
       );
       
       const querySnapshot = await getDocs(occasionQuery);
@@ -121,12 +123,12 @@ export function useOccasionManagement({ alias, useContext = true, userId = null 
 
   const uploadOccasionImage = async (file: File, occasionName: string): Promise<string> => {
     try {
-      if (!userId) {
+      if (!user?.uid) {
         throw new Error('User ID is required');
       }
 
       const sanitizedOccasionName = occasionName.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
-      const storageRef = ref(storage, `occasion-images/${userId}/${sanitizedOccasionName}/${Date.now()}-${file.name}`);
+      const storageRef = ref(storage, `occasion-images/${user.uid}/${sanitizedOccasionName}/${Date.now()}-${file.name}`);
       const snapshot = await uploadBytes(storageRef, file);
       return await getDownloadURL(snapshot.ref);
     } catch (error) {
@@ -136,7 +138,7 @@ export function useOccasionManagement({ alias, useContext = true, userId = null 
   };
 
   const handleUpdateOccasion = async (updatedOccasion: Partial<Occasion>) => {
-    if (!occasion || !aliasDoc) return;
+    if (!occasion || !aliasDoc || !user?.uid) return;
     
     try {
       // Create a batch to update both documents atomically
@@ -155,6 +157,7 @@ export function useOccasionManagement({ alias, useContext = true, userId = null 
         // Update all events that use this alias
         const eventsQuery = query(
           collection(db, 'events'),
+          where('createdBy', '==', user.uid),
           where('occasionAlias', '==', alias)
         );
         const eventsSnapshot = await getDocs(eventsQuery);
@@ -184,7 +187,7 @@ export function useOccasionManagement({ alias, useContext = true, userId = null 
   };
 
   const handleDeleteOccasion = async () => {
-    if (!occasion || !aliasDoc) return;
+    if (!occasion || !aliasDoc || !user?.uid) return;
     
     try {
       // Create a batch to delete all related documents atomically
@@ -201,6 +204,7 @@ export function useOccasionManagement({ alias, useContext = true, userId = null 
       // Delete all events in this series
       const eventsQuery = query(
         collection(db, 'events'),
+        where('createdBy', '==', user.uid),
         where('occasionId', '==', occasion.id)
       );
       const eventsSnapshot = await getDocs(eventsQuery);
@@ -212,6 +216,7 @@ export function useOccasionManagement({ alias, useContext = true, userId = null 
       // Delete all guests in this series
       const guestsQuery = query(
         collection(db, 'guests'),
+        where('createdBy', '==', user.uid),
         where('occasionId', '==', occasion.id)
       );
       const guestsSnapshot = await getDocs(guestsQuery);
@@ -239,7 +244,7 @@ export function useOccasionManagement({ alias, useContext = true, userId = null 
   };
 
   const handleAddOccasion = async (newOccasion: Partial<Occasion>) => {
-    if (!userId) return;
+    if (!user?.uid) return;
     
     try {
       if (!newOccasion.alias) {
@@ -267,7 +272,7 @@ export function useOccasionManagement({ alias, useContext = true, userId = null 
       // Add the occasion document
       batch.set(newOccasionRef, {
         ...newOccasion,
-        createdBy: userId,
+        createdBy: user.uid,
         createdAt: new Date()
       });
       
@@ -276,7 +281,7 @@ export function useOccasionManagement({ alias, useContext = true, userId = null 
       batch.set(aliasDocRef, {
         alias: newOccasion.alias,
         occasionId,
-        createdBy: userId,
+        createdBy: user.uid,
         createdAt: new Date()
       });
       
@@ -297,12 +302,12 @@ export function useOccasionManagement({ alias, useContext = true, userId = null 
 
   // Initialize data
   useEffect(() => {
-    if (userId) {
+    if (user?.uid) {
       fetchAllOccasions();
     } else if (alias) {
       fetchOccasion();
     }
-  }, [alias, userId]);
+  }, [alias, user?.uid]);
 
   return {
     occasion,
