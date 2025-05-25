@@ -4,12 +4,20 @@ import { useState, Suspense } from 'react';
 import { RsvpCode } from '@/src/components/rsvp/RsvpCode';
 import { RsvpContent } from '@/src/components/rsvp/RsvpContent';
 import { useRouter } from 'next/navigation';
+import { AuthProvider } from '@/src/contexts/AuthContext';
+
 function RSVPContent() {
   const router = useRouter();
   const [guestId, setGuestId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const handleCodeSubmit = (code: string) => {
     setGuestId(code);
+  };
+
+  const handleError = (errorMessage: string) => {
+    setError(errorMessage);
+    setGuestId(null);
   };
 
   // Background image container
@@ -37,9 +45,11 @@ function RSVPContent() {
   return (
     <BackgroundContainer>
       {guestId ? (
-        <RsvpContent guestId={guestId} />
+        <AuthProvider>
+          <RsvpContent guestId={guestId} onError={handleError} />
+        </AuthProvider>
       ) : (
-        <RsvpCode onCodeSubmit={handleCodeSubmit} />
+        <RsvpCode onCodeSubmit={handleCodeSubmit} initialError={error} />
       )}
     </BackgroundContainer>
   );

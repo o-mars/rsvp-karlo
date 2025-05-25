@@ -10,6 +10,7 @@ interface RsvpEventCardProps {
   onAdditionalGuestsChange: (eventId: EventId, count: number) => void;
   saving: boolean;
   additionalGuestsCount: Record<EventId, number>;
+  isAdmin?: boolean;
 }
 
 export function RsvpEventCard({
@@ -19,6 +20,7 @@ export function RsvpEventCard({
   onAdditionalGuestsChange,
   saving,
   additionalGuestsCount,
+  isAdmin = false,
 }: RsvpEventCardProps) {
   const hasSubGuests = guest.subGuests && guest.subGuests.length > 0;
   const [showingAdditionalGuests, setShowingAdditionalGuests] = useState<string | null>(null);
@@ -54,16 +56,22 @@ export function RsvpEventCard({
     const maxAdditionalGuests = guest?.additionalGuests?.[eventId] ?? 0;
     const currentAdditionalGuests = additionalGuestsCount[eventId] ?? 0;
     const isShowingAdditionalGuests = showingAdditionalGuests === guestId;
+    const currentStatus = rsvps[eventId];
 
     return (
       <div className="space-y-4">
         <div className="flex justify-center">
           <div className="flex space-x-4">
             <button
-              onClick={() => onRSVP(guestId, eventId, RsvpStatus.ATTENDING, isSubGuest)}
+              onClick={() => onRSVP(
+                guestId, 
+                eventId, 
+                isAdmin && currentStatus === RsvpStatus.ATTENDING ? RsvpStatus.AWAITING_RESPONSE : RsvpStatus.ATTENDING, 
+                isSubGuest
+              )}
               disabled={saving}
               className={`px-4 py-2 rounded transition-colors duration-200 ${
-                rsvps[eventId] === RsvpStatus.ATTENDING
+                currentStatus === RsvpStatus.ATTENDING
                   ? 'bg-green-600 text-white'
                   : 'bg-[var(--blossom-pink-light)] text-[var(--blossom-text-dark)] hover:bg-pink-200 border border-[var(--blossom-border)]'
               }`}
@@ -71,10 +79,15 @@ export function RsvpEventCard({
               Attending
             </button>
             <button
-              onClick={() => onRSVP(guestId, eventId, RsvpStatus.NOT_ATTENDING, isSubGuest)}
+              onClick={() => onRSVP(
+                guestId, 
+                eventId, 
+                isAdmin && currentStatus === RsvpStatus.NOT_ATTENDING ? RsvpStatus.AWAITING_RESPONSE : RsvpStatus.NOT_ATTENDING, 
+                isSubGuest
+              )}
               disabled={saving}
               className={`px-4 py-2 rounded transition-colors duration-200 ${
-                rsvps[eventId] === RsvpStatus.NOT_ATTENDING
+                currentStatus === RsvpStatus.NOT_ATTENDING
                   ? 'bg-red-600 text-white'
                   : 'bg-[var(--blossom-pink-light)] text-[var(--blossom-text-dark)] hover:bg-pink-200 border border-[var(--blossom-border)]'
               }`}
@@ -83,7 +96,7 @@ export function RsvpEventCard({
             </button>
           </div>
         </div>
-        {maxAdditionalGuests > 0 && rsvps[eventId] === RsvpStatus.ATTENDING && isShowingAdditionalGuests && (
+        {maxAdditionalGuests > 0 && currentStatus === RsvpStatus.ATTENDING && isShowingAdditionalGuests && (
           <div className="mt-6 p-4 bg-[var(--blossom-pink-light)] rounded-lg border border-[var(--blossom-border)]">
             <div className="flex flex-col items-center space-y-3">
               <h4 className="text-lg font-medium text-[var(--blossom-text-dark)]">Additional Guests</h4>

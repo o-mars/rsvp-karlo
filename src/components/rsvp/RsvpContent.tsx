@@ -3,18 +3,21 @@ import { db } from '@/utils/firebase';
 import { doc, updateDoc, getDoc } from 'firebase/firestore';
 import { Guest, Event, RsvpStatus, GuestId, EventId, RSVPStatus } from '@/src/models/interfaces';
 import { RsvpEventCard } from './RsvpEventCard';
+import { useAuth } from '@/src/contexts/AuthContext';
 
 interface RsvpContentProps {
   guestId: GuestId;
+  onError: (errorMessage: string) => void;
 }
 
-export function RsvpContent({ guestId }: RsvpContentProps) {
+export function RsvpContent({ guestId, onError }: RsvpContentProps) {
   const [guest, setGuest] = useState<Guest | null>(null);
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [additionalGuestsCount, setAdditionalGuestsCount] = useState<Record<string, number>>({});
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchGuestAndEvents = async () => {
@@ -23,7 +26,9 @@ export function RsvpContent({ guestId }: RsvpContentProps) {
         const guestRef = doc(db, 'guests', guestId);
         const guestSnap = await getDoc(guestRef);
         if (!guestSnap.exists()) {
-          setError('Invalid RSVP code. Please check your invitation and try again.');
+          const errorMessage = 'Invalid RSVP code. Please check your invitation and try again.';
+          setError(errorMessage);
+          onError(errorMessage);
           return;
         }
 
@@ -44,7 +49,9 @@ export function RsvpContent({ guestId }: RsvpContentProps) {
         setEvents(eventsList);
 
       } catch (err) {
-        setError('An error occurred. Please try again.');
+        const errorMessage = 'An error occurred. Please try again.';
+        setError(errorMessage);
+        onError(errorMessage);
         console.error('Error fetching data:', err);
       } finally {
         setLoading(false);
@@ -52,7 +59,7 @@ export function RsvpContent({ guestId }: RsvpContentProps) {
     };
 
     fetchGuestAndEvents();
-  }, [guestId]);
+  }, [guestId, onError]);
 
   const handleRSVP = async (guestId: GuestId, eventId: EventId, response: RSVPStatus, isSubGuest: boolean = false) => {
     if (!guest) return;
@@ -201,6 +208,7 @@ export function RsvpContent({ guestId }: RsvpContentProps) {
                 onAdditionalGuestsChange={handleAdditionalGuestsChange}
                 saving={saving}
                 additionalGuestsCount={additionalGuestsCount}
+                isAdmin={user?.uid === event.createdBy}
               />
             );
           })}

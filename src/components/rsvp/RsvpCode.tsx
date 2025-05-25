@@ -4,13 +4,18 @@ import { Input } from '@/src/components/ui/input';
 
 interface RsvpCodeProps {
   onCodeSubmit: (code: string) => void;
+  initialError?: string | null;
 }
 
-export function RsvpCode({ onCodeSubmit }: RsvpCodeProps) {
+export function RsvpCode({ onCodeSubmit, initialError }: RsvpCodeProps) {
   const searchParams = useSearchParams();
   const [inputToken, setInputToken] = useState('');
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(initialError || null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    setError(initialError || null);
+  }, [initialError]);
 
   const handleTokenSubmit = useCallback(async (submittedToken: string) => {
     setLoading(true);
@@ -44,7 +49,7 @@ export function RsvpCode({ onCodeSubmit }: RsvpCodeProps) {
       
       onCodeSubmit(cleanToken);
     } catch (err) {
-      setError('An error occurred. Please try again.');
+      setError('Invalid RSVP code. Please check your invitation and try again.');
       console.error('Error checking token:', err);
     } finally {
       setLoading(false);
@@ -65,6 +70,13 @@ export function RsvpCode({ onCodeSubmit }: RsvpCodeProps) {
     handleTokenSubmit(pastedValue);
   };
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputToken(e.target.value);
+    if (error) {
+      setError(null);
+    }
+  };
+
   return (
     <div className="px-4 sm:px-6 lg:px-8">
       <div className="max-w-md mx-auto bg-white rounded-lg shadow-lg p-8">
@@ -76,10 +88,12 @@ export function RsvpCode({ onCodeSubmit }: RsvpCodeProps) {
           <Input
             type="text"
             value={inputToken}
-            onChange={(e) => setInputToken(e.target.value)}
+            onChange={handleInputChange}
             onPaste={handlePaste}
             placeholder="Enter your RSVP code"
-            className="text-gray-900 placeholder-gray-400 bg-white border-pink-300 focus-visible:ring-[var(--blossom-pink-primary)] focus-visible:ring-1 focus-visible:ring-offset-0"
+            className={`text-gray-900 placeholder-gray-400 bg-white border-pink-300 focus-visible:ring-[var(--blossom-pink-primary)] focus-visible:ring-1 focus-visible:ring-offset-0 ${
+              error ? 'border-red-500' : ''
+            }`}
           />
 
           {error && (
