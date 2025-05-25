@@ -85,15 +85,27 @@ export function useEventManagement({ occasionId, useContext = true }: UseEventMa
   const uploadEventInvite = async (file: File, eventName: string): Promise<string> => {
     try {
       const id = occasionId || occasionContext?.occasion?.id;
-      if (!id) {
-        throw new Error('No occasion ID provided');
+      const occasionAlias = occasionContext?.occasion?.alias;
+      
+      if (!id || !occasionAlias) {
+        throw new Error('No occasion ID or alias provided');
       }
 
-      const sanitizedEventName = eventName.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
       const fileExtension = file.name.split('.').pop()?.toLowerCase() || 'jpg';
-      const storageRef = ref(storage, `event-invites/${id}/${sanitizedEventName}/invite.${fileExtension}`);
+      // Use eventId in path for security, but keep occasionAlias for organization
+      const storageRef = ref(storage, `${occasionAlias}/events/${id}/invite.${fileExtension}`);
       
-      const snapshot = await uploadBytes(storageRef, file);
+      // Add metadata with creator information
+      const metadata = {
+        customMetadata: {
+          createdBy: user?.uid || '',
+          occasionId: id,
+          eventName: eventName, // Store the name in metadata instead of path
+          createdAt: new Date().toISOString()
+        }
+      };
+      
+      const snapshot = await uploadBytes(storageRef, file, metadata);
       return await getDownloadURL(snapshot.ref);
     } catch (error) {
       console.error('Error uploading event invite:', error);

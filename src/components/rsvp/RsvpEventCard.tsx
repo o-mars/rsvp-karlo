@@ -13,12 +13,12 @@ interface RsvpEventCardProps {
 }
 
 export function RsvpEventCard({
-  event, 
-  guest, 
-  onRSVP, 
+  event,
+  guest,
+  onRSVP,
   onAdditionalGuestsChange,
   saving,
-  additionalGuestsCount 
+  additionalGuestsCount,
 }: RsvpEventCardProps) {
   const hasSubGuests = guest.subGuests && guest.subGuests.length > 0;
   const [showingAdditionalGuests, setShowingAdditionalGuests] = useState<string | null>(null);

@@ -34,6 +34,7 @@ export function useOccasionManagement({ alias, useContext = true }: UseOccasionM
   }
 
   const fetchOccasion = async () => {
+    console.log('fetchOccasion', alias, user?.uid);
     if (!alias || !user?.uid) return;
     
     setLoading(true);
@@ -113,6 +114,11 @@ export function useOccasionManagement({ alias, useContext = true }: UseOccasionM
       });
       
       setOccasionList(occasionList);
+      
+      const occasion = occasionList.find(o => o.alias === alias);
+      if (occasion) {
+        setOccasion(occasion);
+      }
     } catch (err) {
       console.error('Error fetching occasion list:', err);
       setError('Error loading occasion list. Please try again.');
@@ -121,15 +127,26 @@ export function useOccasionManagement({ alias, useContext = true }: UseOccasionM
     }
   };
 
-  const uploadOccasionImage = async (file: File, occasionName: string): Promise<string> => {
+  const uploadOccasionImage = async (file: File): Promise<string> => {
     try {
-      if (!user?.uid) {
-        throw new Error('User ID is required');
+      if (!user?.uid || !occasion?.alias || !occasion?.id) {
+        throw new Error('User ID, occasion alias, and occasion ID are required');
       }
 
-      const sanitizedOccasionName = occasionName.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
-      const storageRef = ref(storage, `occasion-images/${user.uid}/${sanitizedOccasionName}/${Date.now()}-${file.name}`);
-      const snapshot = await uploadBytes(storageRef, file);
+      const fileExtension = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+      // Use occasionId in path for security, but keep alias for organization
+      const storageRef = ref(storage, `${occasion.alias}/occasion/${occasion.id}/image.${fileExtension}`);
+      
+      // Add metadata with creator information
+      const metadata = {
+        customMetadata: {
+          createdBy: user.uid,
+          occasionId: occasion.id,
+          createdAt: new Date().toISOString()
+        }
+      };
+      
+      const snapshot = await uploadBytes(storageRef, file, metadata);
       return await getDownloadURL(snapshot.ref);
     } catch (error) {
       console.error('Error uploading occasion image:', error);
@@ -146,28 +163,11 @@ export function useOccasionManagement({ alias, useContext = true }: UseOccasionM
       
       // Update the occasion document
       const occasionRef = doc(db, 'occasions', occasion.id);
-      batch.update(occasionRef, updatedOccasion);
       
-      // If alias has changed, update the alias document and all events
-      if (updatedOccasion.alias && updatedOccasion.alias !== alias && alias) {
-        // Update the alias in the alias document
-        const aliasDocRef = doc(db, 'aliases', aliasDoc.id);
-        batch.update(aliasDocRef, { alias: updatedOccasion.alias });
-        
-        // Update all events that use this alias
-        const eventsQuery = query(
-          collection(db, 'events'),
-          where('createdBy', '==', user.uid),
-          where('occasionAlias', '==', alias)
-        );
-        const eventsSnapshot = await getDocs(eventsQuery);
-        
-        eventsSnapshot.forEach(eventDoc => {
-          batch.update(doc(db, 'events', eventDoc.id), {
-            occasionAlias: updatedOccasion.alias
-          });
-        });
-      }
+      // Remove alias from updatedOccasion to prevent updates
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { alias: removedAlias, ...updateData } = updatedOccasion;
+      batch.update(occasionRef, updateData);
       
       // Commit the batch
       await batch.commit();
@@ -176,7 +176,7 @@ export function useOccasionManagement({ alias, useContext = true }: UseOccasionM
       if (occasionContext && occasionContext.refreshData && !alias) {
         await occasionContext.refreshData();
       } else {
-        setOccasion(prev => prev ? { ...prev, ...updatedOccasion } : null);
+        setOccasion(prev => prev ? { ...prev, ...updateData } : null);
       }
       
       return true;
@@ -276,8 +276,8 @@ export function useOccasionManagement({ alias, useContext = true }: UseOccasionM
         createdAt: new Date()
       });
       
-      // Add the alias document with an auto-generated ID
-      const aliasDocRef = doc(collection(db, 'aliases'));
+      // Add the alias document using the alias as the document ID
+      const aliasDocRef = doc(db, 'aliases', newOccasion.alias);
       batch.set(aliasDocRef, {
         alias: newOccasion.alias,
         occasionId,

@@ -31,7 +31,7 @@ export default function CreateOrUpdateOccasionCard({
   const [previewUrl, setPreviewUrl] = useState<string | null>(editingOccasion?.inviteImageUrl || null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   
-  const { uploadOccasionImage } = useOccasionManagement({ userId });
+  const { uploadOccasionImage } = useOccasionManagement();
   
   const [errors, setErrors] = useState<{
     name?: string;
@@ -227,7 +227,7 @@ export default function CreateOrUpdateOccasionCard({
     setUploadError(null);
 
     try {
-      const downloadUrl = await uploadOccasionImage(file, name || 'untitled-occasion');
+      const downloadUrl = await uploadOccasionImage(file);
       
       // Update the form data with the new image URL
       const occasionData = {

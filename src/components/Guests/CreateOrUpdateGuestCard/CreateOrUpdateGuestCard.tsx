@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { Guest, Event, RsvpStatus } from '@/src/models/interfaces';
+import { Guest, Event, RsvpStatus, RSVPStatus, EventId } from '@/src/models/interfaces';
 
 interface CreateOrUpdateGuestCardProps {
   isOpen: boolean;
@@ -22,8 +22,8 @@ export default function CreateOrUpdateGuestCard({
     firstName: '',
     lastName: '',
     email: [],
-    rsvps: {} as Record<string, string>,
-    additionalGuests: {} as Record<string, number>,
+    rsvps: {} as Record<EventId, RSVPStatus>,
+    additionalGuests: {} as Record<EventId, number>,
     subGuests: [],
   });
   
@@ -89,7 +89,7 @@ export default function CreateOrUpdateGuestCard({
       firstName: '',
       lastName: '',
       email: [],
-      rsvps: {} as Record<string, string>,
+      rsvps: {} as Record<EventId, RSVPStatus>,
       additionalGuests: {} as Record<string, number>,
       subGuests: [],
     });
@@ -230,8 +230,8 @@ export default function CreateOrUpdateGuestCard({
       lastName: '',
       rsvps: Object.keys(guestData.rsvps || {}).reduce((acc, eventId) => {
         // Copy all events the main guest is invited to
-        return { ...acc, [eventId]: 'pending' };
-      }, {} as Record<string, string>)
+        return { ...acc, [eventId]: RsvpStatus.AWAITING_RESPONSE };
+      }, {} as Record<EventId, RSVPStatus>)
     };
     
     setGuestData({
@@ -623,7 +623,7 @@ export default function CreateOrUpdateGuestCard({
                                       const updatedRsvps = { ...subGuest.rsvps };
                                       
                                       if (e.target.checked) {
-                                        updatedRsvps[eventId] = 'pending';
+                                        updatedRsvps[eventId] = RsvpStatus.AWAITING_RESPONSE;
                                       } else {
                                         delete updatedRsvps[eventId];
                                       }

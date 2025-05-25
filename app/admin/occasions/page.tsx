@@ -16,6 +16,7 @@ import { useGuestManagement } from '@/src/hooks/useGuestManagement';
 import OccasionStatusView from '@/src/components/RSVPs/OccasionStatusView/OccasionStatusView';
 import { useOccasionManagement } from '@/src/hooks/useOccasionManagement';
 import ImportGuestsFromFile from '@/src/components/Guests/ImportGuestsFromFile/ImportGuestsFromFile';
+import ImagePreviewModal from '@/src/components/shared/ImagePreviewModal';
 
 export default function EventsPage() {
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
@@ -25,35 +26,36 @@ export default function EventsPage() {
   const [activeTab, setActiveTab] = useState('events');
   const [isEditingOccasion, setIsEditingOccasion] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   
   const searchParams = useSearchParams();
   const alias = searchParams.get('a');
   const { user } = useAuth();
   
-  const { 
-    occasion, 
+  const {
+    occasion,
     loading: occasionLoading, 
     error: occasionError,
     handleUpdateOccasion
   } = useOccasionManagement({ alias, useContext: false });
   
-  const { 
-    events, 
-    loading: eventsLoading, 
-    handleDeleteEvent, 
-    handleAddEvent, 
-    handleUpdateEvent 
-  } = useEventManagement({ 
+  const {
+    events,
+    loading: eventsLoading,
+    handleDeleteEvent,
+    handleAddEvent,
+    handleUpdateEvent
+  } = useEventManagement({
     occasionId: occasion?.id,
     useContext: false 
   });
   
-  const { 
-    guests, 
-    selectedGuests, 
-    toggleGuestSelection, 
-    toggleAllSelection, 
-    handleDeleteGuest, 
+  const {
+    guests,
+    selectedGuests,
+    toggleGuestSelection,
+    toggleAllSelection,
+    handleDeleteGuest,
     handleBulkEmail,
     handleAddGuest,
     handleUpdateGuest,
@@ -150,11 +152,11 @@ export default function EventsPage() {
         
         {occasion && (
           <div className="mb-8">
-            <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center justify-between mb-1">
               <h1 className="text-3xl font-bold">{occasion.name}</h1>
-              <button 
+              <button
                 onClick={() => setIsEditingOccasion(true)}
-                className="text-[var(--blossom-text-dark)]/70 hover:text-[var(--blossom-text-dark)] flex items-center text-sm bg-white border border-[var(--blossom-border)] hover:bg-pink-100 px-3 py-1 rounded transition-colors"
+                className="text-[var(--blossom-text-dark)]/70 hover:text-[var(--blossom-text-dark)] flex items-center justify-center text-sm bg-white border border-[var(--blossom-border)] hover:bg-pink-100 px-3 py-1 rounded transition-colors w-[140px]"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
                   <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
@@ -162,9 +164,22 @@ export default function EventsPage() {
                 Edit Occasion
               </button>
             </div>
-            {occasion.description && (
-              <p className="text-[var(--blossom-text-dark)]/70">{occasion.description}</p>
-            )}
+            <div className="flex items-center justify-between">
+              {occasion.description && (
+                <p className="text-[var(--blossom-text-dark)]/70">{occasion.description}</p>
+              )}
+              {occasion.inviteImageUrl && (
+                <button
+                  onClick={() => setIsInviteModalOpen(true)}
+                  className="text-[var(--blossom-text-dark)]/70 hover:text-[var(--blossom-text-dark)] flex items-center justify-center text-sm bg-white border border-[var(--blossom-border)] hover:bg-pink-100 px-3 py-1 rounded transition-colors w-[140px]"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  View Invitation
+                </button>
+              )}
+            </div>
           </div>
         )}
         
@@ -335,6 +350,16 @@ export default function EventsPage() {
             />
           </div>
         </div>
+      )}
+
+      {/* Add the invitation preview modal */}
+      {occasion?.inviteImageUrl && (
+        <ImagePreviewModal
+          isOpen={isInviteModalOpen}
+          onClose={() => setIsInviteModalOpen(false)}
+          imageUrl={occasion.inviteImageUrl}
+          alt="Occasion invitation"
+        />
       )}
     </div>
   );
