@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { collection, getDocs, doc, query, where, limit, writeBatch } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { collection, getDocs, doc, query, where, limit, runTransaction, writeBatch } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL, listAll, deleteObject } from 'firebase/storage';
 import { db, storage } from '@/utils/firebase';
 import { Occasion } from '@/src/models/interfaces';
 import { useOccasion } from '@/src/contexts/OccasionContext';
@@ -135,7 +135,7 @@ export function useOccasionManagement({ alias, useContext = true }: UseOccasionM
 
       const fileExtension = file.name.split('.').pop()?.toLowerCase() || 'jpg';
       // Use occasionId in path for security, but keep alias for organization
-      const storageRef = ref(storage, `${occasion.alias}/occasion/${occasion.id}/image.${fileExtension}`);
+      const storageRef = ref(storage, `${occasion.alias}/occasion/${occasion.id}/occasion-invite.${fileExtension}`);
       
       // Add metadata with creator information
       const metadata = {
@@ -154,96 +154,165 @@ export function useOccasionManagement({ alias, useContext = true }: UseOccasionM
     }
   };
 
-  const handleUpdateOccasion = async (updatedOccasion: Partial<Occasion>) => {
-    if (!occasion || !aliasDoc || !user?.uid) return;
+  const handleUpdateOccasion = async (updatedOccasion: Partial<Occasion>, imageFile: File | null) => {
+    if (!occasion) {
+      console.error('Update failed: occasion is null');
+      throw new Error('Occasion data is required for update');
+    }
+    if (!aliasDoc) {
+      console.error('Update failed: aliasDoc is null');
+      throw new Error('Alias document is required for update');
+    }
+    if (!user?.uid) {
+      console.error('Update failed: user.uid is null');
+      throw new Error('User ID is required for update');
+    }
     
     try {
-      // Create a batch to update both documents atomically
-      const batch = writeBatch(db);
-      
-      // Update the occasion document
-      const occasionRef = doc(db, 'occasions', occasion.id);
-      
-      // Remove alias from updatedOccasion to prevent updates
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { alias: removedAlias, ...updateData } = updatedOccasion;
-      batch.update(occasionRef, updateData);
-      
-      // Commit the batch
-      await batch.commit();
-      
+      let imageUrl: string | undefined;
+
+      // If there's a new image file, upload it first
+      if (imageFile) {
+        const fileExtension = imageFile.name.split('.').pop()?.toLowerCase() || 'jpg';
+        const storageRef = ref(storage, `${occasion.alias}/occasion/${occasion.id}/occasion-invite.${fileExtension}`);
+        
+        const metadata = {
+          customMetadata: {
+            createdBy: user.uid,
+            occasionId: occasion.id,
+            createdAt: new Date().toISOString()
+          }
+        };
+        
+        const snapshot = await uploadBytes(storageRef, imageFile, metadata);
+        imageUrl = await getDownloadURL(snapshot.ref);
+      }
+
+      // Use a transaction to update the occasion
+      await runTransaction(db, async (transaction) => {
+        const occasionRef = doc(db, 'occasions', occasion.id);
+        const occasionDoc = await transaction.get(occasionRef);
+        
+        if (!occasionDoc.exists()) {
+          throw new Error('Occasion does not exist');
+        }
+
+        // Remove alias from updatedOccasion to prevent updates
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { alias: removedAlias, ...updateData } = updatedOccasion;
+        
+        // Update with new data and image URL if we uploaded one
+        transaction.update(occasionRef, {
+          ...updateData,
+          ...(imageUrl ? { inviteImageUrl: imageUrl } : {})
+        });
+      });
+
       // Use context refresh if available, otherwise update local state
       if (occasionContext && occasionContext.refreshData && !alias) {
         await occasionContext.refreshData();
       } else {
-        setOccasion(prev => prev ? { ...prev, ...updateData } : null);
+        setOccasion(prev => prev ? { 
+          ...prev, 
+          ...updatedOccasion,
+          ...(imageUrl ? { inviteImageUrl: imageUrl } : {})
+        } : null);
       }
-      
-      return true;
     } catch (error) {
       console.error('Error updating occasion:', error);
       throw error;
     }
   };
 
-  const handleDeleteOccasion = async () => {
-    if (!occasion || !aliasDoc || !user?.uid) return;
+  const handleDeleteOccasion = async (occasionToDelete: Occasion) => {
+    if (!occasionToDelete || !user?.uid) {
+      console.error('Delete failed: Missing required data', { 
+        hasOccasion: !!occasionToDelete, 
+        hasUserId: !!user?.uid 
+      });
+      return;
+    }
+
+    // Verify that the occasion belongs to the current user
+    if (occasionToDelete.createdBy !== user.uid) {
+      console.error('Delete failed: Permission denied - occasion does not belong to user', {
+        occasionCreatedBy: occasionToDelete.createdBy,
+        currentUserId: user.uid
+      });
+      throw new Error('You do not have permission to delete this occasion');
+    }
     
     try {
       // Create a batch to delete all related documents atomically
       const batch = writeBatch(db);
       
-      // Delete the occasion document
-      const occasionRef = doc(db, 'occasions', occasion.id);
-      batch.delete(occasionRef);
-      
-      // Delete the alias document
-      const aliasDocRef = doc(db, 'aliases', aliasDoc.id);
-      batch.delete(aliasDocRef);
-      
-      // Delete all events in this series
-      const eventsQuery = query(
-        collection(db, 'events'),
-        where('createdBy', '==', user.uid),
-        where('occasionId', '==', occasion.id)
-      );
-      const eventsSnapshot = await getDocs(eventsQuery);
-      
-      eventsSnapshot.forEach(eventDoc => {
-        batch.delete(doc(db, 'events', eventDoc.id));
-      });
-      
-      // Delete all guests in this series
+      // 1. Add all guests to batch delete
       const guestsQuery = query(
         collection(db, 'guests'),
         where('createdBy', '==', user.uid),
-        where('occasionId', '==', occasion.id)
+        where('occasionId', '==', occasionToDelete.id)
       );
       const guestsSnapshot = await getDocs(guestsQuery);
       
       guestsSnapshot.forEach(guestDoc => {
         batch.delete(doc(db, 'guests', guestDoc.id));
       });
+
+      // 2. Add all events to batch delete
+      const eventsQuery = query(
+        collection(db, 'events'),
+        where('createdBy', '==', user.uid),
+        where('occasionId', '==', occasionToDelete.id)
+      );
+      const eventsSnapshot = await getDocs(eventsQuery);
+      
+      eventsSnapshot.forEach(eventDoc => {
+        batch.delete(doc(db, 'events', eventDoc.id));
+      });
+
+      // 3. Add alias document to batch delete
+      const aliasDocRef = doc(db, 'aliases', occasionToDelete.alias);
+      batch.delete(aliasDocRef);
+
+      // 4. Add occasion document to batch delete
+      const occasionRef = doc(db, 'occasions', occasionToDelete.id);
+      batch.delete(occasionRef);
+      
+      // 5. Delete all storage files associated with this occasion
+      try {
+        // List all files in the occasion's storage folder
+        const occasionStorageRef = ref(storage, `${occasionToDelete.alias}/occasion/${occasionToDelete.id}`);
+        const storageList = await listAll(occasionStorageRef);
+        
+        // Delete each file
+        const deletePromises = storageList.items.map(item => deleteObject(item));
+        await Promise.all(deletePromises);
+      } catch (error) {
+        console.error('Error deleting storage files:', error);
+        // Don't throw here - we still want to proceed with the database deletions
+      }
       
       // Commit the batch
       await batch.commit();
       
-      // Use context refresh if available, otherwise update local state
+      // Update state after successful deletion
       if (occasionContext && occasionContext.refreshData && !alias) {
         await occasionContext.refreshData();
       } else {
         setOccasion(null);
         setAliasDoc(null);
+        // Refresh the occasion list
+        await fetchAllOccasions();
       }
       
       return true;
     } catch (error) {
-      console.error('Error deleting occasion:', error);
+      console.error('Error in deletion process:', error);
       throw error;
     }
   };
 
-  const handleAddOccasion = async (newOccasion: Partial<Occasion>) => {
+  const handleAddOccasion = async (newOccasion: Partial<Occasion>, imageFile: File | null) => {
     if (!user?.uid) return;
     
     try {
@@ -263,30 +332,49 @@ export function useOccasionManagement({ alias, useContext = true }: UseOccasionM
       }
       
       // Create a new occasion document reference with auto-generated ID
-      const newOccasionRef = doc(collection(db, 'occasions'));
+      const occasionsRef = collection(db, 'occasions');
+      const newOccasionRef = doc(occasionsRef);
       const occasionId = newOccasionRef.id;
+
+      let imageUrl: string | undefined;
+
+      // If there's an image file, upload it first
+      if (imageFile) {
+        const fileExtension = imageFile.name.split('.').pop()?.toLowerCase() || 'jpg';
+        const storageRef = ref(storage, `${newOccasion.alias}/occasion/${occasionId}/occasion-invite.${fileExtension}`);
+        
+        const metadata = {
+          customMetadata: {
+            createdBy: user.uid,
+            occasionId,
+            createdAt: new Date().toISOString()
+          }
+        };
+        
+        const snapshot = await uploadBytes(storageRef, imageFile, metadata);
+        imageUrl = await getDownloadURL(snapshot.ref);
+      }
       
-      // Create a batch to perform both operations atomically
-      const batch = writeBatch(db);
-      
-      // Add the occasion document
-      batch.set(newOccasionRef, {
-        ...newOccasion,
-        createdBy: user.uid,
-        createdAt: new Date()
+      // Use a transaction to create both documents atomically
+      await runTransaction(db, async (transaction) => {
+        // Add the occasion document
+        transaction.set(newOccasionRef, {
+          ...newOccasion,
+          createdBy: user.uid,
+          createdAt: new Date(),
+          ...(imageUrl ? { inviteImageUrl: imageUrl } : {})
+        });
+        
+        // Add the alias document
+        const aliasesRef = collection(db, 'aliases');
+        const aliasDocRef = doc(aliasesRef, newOccasion.alias);
+        transaction.set(aliasDocRef, {
+          alias: newOccasion.alias,
+          occasionId,
+          createdBy: user.uid,
+          createdAt: new Date()
+        });
       });
-      
-      // Add the alias document using the alias as the document ID
-      const aliasDocRef = doc(db, 'aliases', newOccasion.alias);
-      batch.set(aliasDocRef, {
-        alias: newOccasion.alias,
-        occasionId,
-        createdBy: user.uid,
-        createdAt: new Date()
-      });
-      
-      // Commit the batch
-      await batch.commit();
       
       // Refresh the list if we're in list mode
       if (!alias) {
@@ -302,11 +390,12 @@ export function useOccasionManagement({ alias, useContext = true }: UseOccasionM
 
   // Initialize data
   useEffect(() => {
-    if (user?.uid) {
-      fetchAllOccasions();
-    } else if (alias) {
+    if (alias) {
       fetchOccasion();
+    } else if (user?.uid) {
+      fetchAllOccasions();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [alias, user?.uid]);
 
   return {

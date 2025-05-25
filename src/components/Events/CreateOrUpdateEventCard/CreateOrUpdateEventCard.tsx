@@ -11,7 +11,7 @@ import { toast } from 'react-hot-toast';
 interface CreateOrUpdateEventCardProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (event: Partial<Event>) => void;
+  onSubmit: (event: Partial<Event>) => Promise<{ id: string } | void>;
   editingEvent: Event | null;
   occasionId: string;
   occasionAlias: string;
@@ -29,6 +29,7 @@ export default function CreateOrUpdateEventCard({
   const [time, setTime] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [pendingImageFile, setPendingImageFile] = useState<File | null>(null);
   
   const { uploadEventInvite } = useEventManagement({ occasionId });
   
@@ -74,9 +75,10 @@ export default function CreateOrUpdateEventCard({
     setNewFieldKey('');
     setNewFieldValue('');
     setUploadError(null);
+    setPendingImageFile(null);
   };
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
@@ -91,7 +93,23 @@ export default function CreateOrUpdateEventCard({
         })
       };
       
-      onSubmit(eventData);
+      // Submit the event data first
+      await onSubmit(eventData);
+      
+      // If we have a pending image, upload it now
+      if (pendingImageFile && !editingEvent) {
+        // The event should now have an ID from the creation
+        const eventId = eventData.id;
+        if (eventId) {
+          const downloadUrl = await uploadEventInvite(pendingImageFile, eventId);
+          // Update the event with the image URL
+          await onSubmit({
+            ...eventData,
+            id: eventId,
+            inviteImageUrl: downloadUrl
+          });
+        }
+      }
       
       if (!editingEvent) {
         resetForm();
@@ -129,21 +147,35 @@ export default function CreateOrUpdateEventCard({
 
     // Store previous state in case of error
     const previousEventState = { ...newEvent };
+    const previousPendingFile = pendingImageFile;
 
     setIsUploading(true);
     setUploadError(null);
 
     try {
-      const downloadUrl = await uploadEventInvite(file, newEvent.name || 'untitled-event');
-      
-      setNewEvent(prev => ({
-        ...prev,
-        inviteImageUrl: downloadUrl
-      }));
+      if (editingEvent) {
+        // For existing events, we can upload directly
+        const downloadUrl = await uploadEventInvite(file, editingEvent.id);
+        setNewEvent(prev => ({
+          ...prev,
+          inviteImageUrl: downloadUrl
+        }));
+      } else {
+        // For new events, we'll store the file temporarily
+        // and upload it after event creation
+        setPendingImageFile(file);
+        // Create a temporary URL for preview
+        const previewUrl = URL.createObjectURL(file);
+        setNewEvent(prev => ({
+          ...prev,
+          inviteImageUrl: previewUrl
+        }));
+      }
     } catch (error) {
       console.error('Error uploading image:', error);
       setNewEvent(previousEventState);
-      toast.error('Failed to upload image. Please try again.');      
+      setPendingImageFile(previousPendingFile);
+      toast.error('Failed to upload image. Please try again.');
       setUploadError('Failed to upload image. Please try again.');
     } finally {
       setIsUploading(false);
@@ -155,6 +187,7 @@ export default function CreateOrUpdateEventCard({
       ...prev,
       inviteImageUrl: undefined
     }));
+    setPendingImageFile(null);
     setUploadError(null);
   };
 

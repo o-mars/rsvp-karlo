@@ -1,12 +1,10 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useAuth } from '../../src/contexts/AuthContext';
 import OccasionCard from '@/src/components/Occasion/OccasionCard/OccasionCard';
 import { useOccasionManagement } from '@/src/hooks/useOccasionManagement';
 
 export default function AdminDashboard() {
-  const { user } = useAuth();
   const router = useRouter();
   
   const { 
@@ -14,7 +12,7 @@ export default function AdminDashboard() {
     loading: occasionLoading,
     error: occasionError,
     handleDeleteOccasion,
-  } = useOccasionManagement({ userId: user?.uid || null, useContext: false });
+  } = useOccasionManagement({ useContext: false });
 
   const handleCreateNew = () => {
     router.push('/admin/occasions/new/');
@@ -54,10 +52,12 @@ export default function AdminDashboard() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {occasion.map((occasion) => (
-              <OccasionCard 
-                key={occasion.id} 
-                occasion={occasion} 
-                onDelete={handleDeleteOccasion}
+              <OccasionCard
+                key={occasion.id}
+                occasion={occasion}
+                onDelete={async () => {
+                  await handleDeleteOccasion(occasion);
+                }}
               />
             ))}
           </div>

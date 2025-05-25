@@ -31,7 +31,6 @@ export default function OccasionCard({
       await onDelete(occasion.id);
     } catch (error) {
       console.error('Error deleting occasion:', error);
-      alert('Failed to delete occasion. Please try again.');
     } finally {
       setIsDeleting(false);
       setIsDeleteModalOpen(false);

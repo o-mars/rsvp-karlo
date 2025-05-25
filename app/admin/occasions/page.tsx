@@ -34,10 +34,13 @@ export default function EventsPage() {
   
   const {
     occasion,
-    loading: occasionLoading, 
+    loading: occasionLoading,
     error: occasionError,
     handleUpdateOccasion
-  } = useOccasionManagement({ alias, useContext: false });
+  } = useOccasionManagement({
+    alias,
+    useContext: false
+  });
   
   const {
     events,
@@ -165,13 +168,17 @@ export default function EventsPage() {
               </button>
             </div>
             <div className="flex items-center justify-between">
-              {occasion.description && (
-                <p className="text-[var(--blossom-text-dark)]/70">{occasion.description}</p>
-              )}
+              <div className="flex-1 mr-4">
+                {occasion.description ? (
+                  <p className="text-[var(--blossom-text-dark)]/70">{occasion.description}</p>
+                ) : (
+                  <p className="text-[var(--blossom-text-dark)]/30 italic"></p>
+                )}
+              </div>
               {occasion.inviteImageUrl && (
                 <button
                   onClick={() => setIsInviteModalOpen(true)}
-                  className="text-[var(--blossom-text-dark)]/70 hover:text-[var(--blossom-text-dark)] flex items-center justify-center text-sm bg-white border border-[var(--blossom-border)] hover:bg-pink-100 px-3 py-1 rounded transition-colors w-[140px]"
+                  className="text-[var(--blossom-text-dark)]/70 hover:text-[var(--blossom-text-dark)] flex items-center justify-center text-sm bg-white border border-[var(--blossom-border)] hover:bg-pink-100 px-3 py-1 rounded transition-colors w-[140px] flex-shrink-0"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />

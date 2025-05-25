@@ -82,25 +82,25 @@ export function useEventManagement({ occasionId, useContext = true }: UseEventMa
     }
   };
 
-  const uploadEventInvite = async (file: File, eventName: string): Promise<string> => {
+  const uploadEventInvite = async (file: File, eventId: string): Promise<string> => {
     try {
-      const id = occasionId || occasionContext?.occasion?.id;
+      const currentOccasionId = occasionId || occasionContext?.occasion?.id;
       const occasionAlias = occasionContext?.occasion?.alias;
       
-      if (!id || !occasionAlias) {
+      if (!currentOccasionId || !occasionAlias) {
         throw new Error('No occasion ID or alias provided');
       }
 
       const fileExtension = file.name.split('.').pop()?.toLowerCase() || 'jpg';
       // Use eventId in path for security, but keep occasionAlias for organization
-      const storageRef = ref(storage, `${occasionAlias}/events/${id}/invite.${fileExtension}`);
+      const storageRef = ref(storage, `${occasionAlias}/events/${eventId}/event-invite.${fileExtension}`);
       
       // Add metadata with creator information
       const metadata = {
         customMetadata: {
           createdBy: user?.uid || '',
-          occasionId: id,
-          eventName: eventName, // Store the name in metadata instead of path
+          occasionId: currentOccasionId,
+          eventId: eventId,
           createdAt: new Date().toISOString()
         }
       };

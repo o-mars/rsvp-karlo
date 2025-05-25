@@ -9,15 +9,15 @@ import { Occasion } from '@/src/models/interfaces';
 export default function NewOccasion() {
   const router = useRouter();
   const { user } = useAuth();
-  
-  const { 
+
+  const {
     handleAddOccasion,
     error: occasionError
-  } = useOccasionManagement({ userId: user?.uid || null, useContext: false });
+  } = useOccasionManagement();
 
-  const handleSubmit = async (occasionData: Partial<Occasion>) => {
+  const handleSubmit = async (occasionData: Partial<Occasion>, imageFile: File | null) => {
     try {
-      await handleAddOccasion(occasionData);
+      await handleAddOccasion(occasionData, imageFile);
       router.push('/admin/');
     } catch (error) {
       console.error('Error creating occasion:', error);

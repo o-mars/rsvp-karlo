@@ -4,14 +4,13 @@ import { useState, useEffect } from 'react';
 import { Timestamp, query, collection, where, getDocs } from 'firebase/firestore';
 import { db } from '@/utils/firebase';
 import { Occasion } from '@/src/models/interfaces';
-import { useOccasionManagement } from '@/src/hooks/useOccasionManagement';
 import Image from 'next/image';
 import { toast } from 'react-hot-toast';
 
 interface CreateOrUpdateOccasionCardProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (occasion: Partial<Occasion>) => void;
+  onSubmit: (occasion: Partial<Occasion>, image: File | null) => Promise<{ id: string } | void>;
   editingOccasion?: Occasion | null;
   userId: string;
 }
@@ -21,7 +20,7 @@ export default function CreateOrUpdateOccasionCard({
   onClose,
   onSubmit,
   editingOccasion,
-  userId
+  userId,
 }: CreateOrUpdateOccasionCardProps) {
   const [name, setName] = useState(editingOccasion?.name || '');
   const [alias, setAlias] = useState(editingOccasion?.alias || '');
@@ -30,8 +29,7 @@ export default function CreateOrUpdateOccasionCard({
   const [isUploading, setIsUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(editingOccasion?.inviteImageUrl || null);
   const [uploadError, setUploadError] = useState<string | null>(null);
-  
-  const { uploadOccasionImage } = useOccasionManagement();
+  const [pendingImageFile, setPendingImageFile] = useState<File | null>(null);
   
   const [errors, setErrors] = useState<{
     name?: string;
@@ -143,12 +141,12 @@ export default function CreateOrUpdateOccasionCard({
       return;
     }
     
-    // If we got here and we're editing with the same alias, skip final check
-    if (!(editingOccasion && alias === editingOccasion.alias)) {
-      // If we got here, we need to check alias uniqueness one more time
-      setIsSubmitting(true);
-      
-      try {
+    setIsSubmitting(true);
+    
+    try {
+      // If we got here and we're editing with the same alias, skip final check
+      if (!(editingOccasion && alias === editingOccasion.alias)) {
+        // If we got here, we need to check alias uniqueness one more time
         // Final check for alias uniqueness
         const aliasQuery = query(
           collection(db, 'aliases'),
@@ -163,41 +161,35 @@ export default function CreateOrUpdateOccasionCard({
           setIsSubmitting(false);
           return;
         }
-        
-        const occasionData = {
-          name: name.trim(),
-          alias: alias.trim(),
-          ...(description ? { description: description.trim() } : {}),
-          hosts: hosts.map(h => h.trim()),
-          createdBy: userId,
-          ...(editingOccasion ? {} : { createdAt: Timestamp.now() })
-        };
-        
-        onSubmit(occasionData);
-      } catch (error) {
-        console.error('Error with occasion:', error);
-        setErrors({
-          general: 'An error occurred. Please try again.'
-        });
-      } finally {
-        setIsSubmitting(false);
       }
-    } else {
-      // If editing with same alias, just submit the data
-      const occasionData = {
+      
+      const occasionData: Partial<Occasion> = {
         name: name.trim(),
         alias: alias.trim(),
-        description: description.trim() || undefined,
+        ...(description ? { description: description.trim() } : {}),
         hosts: hosts.map(h => h.trim()),
-        createdBy: userId
+        createdBy: userId,
+        ...(editingOccasion ? {} : { createdAt: Timestamp.now() })
       };
+
+      if (editingOccasion) {
+        occasionData.id = editingOccasion.id;
+      }
+
+      await onSubmit(occasionData, pendingImageFile || null);
+      onClose();
       
-      onSubmit(occasionData);
+    } catch (error) {
+      console.error('Error with occasion:', error);
+      setErrors({
+        general: 'An error occurred. Please try again.'
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleAliasChange = (value: string) => {
-    // Allow only valid characters
     const sanitizedValue = value.toLowerCase().replace(/[^a-z0-9_-]/g, '');
     setAlias(sanitizedValue);
   };
@@ -220,37 +212,25 @@ export default function CreateOrUpdateOccasionCard({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Store previous state in case of error
     const previousPreviewUrl = previewUrl;
+    const previousPendingFile = pendingImageFile;
 
     setIsUploading(true);
     setUploadError(null);
 
     try {
-      const downloadUrl = await uploadOccasionImage(file);
-      
-      // Update the form data with the new image URL
-      const occasionData = {
-        name: name.trim(),
-        alias: alias.trim(),
-        description: description.trim() || undefined,
-        hosts: hosts.map(h => h.trim()),
-        createdBy: userId,
-        inviteImageUrl: downloadUrl
-      };
-      
-      setPreviewUrl(downloadUrl);
-      onSubmit(occasionData);
+      setPendingImageFile(file);
+      const previewUrl = URL.createObjectURL(file);
+      setPreviewUrl(previewUrl);
     } catch (error) {
-      console.error('Error uploading image:', error);
+      console.error('Error handling image:', error);
       
-      // Reset to previous state
       setPreviewUrl(previousPreviewUrl);
+      setPendingImageFile(previousPendingFile);
       
-      // Show error toast
-      toast.error('Failed to upload image. Please try again.');
+      toast.error('Failed to process image. Please try again.');
       
-      setUploadError('Failed to upload image. Please try again.');
+      setUploadError('Failed to process image. Please try again.');
     } finally {
       setIsUploading(false);
     }
@@ -258,19 +238,17 @@ export default function CreateOrUpdateOccasionCard({
 
   const removeImage = () => {
     setPreviewUrl(null);
+    setPendingImageFile(null);
     setUploadError(null);
-    
-    // Update the form data to remove the image URL
-    const occasionData = {
-      name: name.trim(),
-      alias: alias.trim(),
-      description: description.trim() || undefined,
-      hosts: hosts.map(h => h.trim()),
-      createdBy: userId,
-    };
-    
-    onSubmit(occasionData);
   };
+
+  useEffect(() => {
+    if (!isOpen) {
+      setPreviewUrl(null);
+      setPendingImageFile(null);
+      setUploadError(null);
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -511,4 +489,4 @@ export default function CreateOrUpdateOccasionCard({
       </div>
     </div>
   );
-} 
+}
