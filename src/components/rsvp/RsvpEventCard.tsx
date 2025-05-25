@@ -12,7 +12,7 @@ interface RsvpEventCardProps {
   additionalGuestsCount: Record<EventId, number>;
 }
 
-export function RsvpEventCard({ 
+export function RsvpEventCard({
   event, 
   guest, 
   onRSVP, 
