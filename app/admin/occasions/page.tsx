@@ -68,25 +68,30 @@ export default function EventsPage() {
     useContext: false 
   });
 
-  const handleEventSubmit = async (eventData: Partial<Event>) => {
+  const handleEventSubmit = async (eventData: Partial<Event>, imageFile: File | null) => {
     try {
+      if (!occasion?.alias) {
+        throw new Error('Missing alias');
+      }
+
       if (editingEvent) {
         await handleUpdateEvent({
           ...eventData,
-          id: editingEvent.id
-        });
+          id: editingEvent.id,
+          occasionAlias: occasion.alias
+        }, imageFile);
       } else {
         await handleAddEvent({
           ...eventData,
-          createdAt: Timestamp.fromDate(new Date())
-        });
+          createdAt: Timestamp.fromDate(new Date()),
+          occasionAlias: occasion.alias
+        }, imageFile);
       }
       
       setEditingEvent(null);
       setIsEventModalOpen(false);
     } catch (error) {
       console.error('Error saving event:', error);
-      alert('Failed to save event');
     }
   };
 
@@ -106,7 +111,6 @@ export default function EventsPage() {
       setIsGuestModalOpen(false);
     } catch (error) {
       console.error('Error saving guest:', error);
-      alert('Failed to save guest');
     }
   };
 

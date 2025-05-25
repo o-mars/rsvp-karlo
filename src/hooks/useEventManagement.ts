@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { collection, getDocs, query, doc, updateDoc, deleteDoc, addDoc, Timestamp, where } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { collection, getDocs, query, doc, updateDoc, addDoc, Timestamp, where, deleteDoc } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL, listAll, deleteObject } from 'firebase/storage';
 import { db, storage } from '@/utils/firebase';
 import { Event } from '@/src/models/interfaces';
 import { useOccasion } from '@/src/contexts/OccasionContext';
@@ -82,24 +82,19 @@ export function useEventManagement({ occasionId, useContext = true }: UseEventMa
     }
   };
 
-  const uploadEventInvite = async (file: File, eventId: string): Promise<string> => {
+  const uploadEventInvite = async (file: File, eventId: string, occasionAlias: string): Promise<string> => {
     try {
-      const currentOccasionId = occasionId || occasionContext?.occasion?.id;
-      const occasionAlias = occasionContext?.occasion?.alias;
-      
-      if (!currentOccasionId || !occasionAlias) {
-        throw new Error('No occasion ID or alias provided');
+      if (!occasionAlias) {
+        throw new Error('No occasion alias provided');
       }
 
       const fileExtension = file.name.split('.').pop()?.toLowerCase() || 'jpg';
       // Use eventId in path for security, but keep occasionAlias for organization
       const storageRef = ref(storage, `${occasionAlias}/events/${eventId}/event-invite.${fileExtension}`);
       
-      // Add metadata with creator information
       const metadata = {
         customMetadata: {
           createdBy: user?.uid || '',
-          occasionId: currentOccasionId,
           eventId: eventId,
           createdAt: new Date().toISOString()
         }
@@ -113,7 +108,7 @@ export function useEventManagement({ occasionId, useContext = true }: UseEventMa
     }
   };
 
-  const handleAddEvent = async (eventData: Partial<Event>) => {
+  const handleAddEvent = async (eventData: Partial<Event>, imageFile: File | null) => {
     if (!eventData.name || !eventData.date || !eventData.time) return;
     
     try {
@@ -122,7 +117,9 @@ export function useEventManagement({ occasionId, useContext = true }: UseEventMa
         throw new Error('No occasion ID provided');
       }
       
-      const occasion = occasionContext?.occasion;
+      if (!eventData.occasionAlias) {
+        throw new Error('No occasion alias provided');
+      }
 
       checkDuplicateEventName(eventData.name as string);
 
@@ -130,13 +127,16 @@ export function useEventManagement({ occasionId, useContext = true }: UseEventMa
         ...eventData,
         occasionId: id,
         createdBy: user?.uid,
-        occasionAlias: occasion?.alias ?? '',
         createdAt: Timestamp.now(),
         additionalFields: eventData.additionalFields || {},
-        inviteImageUrl: eventData.inviteImageUrl || null
       };
       
-      await addDoc(collection(db, 'events'), newEvent);
+      const docRef = await addDoc(collection(db, 'events'), newEvent);
+
+      if (imageFile) {
+        const downloadUrl = await uploadEventInvite(imageFile, docRef.id, eventData.occasionAlias);
+        await updateDoc(docRef, { inviteImageUrl: downloadUrl });
+      }
       
       if (occasionContext && occasionContext.refreshData && !occasionId) {
         await occasionContext.refreshData();
@@ -149,20 +149,28 @@ export function useEventManagement({ occasionId, useContext = true }: UseEventMa
     }
   };
 
-  const handleUpdateEvent = async (eventData: Partial<Event>) => {
+  const handleUpdateEvent = async (eventData: Partial<Event>, imageFile: File | null) => {
     if (!eventData.id || !eventData.name || !eventData.date || !eventData.time) return;
     
     try {
       checkDuplicateEventName(eventData.name as string, eventData.id);
+
+      let finalImageUrl = eventData.inviteImageUrl;
+      if (imageFile) {
+        if (!eventData.occasionAlias) {
+          throw new Error('No occasion alias provided');
+        }
+        finalImageUrl = await uploadEventInvite(imageFile, eventData.id, eventData.occasionAlias);
+      }
 
       await updateDoc(doc(db, 'events', eventData.id), {
         name: eventData.name,
         description: eventData.description || '',
         location: eventData.location || '',
         additionalFields: eventData.additionalFields || {},
-        inviteImageUrl: eventData.inviteImageUrl,
         date: eventData.date,
-        time: eventData.time
+        time: eventData.time,
+        ...(finalImageUrl ? { inviteImageUrl: finalImageUrl } : {}),
       });
       
       if (occasionContext && occasionContext.refreshData && !occasionId) {
@@ -176,18 +184,31 @@ export function useEventManagement({ occasionId, useContext = true }: UseEventMa
     }
   };
 
-  const handleDeleteEvent = async (id: string) => {
+  const handleDeleteEvent = async (eventToDelete: Event) => {
     try {
-      await deleteDoc(doc(db, 'events', id));
-      
-      // Use context refresh if available, otherwise fetch data
+      await deleteDoc(doc(db, 'events', eventToDelete.id));
+
+      try {
+        if (eventToDelete.occasionAlias) {
+          const eventStorageRef = ref(storage, `${eventToDelete.occasionAlias}/events/${eventToDelete.id}`);
+          const storageList = await listAll(eventStorageRef);
+          
+          const deletePromises = storageList.items.map(item => deleteObject(item));
+          await Promise.all(deletePromises);
+        }
+      } catch (error) {
+        console.error('Error deleting storage files:', error);
+      }
+
       if (occasionContext && occasionContext.refreshData && !occasionId) {
         await occasionContext.refreshData();
       } else {
         await fetchData();
       }
+      
+      return true;
     } catch (error) {
-      console.error('Error deleting event:', error);
+      console.error('Error in deletion process:', error);
       throw error;
     }
   };

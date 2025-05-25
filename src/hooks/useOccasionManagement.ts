@@ -34,7 +34,6 @@ export function useOccasionManagement({ alias, useContext = true }: UseOccasionM
   }
 
   const fetchOccasion = async () => {
-    console.log('fetchOccasion', alias, user?.uid);
     if (!alias || !user?.uid) return;
     
     setLoading(true);
@@ -233,15 +232,6 @@ export function useOccasionManagement({ alias, useContext = true }: UseOccasionM
       return;
     }
 
-    // Verify that the occasion belongs to the current user
-    if (occasionToDelete.createdBy !== user.uid) {
-      console.error('Delete failed: Permission denied - occasion does not belong to user', {
-        occasionCreatedBy: occasionToDelete.createdBy,
-        currentUserId: user.uid
-      });
-      throw new Error('You do not have permission to delete this occasion');
-    }
-    
     try {
       // Create a batch to delete all related documents atomically
       const batch = writeBatch(db);

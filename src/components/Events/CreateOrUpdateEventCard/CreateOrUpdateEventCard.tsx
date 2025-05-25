@@ -5,13 +5,12 @@ import { Event } from '@/src/models/interfaces';
 import DateInput from '@/src/components/shared/DateInput';
 import TimeInput from '@/src/components/shared/TimeInput';
 import Image from 'next/image';
-import { useEventManagement } from '@/src/hooks/useEventManagement';
 import { toast } from 'react-hot-toast';
 
 interface CreateOrUpdateEventCardProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (event: Partial<Event>) => Promise<{ id: string } | void>;
+  onSubmit: (event: Partial<Event>, imageFile: File | null) => Promise<{ id: string } | void>;
   editingEvent: Event | null;
   occasionId: string;
   occasionAlias: string;
@@ -30,8 +29,8 @@ export default function CreateOrUpdateEventCard({
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [pendingImageFile, setPendingImageFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   
-  const { uploadEventInvite } = useEventManagement({ occasionId });
   
   const [newEvent, setNewEvent] = useState<Partial<Event>>({
     name: '',
@@ -45,15 +44,15 @@ export default function CreateOrUpdateEventCard({
   // Update form values when editingEvent changes
   useEffect(() => {
     if (editingEvent) {
-      console.log('editingEvent', editingEvent);
-
       setNewEvent({
         name: editingEvent.name || '',
         location: editingEvent.location || '',
         description: editingEvent.description || '',
         additionalFields: editingEvent.additionalFields || {},
-        inviteImageUrl: editingEvent.inviteImageUrl,
+        ...(editingEvent.inviteImageUrl ? { inviteImageUrl: editingEvent.inviteImageUrl } : {}),
       });
+      
+      setPreviewUrl(editingEvent.inviteImageUrl || null);
       
       // Set date and time values
       setDate(editingEvent.date);
@@ -76,40 +75,22 @@ export default function CreateOrUpdateEventCard({
     setNewFieldValue('');
     setUploadError(null);
     setPendingImageFile(null);
+    setPreviewUrl(null);
   };
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
-      // Include occasionId and occasionAlias for new events
       const eventData = {
         ...newEvent,
         date,
         time,
-        ...(editingEvent ? {} : { 
-          occasionId,
-          occasionAlias
-        })
+        occasionId,
+        occasionAlias
       };
       
-      // Submit the event data first
-      await onSubmit(eventData);
-      
-      // If we have a pending image, upload it now
-      if (pendingImageFile && !editingEvent) {
-        // The event should now have an ID from the creation
-        const eventId = eventData.id;
-        if (eventId) {
-          const downloadUrl = await uploadEventInvite(pendingImageFile, eventId);
-          // Update the event with the image URL
-          await onSubmit({
-            ...eventData,
-            id: eventId,
-            inviteImageUrl: downloadUrl
-          });
-        }
-      }
+      await onSubmit(eventData, pendingImageFile);
       
       if (!editingEvent) {
         resetForm();
@@ -145,51 +126,42 @@ export default function CreateOrUpdateEventCard({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Store previous state in case of error
     const previousEventState = { ...newEvent };
     const previousPendingFile = pendingImageFile;
+    const previousPreviewUrl = previewUrl;
 
     setIsUploading(true);
     setUploadError(null);
 
     try {
-      if (editingEvent) {
-        // For existing events, we can upload directly
-        const downloadUrl = await uploadEventInvite(file, editingEvent.id);
-        setNewEvent(prev => ({
-          ...prev,
-          inviteImageUrl: downloadUrl
-        }));
-      } else {
-        // For new events, we'll store the file temporarily
-        // and upload it after event creation
-        setPendingImageFile(file);
-        // Create a temporary URL for preview
-        const previewUrl = URL.createObjectURL(file);
-        setNewEvent(prev => ({
-          ...prev,
-          inviteImageUrl: previewUrl
-        }));
-      }
+      const previewUrl = URL.createObjectURL(file);
+      setPreviewUrl(previewUrl);
+      setPendingImageFile(file);
     } catch (error) {
-      console.error('Error uploading image:', error);
+      console.error('Error handling image:', error);
       setNewEvent(previousEventState);
       setPendingImageFile(previousPendingFile);
-      toast.error('Failed to upload image. Please try again.');
-      setUploadError('Failed to upload image. Please try again.');
+      setPreviewUrl(previousPreviewUrl);
+      toast.error('Failed to process image. Please try again.');
+      setUploadError('Failed to process image. Please try again.');
     } finally {
       setIsUploading(false);
     }
   };
 
   const removeImage = () => {
-    setNewEvent(prev => ({
-      ...prev,
-      inviteImageUrl: undefined
-    }));
+    setPreviewUrl(null);
     setPendingImageFile(null);
     setUploadError(null);
   };
+
+  useEffect(() => {
+    if (!isOpen) {
+      setPreviewUrl(null);
+      setPendingImageFile(null);
+      setUploadError(null);
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -355,11 +327,11 @@ export default function CreateOrUpdateEventCard({
             <div className="space-y-3">
               <h3 className="font-medium text-[var(--blossom-text-dark)]">Event Invitation</h3>
               <div className="flex flex-col gap-4">
-                {newEvent.inviteImageUrl ? (
+                {previewUrl ? (
                   <div className="relative">
                     <div className="relative w-full h-48 rounded overflow-hidden">
                       <Image
-                        src={newEvent.inviteImageUrl}
+                        src={previewUrl}
                         alt="Event invitation preview"
                         fill
                         className="object-contain"

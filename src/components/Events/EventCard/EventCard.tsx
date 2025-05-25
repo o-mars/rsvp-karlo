@@ -2,22 +2,21 @@
 
 import { useState } from 'react';
 import { Event } from '@/src/models/interfaces';
-import { useEventManagement } from '@/src/hooks/useEventManagement';
 import DeleteConfirmationModal from '@/src/components/shared/DeleteConfirmationModal';
 import ImagePreviewModal from '@/src/components/shared/ImagePreviewModal';
 import { formatEventDate, formatEventTime } from '@/src/utils/dateUtils';
+import { toast } from 'react-hot-toast';
 
 interface EventCardProps {
   event: Event;
   onEdit?: (event: Event) => void;
-  onDelete?: (id: string) => void;
+  onDelete?: (event: Event) => void;
 }
 
 export default function EventCard({ event, onEdit, onDelete }: EventCardProps) {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
-  const { handleDeleteEvent } = useEventManagement({ useContext: false });
   
   const handleDeleteClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -32,18 +31,17 @@ export default function EventCard({ event, onEdit, onDelete }: EventCardProps) {
   };
   
   const handleDeleteConfirm = async () => {
+    if (!onDelete) return;
+    
     setIsDeleting(true);
     try {
-      await handleDeleteEvent(event.id);
-      if (onDelete) {
-        onDelete(event.id);
-      }
+      await onDelete(event);
+      setIsDeleteModalOpen(false);
     } catch (error) {
       console.error('Error deleting event:', error);
-      alert('Failed to delete event. Please try again.');
+      toast.error('Failed to delete event. Please try again.');
     } finally {
       setIsDeleting(false);
-      setIsDeleteModalOpen(false);
     }
   };
 
