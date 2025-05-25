@@ -4,16 +4,20 @@ export enum RsvpStatus {
   ATTENDING = 'Attending',
   NOT_ATTENDING = 'Not Attending',
   AWAITING_RESPONSE = 'Awaiting Response',
-  EMAIL_NOT_SENT = 'Email Not Sent',
   NOT_INVITED = 'Not Invited'
 }
 
-export type RSVPStatus = RsvpStatus.ATTENDING | RsvpStatus.NOT_ATTENDING | RsvpStatus.AWAITING_RESPONSE | RsvpStatus.EMAIL_NOT_SENT | RsvpStatus.NOT_INVITED;
+export type RSVPStatus = RsvpStatus.ATTENDING | RsvpStatus.NOT_ATTENDING | RsvpStatus.AWAITING_RESPONSE | RsvpStatus.NOT_INVITED;
+export type EventId = string;
+export type OccasionId = string;
+export type GuestId = string;
+export type SubGuestId = string;
+export type UserId = string;
 
 export interface Event {
-  id: string;
-  occasionId: string;
-  createdBy: string;
+  id: EventId;
+  occasionId: OccasionId;
+  createdBy: UserId;
   occasionAlias: string;
   name: string;
   date: string;  // ISO date string (YYYY-MM-DD)
@@ -26,37 +30,37 @@ export interface Event {
 }
 
 export interface Occasion {
-  id: string;
+  id: OccasionId;
   name: string;
   alias: string;
-  createdBy: string;
+  createdBy: UserId;
   createdAt: Timestamp;
   description?: string;
-  hosts: string[];
+  hosts: UserId[];
   inviteImageUrl?: string;
 }
 
 export interface SubGuest {
-  id: string;
+  id: SubGuestId;
   firstName: string;
   lastName: string;
-  rsvps: Record<string, string>;
+  rsvps: Record<EventId, RsvpStatus>;
 }
 
 export interface Guest {
-  id: string;
-  occasionId: string;
+  id: GuestId;
+  occasionId: OccasionId;
   occasionAlias: string;
-  createdBy: string;
+  createdBy: UserId;
   firstName: string;
   lastName: string;
   email: string[];
   emailSent: boolean;
   token: string;
-  rsvps: Record<string, string>;
+  rsvps: Record<EventId, RsvpStatus>;
   subGuests: SubGuest[];
-  additionalGuests?: Record<string, number>;
-  additionalRsvps?: Record<string, number>;
+  additionalGuests?: Record<EventId, number>;
+  additionalRsvps?: Record<EventId, number>;
 }
 
 export interface EventStats {

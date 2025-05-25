@@ -1,15 +1,15 @@
-import { Guest, Event, RsvpStatus } from '@/src/models/interfaces';
+import { Guest, Event, RsvpStatus, EventId, RSVPStatus, GuestId } from '@/src/models/interfaces';
 import { useState, useEffect } from 'react';
 import ImagePreviewModal from '@/src/components/shared/ImagePreviewModal';
-import { formatDateInTimezone } from '@/src/utils/dateUtils';
+import { formatEventDate, formatEventTime } from '@/src/utils/dateUtils';
 
 interface RsvpEventCardProps {
   event: Event;
   guest: Guest;
-  onRSVP: (guestId: string, eventId: string, response: string, isSubGuest: boolean) => Promise<void>;
-  onAdditionalGuestsChange: (eventId: string, count: number) => void;
+  onRSVP: (guestId: GuestId, eventId: EventId, response: RSVPStatus, isSubGuest: boolean) => Promise<void>;
+  onAdditionalGuestsChange: (eventId: EventId, count: number) => void;
   saving: boolean;
-  additionalGuestsCount: Record<string, number>;
+  additionalGuestsCount: Record<EventId, number>;
 }
 
 export function RsvpEventCard({ 
@@ -132,7 +132,7 @@ export function RsvpEventCard({
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-[var(--blossom-pink-primary)] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
-          <span className="italic">{formatEventDateTime(event)}</span>
+          <span className="italic">{formatEventDate(event.date)} at {formatEventTime(event.time)}</span>
         </div>
         <div className="flex items-center text-[var(--blossom-text-light)]">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-[var(--blossom-pink-primary)] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -202,24 +202,3 @@ export function RsvpEventCard({
     </div>
   );
 }
-
-// Helper to format timestamp or date/time
-const formatEventDateTime = (event: Event): string => {
-  if (event.startDateTime) {
-    try {
-      return formatDateInTimezone(event.startDateTime, event.timezone, {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true
-      });
-    } catch (error) {
-      console.error('Error formatting date:', error);
-    }
-  }
-  
-  return "Invalid date";
-}; 

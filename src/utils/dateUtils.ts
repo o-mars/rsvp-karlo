@@ -45,12 +45,13 @@ export const createDateInTimezone = (
 
 export const formatEventDate = (date: string): string => {
   try {
-    return new Intl.DateTimeFormat('en-US', { 
-      weekday: 'short',
-      month: 'short', 
-      day: 'numeric',
-      year: 'numeric'
-    }).format(new Date(date));
+    const [year, month, day] = date.split('-');
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const dateObj = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    const weekday = weekdays[dateObj.getDay()];
+    const monthName = months[parseInt(month) - 1];
+    return `${weekday}, ${monthName} ${day}, ${year}`;
   } catch {
     return 'Invalid date';
   }
@@ -59,13 +60,10 @@ export const formatEventDate = (date: string): string => {
 export const formatEventTime = (time: string): string => {
   try {
     const [hours, minutes] = time.split(':');
-    const date = new Date();
-    date.setHours(parseInt(hours), parseInt(minutes));
-    return new Intl.DateTimeFormat('en-US', { 
-      hour: 'numeric',
-      minute: 'numeric',
-      hour12: true
-    }).format(date);
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const hour12 = hour % 12 || 12;
+    return `${hour12}:${minutes} ${ampm}`;
   } catch {
     return 'Invalid time';
   }

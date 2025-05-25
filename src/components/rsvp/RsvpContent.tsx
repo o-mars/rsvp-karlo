@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { db } from '@/utils/firebase';
 import { doc, updateDoc, getDoc } from 'firebase/firestore';
-import { Guest, Event, RsvpStatus } from '@/src/models/interfaces';
+import { Guest, Event, RsvpStatus, GuestId, EventId, RSVPStatus } from '@/src/models/interfaces';
 import { RsvpEventCard } from './RsvpEventCard';
 
 interface RsvpContentProps {
-  guestId: string;
+  guestId: GuestId;
 }
 
 export function RsvpContent({ guestId }: RsvpContentProps) {
@@ -55,7 +55,7 @@ export function RsvpContent({ guestId }: RsvpContentProps) {
     fetchGuestAndEvents();
   }, [guestId]);
 
-  const handleRSVP = async (guestId: string, eventId: string, response: string, isSubGuest: boolean = false) => {
+  const handleRSVP = async (guestId: GuestId, eventId: EventId, response: RSVPStatus, isSubGuest: boolean = false) => {
     if (!guest) return;
 
     try {
@@ -82,12 +82,12 @@ export function RsvpContent({ guestId }: RsvpContentProps) {
           delete updatedAdditionalRsvps[eventId];
         }
         
-        await updateDoc(doc(db, 'guests', guest.id), { 
+        await updateDoc(doc(db, 'guests', guest.id), {
           rsvps: updatedRsvps,
           additionalRsvps: updatedAdditionalRsvps
         });
-        setGuest({ 
-          ...guest, 
+        setGuest({
+          ...guest,
           rsvps: updatedRsvps,
           additionalRsvps: updatedAdditionalRsvps
         });
@@ -100,7 +100,7 @@ export function RsvpContent({ guestId }: RsvpContentProps) {
     }
   };
 
-  const handleAdditionalGuestsChange = (eventId: string, count: number) => {
+  const handleAdditionalGuestsChange = (eventId: EventId, count: number) => {
     if (!guest) return;
     
     const maxAdditionalGuests = guest.additionalGuests?.[eventId] ?? 0;
