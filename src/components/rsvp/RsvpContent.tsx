@@ -20,7 +20,6 @@ export function RsvpContent({ guestId }: RsvpContentProps) {
     const fetchGuestAndEvents = async () => {
       setLoading(true);
       try {
-        // Get guest data
         const guestRef = doc(db, 'guests', guestId);
         const guestSnap = await getDoc(guestRef);
         if (!guestSnap.exists()) {
@@ -141,10 +140,11 @@ export function RsvpContent({ guestId }: RsvpContentProps) {
       }
     }
 
+    // TODO: Is this a good heuristic? Any sub-guest sharing last name with main = Family?
     if (doesSubGuestShareLastName) {
       return `${prefix} ${guest.firstName} ${guest.lastName} & Family,`;
     } else {
-      return `${prefix} ${guest.firstName} ${guest.lastName} & Friends,`;
+      return `${prefix} ${guest.firstName} ${guest.lastName}, ${guest.subGuests[0].firstName} ${guest.subGuests[0].lastName} & Others,`;
     }
   }, [guest, hasSubGuests]);
 

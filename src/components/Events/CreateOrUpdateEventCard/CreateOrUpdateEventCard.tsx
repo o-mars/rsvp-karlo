@@ -204,28 +204,24 @@ export default function CreateOrUpdateEventCard({
               </div>
               
               <div className="col-span-2">
-                <div className="flex items-end gap-4">
-                  <div>
-                    <DateInput 
-                      id="event-date"
-                      label="When"
-                      value={date}
-                      onChange={setDate}
-                      required={true}
-                      className="w-[280px]"
-                    />
-                  </div>
-                  
-                  <div>
-                    <TimeInput
-                      id="event-time"
-                      label="At"
-                      value={time}
-                      onChange={setTime}
-                      required={true}
-                      className="w-[200px]"
-                    />
-                  </div>
+                <div className="flex items-end gap-4 w-full">
+                  <DateInput
+                    id="event-date"
+                    label="When"
+                    value={date}
+                    onChange={setDate}
+                    required={true}
+                    className="w-full"
+                  />
+                
+                  <TimeInput
+                    id="event-time"
+                    label="At"
+                    value={time}
+                    onChange={setTime}
+                    required={true}
+                    className="w-full"
+                  />
                 </div>
               </div>
               
@@ -239,7 +235,7 @@ export default function CreateOrUpdateEventCard({
                   placeholder="Enter location"
                   value={newEvent.location}
                   onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })}
-                  className="bg-white border border-[var(--blossom-border)] text-[var(--blossom-text-dark)] p-2 rounded focus:ring-2 focus:ring-[var(--blossom-pink-primary)] focus:border-[var(--blossom-pink-primary)] w-full max-w-md"
+                  className="bg-white border border-[var(--blossom-border)] text-[var(--blossom-text-dark)] p-2 rounded focus:ring-2 focus:ring-[var(--blossom-pink-primary)] focus:border-[var(--blossom-pink-primary)] w-full"
                   required
                 />
               </div>

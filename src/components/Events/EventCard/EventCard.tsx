@@ -47,7 +47,6 @@ export default function EventCard({ event, onEdit, onDelete }: EventCardProps) {
     }
   };
 
-  // Format date/time using our helper functions
   const getEventDate = (): string => {
     return formatEventDate(event.date);
   };
