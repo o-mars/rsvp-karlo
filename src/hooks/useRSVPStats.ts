@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '@/utils/firebase';
 import { Guest, Event, EventStats, RsvpStatus } from '@/src/models/interfaces';
+import { useAuth } from '@/src/contexts/AuthContext';
 
 interface UseRSVPStatsProps {
   occasionId?: string;
@@ -105,8 +106,11 @@ export function useRSVPStats({ occasionId }: UseRSVPStatsProps = {}) {
   const [guests, setGuests] = useState<Guest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
 
   const fetchData = async () => {
+    if (!user) return;
+
     try {
       setLoading(true);
       setError(null);
@@ -118,20 +122,24 @@ export function useRSVPStats({ occasionId }: UseRSVPStatsProps = {}) {
       if (occasionId) {
         eventsQuery = query(
           collection(db, 'events'),
+          where('createdBy', '==', user.uid),
           where('occasionId', '==', occasionId)
         );
         
         guestsQuery = query(
           collection(db, 'guests'),
+          where('createdBy', '==', user.uid),
           where('occasionId', '==', occasionId)
         );
       } else {
         eventsQuery = query(
-          collection(db, 'events')
+          collection(db, 'events'),
+          where('createdBy', '==', user.uid)
         );
         
         guestsQuery = query(
-          collection(db, 'guests')
+          collection(db, 'guests'),
+          where('createdBy', '==', user.uid)
         );
       }
 
@@ -166,7 +174,12 @@ export function useRSVPStats({ occasionId }: UseRSVPStatsProps = {}) {
 
   const getEventStats = (eventId: string): EventStats => {
     const eventGuests = guests.filter(g => g.rsvps && g.rsvps[eventId] !== undefined);
-    const totalGuests = guests.length;
+
+    const totalGuests = guests.reduce((total, guest) => {
+      const subGuestsCount = (guest.subGuests || []).length;
+      const additionalGuestsAllowed = Math.max(...Object.values(guest.additionalGuests ?? {})) ?? 0;
+      return total + 1 + subGuestsCount + additionalGuestsAllowed;
+    }, 0);
     
     // Calculate total invited (main guests + their sub-guests + additional guests allowed)
     const invited = eventGuests.reduce((total, guest) => {
@@ -217,7 +230,7 @@ export function useRSVPStats({ occasionId }: UseRSVPStatsProps = {}) {
     const pending = invited - responded;
     
     // Calculate not invited (total guests - invited)
-    const notInvited = totalGuests - eventGuests.length;
+    const notInvited = totalGuests - invited;
 
     return {
       totalGuests,
