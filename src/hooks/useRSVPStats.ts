@@ -82,8 +82,8 @@ export const formatDate = (date: Date | null, format: string = 'short'): string 
 // Client-side sorting helpers
 const sortByStartDateTime = (events: Event[]): Event[] => {
   return [...events].sort((a, b) => {
-    const dateA = timestampToDate(a.startDateTime);
-    const dateB = timestampToDate(b.startDateTime);
+    const dateA = timestampToDate(a.date);
+    const dateB = timestampToDate(b.date);
     
     if (!dateA) return 1; // null dates go last
     if (!dateB) return -1;
@@ -240,30 +240,30 @@ export function useRSVPStats({ occasionId }: UseRSVPStatsProps = {}) {
 
   // Format an event date safely
   const getEventDate = (event: Event, format: string = 'long'): string => {
-    if (!event || !event.startDateTime) return 'No date';
-    const date = timestampToDate(event.startDateTime);
+    if (!event || !event.date) return 'No date';
+    const date = timestampToDate(event.date);
     return formatDate(date, format);
   };
 
   // Format an event time safely
   const getEventTime = (event: Event): string => {
-    if (!event || !event.startDateTime) return 'No time';
-    const date = timestampToDate(event.startDateTime);
+    if (!event || !event.time) return 'No time';
+    const date = timestampToDate(event.time);
     return formatDate(date, 'time');
   };
 
   // Get formatted date range for an event
   const getEventDateTimeDisplay = (event: Event): string => {
-    if (!event || !event.startDateTime) return 'No date/time';
+    if (!event || !event.date) return 'No date/time';
     
-    const startDate = timestampToDate(event.startDateTime);
+    const startDate = timestampToDate(event.date);
     if (!startDate) return 'Invalid date';
     
     const startStr = formatDate(startDate, 'datetime');
     
-    if (!event.endDateTime) return startStr;
+    if (!event.date) return startStr;
     
-    const endDate = timestampToDate(event.endDateTime);
+    const endDate = timestampToDate(event.date);
     if (!endDate) return startStr;
     
     // If same day, just show different times

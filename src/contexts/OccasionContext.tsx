@@ -68,7 +68,7 @@ export function OccasionProvider({ children, initialAlias }: { children: ReactNo
         
         // Sort by date
         eventsList.sort((a, b) => 
-          new Date(a.startDateTime.toDate()).getTime() - new Date(b.startDateTime.toDate()).getTime()
+          new Date(a.date).getTime() - new Date(b.date).getTime()
         );
         
         setEvents(eventsList);

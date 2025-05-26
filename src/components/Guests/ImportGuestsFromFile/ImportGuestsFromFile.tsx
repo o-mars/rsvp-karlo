@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Papa from 'papaparse';
 import { useGuestManagement } from '@/src/hooks/useGuestManagement';
-import { Guest } from '@/src/models/interfaces';
+import { EventId, Guest, RsvpStatus } from '@/src/models/interfaces';
 
 interface ParseResult {
   data: string[][];
@@ -107,13 +107,13 @@ export default function ImportGuestsFromFile({ occasionId, onImportComplete }: I
 
       if (firstName && lastName) {
         const eventNames = eventsStr.split(',').map(name => name.trim());
-        const rsvps: Record<string, string> = {};
+        const rsvps: Record<EventId, RsvpStatus> = {};
         
         // Convert event names to IDs
         eventNames.forEach(eventName => {
           const eventId = eventNameToId.get(eventName.toLowerCase());
           if (eventId) {
-            rsvps[eventId] = 'Awaiting Response';
+            rsvps[eventId] = RsvpStatus.AWAITING_RESPONSE;
           } else {
             console.error(`Event "${eventName}" not found for sub-guest ${firstName} ${lastName}`);
           }
@@ -176,7 +176,7 @@ export default function ImportGuestsFromFile({ occasionId, onImportComplete }: I
             .filter(email => email.length > 0) || [];
 
           // Parse event invitations and additional guests
-          const rsvps: Record<string, string> = {};
+          const rsvps: Record<EventId, RsvpStatus> = {};
           const additionalGuests: Record<string, number> = {};
           let currentIndex = 0;
 
@@ -184,7 +184,7 @@ export default function ImportGuestsFromFile({ occasionId, onImportComplete }: I
           while (currentIndex < rest.length && rest[currentIndex] && rest[currentIndex].includes(':')) {
             const result = parseEventInvitations(rest[currentIndex]);
             if (result) {
-              rsvps[result.eventId] = 'Awaiting Response';
+              rsvps[result.eventId] = RsvpStatus.AWAITING_RESPONSE;
               additionalGuests[result.eventId] = result.additionalGuests;
             }
             currentIndex++;
