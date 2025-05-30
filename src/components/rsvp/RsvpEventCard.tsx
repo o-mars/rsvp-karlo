@@ -62,9 +62,9 @@ export function RsvpEventCard({
     const currentGuestNames = additionalGuestNames[eventId] || [];
 
     return (
-      <div className="space-y-4">
+      <div className="space-y-3 md:space-y-4">
         <div className="flex justify-center">
-          <div className="flex space-x-4">
+          <div className="flex space-x-2 md:space-x-4">
             <button
               onClick={() => handleRSVP(
                 guestId, 
@@ -73,7 +73,7 @@ export function RsvpEventCard({
                 isSubGuest
               )}
               disabled={saving}
-              className={`px-4 py-2 rounded transition-colors duration-200 ${
+              className={`px-3 md:px-4 py-1.5 md:py-2 text-sm md:text-base rounded transition-colors duration-200 ${
                 currentStatus === RsvpStatus.ATTENDING
                   ? 'bg-green-600 text-white'
                   : 'bg-[var(--blossom-pink-light)] text-[var(--blossom-text-dark)] hover:bg-pink-200 border border-[var(--blossom-border)]'
@@ -89,7 +89,7 @@ export function RsvpEventCard({
                 isSubGuest
               )}
               disabled={saving}
-              className={`px-4 py-2 rounded transition-colors duration-200 ${
+              className={`px-3 md:px-4 py-1.5 md:py-2 text-sm md:text-base rounded transition-colors duration-200 ${
                 currentStatus === RsvpStatus.NOT_ATTENDING
                   ? 'bg-red-600 text-white'
                   : 'bg-[var(--blossom-pink-light)] text-[var(--blossom-text-dark)] hover:bg-pink-200 border border-[var(--blossom-border)]'
@@ -100,18 +100,18 @@ export function RsvpEventCard({
           </div>
         </div>
         {maxAdditionalGuests > 0 && currentStatus === RsvpStatus.ATTENDING && isShowingAdditionalGuests && (
-          <div className="mt-6 p-4 bg-[var(--blossom-pink-light)] rounded-lg border border-[var(--blossom-border)]">
-            <div className="flex flex-col items-center space-y-3">
-              <h4 className="text-lg font-medium text-[var(--blossom-text-dark)]">Additional Guests</h4>
-              <p className="text-sm text-[var(--blossom-text-light)] text-center">
+          <div className="mt-4 md:mt-6 p-3 md:p-4 bg-[var(--blossom-pink-light)] rounded-lg border border-[var(--blossom-border)]">
+            <div className="flex flex-col items-center space-y-2 md:space-y-3">
+              <h4 className="text-base md:text-lg font-medium text-[var(--blossom-text-dark)]">Additional Guests</h4>
+              <p className="text-xs md:text-sm text-[var(--blossom-text-light)] text-center">
                 You can bring up to {maxAdditionalGuests} additional guest{maxAdditionalGuests > 1 ? 's' : ''} to this event.
               </p>
-              <div className="flex items-center space-x-3">
-                <label className="text-[var(--blossom-text-dark)] font-medium">Number of additional guests:</label>
+              <div className="flex items-center space-x-2 md:space-x-3">
+                <label className="text-xs md:text-sm text-[var(--blossom-text-dark)] font-medium">Number of additional guests:</label>
                 <select
                   value={currentAdditionalGuests}
                   onChange={(e) => handleAdditionalGuestCountChange(eventId, parseInt(e.target.value))}
-                  className="px-3 py-2 border border-[var(--blossom-border)] rounded text-[var(--blossom-text-dark)] bg-white focus:ring-2 focus:ring-[var(--blossom-pink-primary)] focus:border-[var(--blossom-pink-primary)]"
+                  className="px-2 md:px-3 py-1 md:py-2 text-sm md:text-base border border-[var(--blossom-border)] rounded text-[var(--blossom-text-dark)] bg-white focus:ring-2 focus:ring-[var(--blossom-pink-primary)] focus:border-[var(--blossom-pink-primary)]"
                 >
                   {[...Array(maxAdditionalGuests + 1)].map((_, i) => (
                     <option key={i} value={i}>{i}</option>
@@ -120,17 +120,17 @@ export function RsvpEventCard({
               </div>
 
               {currentAdditionalGuests > 0 && (
-                <div className="w-full space-y-4 mt-4">
+                <div className="w-full space-y-3 md:space-y-4 mt-3 md:mt-4">
                   {[...Array(currentAdditionalGuests)].map((_, index) => {
                     const currentName = currentGuestNames[index] || { firstName: '', lastName: '' };
                     return (
-                      <div key={index} className="flex flex-col sm:flex-row gap-3">
+                      <div key={index} className="flex flex-col sm:flex-row gap-2 md:gap-3">
                         <input
                           type="text"
                           placeholder="First Name"
                           value={currentName.firstName}
                           onChange={(e) => handleAdditionalGuestNameChange(eventId, index, e.target.value, currentName.lastName)}
-                          className={`flex-1 px-3 py-2 border rounded text-[var(--blossom-text-dark)] bg-white focus:ring-2 focus:ring-[var(--blossom-pink-primary)] focus:border-[var(--blossom-pink-primary)] ${
+                          className={`flex-1 px-2 md:px-3 py-1.5 md:py-2 text-sm md:text-base border rounded text-[var(--blossom-text-dark)] bg-white focus:ring-2 focus:ring-[var(--blossom-pink-primary)] focus:border-[var(--blossom-pink-primary)] ${
                             !currentName.firstName.trim() ? 'border-red-500' : 'border-[var(--blossom-border)]'
                           }`}
                         />
@@ -139,7 +139,7 @@ export function RsvpEventCard({
                           placeholder="Last Name"
                           value={currentName.lastName}
                           onChange={(e) => handleAdditionalGuestNameChange(eventId, index, currentName.firstName, e.target.value)}
-                          className={`flex-1 px-3 py-2 border rounded text-[var(--blossom-text-dark)] bg-white focus:ring-2 focus:ring-[var(--blossom-pink-primary)] focus:border-[var(--blossom-pink-primary)] ${
+                          className={`flex-1 px-2 md:px-3 py-1.5 md:py-2 text-sm md:text-base border rounded text-[var(--blossom-text-dark)] bg-white focus:ring-2 focus:ring-[var(--blossom-pink-primary)] focus:border-[var(--blossom-pink-primary)] ${
                             !currentName.lastName.trim() ? 'border-red-500' : 'border-[var(--blossom-border)]'
                           }`}
                         />
@@ -157,15 +157,15 @@ export function RsvpEventCard({
 
   return (
     <div className="bg-white rounded-lg p-4 border border-[var(--blossom-border)] transition-all duration-200 hover:shadow-md">
-      <h3 className="text-xl font-bold text-[var(--blossom-text-dark)] mb-4 text-center">{event.name}</h3>
+      <h3 className="text-lg md:text-xl font-bold text-[var(--blossom-text-dark)] mb-3 md:mb-4 mt-2 text-center">{event.name}</h3>
       
       {event.inviteImageUrl && (
-        <div className="mb-4 flex justify-center">
+        <div className="mb-3 md:mb-4 flex justify-center">
           <button
             onClick={() => setIsInviteModalOpen(true)}
-            className="flex items-center gap-2 px-6 py-2.5 text-[var(--blossom-pink-primary)] hover:text-[var(--blossom-pink-hover)] border border-[var(--blossom-pink-primary)] hover:border-[var(--blossom-pink-hover)] rounded-lg transition-colors"
+            className="flex items-center gap-1.5 md:gap-2 px-3 md:px-6 py-1.5 md:py-2.5 text-sm md:text-base text-[var(--blossom-pink-primary)] hover:text-[var(--blossom-pink-hover)] border border-[var(--blossom-pink-primary)] hover:border-[var(--blossom-pink-hover)] rounded-lg transition-colors"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-6 md:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
             </svg>
             View Invitation
@@ -173,17 +173,19 @@ export function RsvpEventCard({
         </div>
       )}
 
-      <div className="flex flex-col gap-2 mb-4">
+      <div className="flex flex-col gap-1.5 md:gap-2 mb-3 md:mb-4">
         <div className="flex items-center text-[var(--blossom-text-light)]">
           <button
             onClick={() => downloadICSFile(event)}
-            className="flex items-center hover:text-[var(--blossom-pink-primary)] transition-colors cursor-pointer"
+            className="flex items-center hover:text-[var(--blossom-pink-primary)] transition-colors cursor-pointer group"
             title="Add to Calendar"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-[var(--blossom-pink-primary)] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
-            <span className="italic">{formatEventDate(event.date)} at {formatEventTime(event.time)}</span>
+            <span className="text-sm md:text-base md:text-[var(--blossom-text-light)] text-[var(--blossom-pink-primary)] italic md:not-italic underline md:no-underline md:group-hover:underline">
+              {formatEventDate(event.date)} at {formatEventTime(event.time)}
+            </span>
           </button>
         </div>
         <div className="flex items-center text-[var(--blossom-text-light)]">
@@ -191,19 +193,19 @@ export function RsvpEventCard({
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
-          <span>{event.location}</span>
+          <span className="text-sm md:text-base">{event.location}</span>
         </div>
       </div>
       
       {event.description && (
-        <div className="text-[var(--blossom-text-light)] mb-4 text-sm whitespace-pre-wrap">{event.description}</div>
+        <div className="text-xs md:text-sm text-[var(--blossom-text-light)] mb-3 md:mb-4 text-sm whitespace-pre-wrap">{event.description}</div>
       )}
 
       {event.additionalFields && Object.keys(event.additionalFields).length > 0 && (
-        <div className="mb-4 p-3 bg-[var(--blossom-pink-light)]/30 rounded-lg">
-          <div className="space-y-2">
+        <div className="mb-3 md:mb-4 p-2 md:p-3 bg-[var(--blossom-pink-light)]/30 rounded-lg">
+          <div className="space-y-1.5 md:space-y-2">
             {Object.entries(event.additionalFields).map(([key, value]) => (
-              <div key={key} className="flex text-sm">
+              <div key={key} className="flex text-xs md:text-sm">
                 <span className="text-[var(--blossom-text-light)]">{key}</span>
                 {value && value !== '' && <span className="text-[var(--blossom-text-dark)] font-medium">: {value}</span>}
               </div>
@@ -212,10 +214,10 @@ export function RsvpEventCard({
         </div>
       )}
       
-      <div className="space-y-8 pb-4">
-        <div className="space-y-2">
+      <div className="space-y-6 md:space-y-8 pb-2 md:pb-4">
+        <div className="space-y-1.5 md:space-y-2">
           {hasSubGuests && (
-            <h4 className="text-[var(--blossom-text-dark)] font-medium text-center">
+            <h4 className="text-sm md:text-base text-[var(--blossom-text-dark)] font-medium text-center">
               {guest.firstName} {guest.lastName}
             </h4>
           )}
@@ -227,16 +229,16 @@ export function RsvpEventCard({
         {(guest.subGuests || [])
           .filter(subGuest => 
             subGuest.rsvps[event.id] !== undefined && 
-            !subGuest.assignedByGuest // Filter out guest-assigned sub-guests
+            !subGuest.assignedByGuest
           )
           .map((subGuest, index, array) => (
             <div 
               key={subGuest.id} 
-              className={`space-y-2 border-t border-[var(--blossom-border)] pt-6 ${
+              className={`space-y-1.5 md:space-y-2 border-t border-[var(--blossom-border)] pt-4 md:pt-6 ${
                 index === array.length - 1 ? 'pb-1' : ''
               }`}
             >
-              <h4 className="text-[var(--blossom-text-dark)] font-medium text-center">
+              <h4 className="text-sm md:text-base text-[var(--blossom-text-dark)] font-medium text-center">
                 {subGuest.firstName} {subGuest.lastName}
               </h4>
               <div className="flex justify-center">

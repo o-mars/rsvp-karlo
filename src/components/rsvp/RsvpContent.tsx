@@ -75,28 +75,32 @@ export function RsvpContent({ guestId, onError }: RsvpContentProps) {
 
   return (
     <div className="max-w-xl mx-auto p-4">
-      <div className="bg-white rounded-lg p-5 mb-8 shadow-xl">
-        <h2 className="text-xl font-semibold mb-4 text-[var(--blossom-text-dark)]">
+      <div className="bg-white rounded-lg p-4 md:p-5 mb-6 md:mb-8 shadow-xl">
+        <h2 className="text-lg md:text-xl font-semibold mb-3 md:mb-4 text-[var(--blossom-text-dark)]">
           {welcomeMessage()}
         </h2>
-        <p className="text-[var(--blossom-text-light)] mb-6">
+        <p className="text-sm md:text-base text-[var(--blossom-text-light)] mb-4 md:mb-6">
           Please let us know if you&apos;ll be joining us for the following events.
         </p>
         
-        <div className="space-y-6">
+        <div className="space-y-4 md:space-y-6">
           {events
             .filter(event => guest?.rsvps[event.id] !== undefined)
-            .map(event => (
-              <RsvpEventCard
-                key={event.id}
-                event={event}
-                guest={guest}
-                saving={saving}
-                handleRSVP={handleRSVP}
-                handleAdditionalGuestCountChange={handleAdditionalGuestCountChange}
-                handleAdditionalGuestNameChange={handleAdditionalGuestNameChange}
-                additionalGuestNames={additionalGuestNames}
-              />
+            .map((event, index, filteredEvents) => (
+              <div key={event.id} className="relative">
+                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-[var(--blossom-pink-medium)] text-white px-3 md:px-4 py-0.5 md:py-1 rounded-full text-xs md:text-sm">
+                  Event {index + 1} of {filteredEvents.length}
+                </div>
+                <RsvpEventCard
+                  event={event}
+                  guest={guest}
+                  saving={saving}
+                  handleRSVP={handleRSVP}
+                  handleAdditionalGuestCountChange={handleAdditionalGuestCountChange}
+                  handleAdditionalGuestNameChange={handleAdditionalGuestNameChange}
+                  additionalGuestNames={additionalGuestNames}
+                />
+              </div>
             ))}
         </div>
       </div>
