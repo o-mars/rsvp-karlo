@@ -1,35 +1,34 @@
-import { Guest, Event, RsvpStatus, EventId, RSVPStatus, GuestId } from '@/src/models/interfaces';
+import { Guest, Event, RsvpStatus, GuestId } from '@/src/models/interfaces';
 import { useState, useEffect } from 'react';
 import ImagePreviewModal from '@/src/components/shared/ImagePreviewModal';
 import { formatEventDate, formatEventTime } from '@/src/utils/dateUtils';
 import { downloadICSFile } from '@/src/utils/calendarUtils';
+import { useAuth } from '@/src/contexts/AuthContext';
 
 interface RsvpEventCardProps {
   event: Event;
   guest: Guest;
-  onRSVP: (guestId: GuestId, eventId: EventId, response: RSVPStatus, isSubGuest: boolean) => Promise<void>;
-  onAdditionalGuestsChange: (eventId: EventId, count: number) => void;
-  // onAdditionalGuestNameChange: (eventId: EventId, index: number, firstName: string, lastName: string) => void;
   saving: boolean;
-  additionalGuestsCount: Record<EventId, number>;
-  // additionalGuestNames: Record<EventId, Array<{ firstName: string; lastName: string }>>;
-  isAdmin?: boolean;
+  handleRSVP: (guestId: GuestId, eventId: string, response: RsvpStatus, isSubGuest: boolean) => Promise<void>;
+  handleAdditionalGuestCountChange: (eventId: string, count: number) => void;
+  handleAdditionalGuestNameChange: (eventId: string, index: number, firstName: string, lastName: string) => void;
+  additionalGuestNames: Record<string, Array<{ firstName: string; lastName: string }>>;
 }
 
 export function RsvpEventCard({
   event,
   guest,
-  onRSVP,
-  onAdditionalGuestsChange,
-  // onAdditionalGuestNameChange,
   saving,
-  additionalGuestsCount,
-  // additionalGuestNames,
-  isAdmin = false,
+  handleRSVP,
+  handleAdditionalGuestCountChange,
+  handleAdditionalGuestNameChange,
+  additionalGuestNames
 }: RsvpEventCardProps) {
+  const { user } = useAuth();
   const hasSubGuests = guest.subGuests && guest.subGuests.length > 0;
-  const [showingAdditionalGuests, setShowingAdditionalGuests] = useState<string | null>(null);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [showingAdditionalGuests, setShowingAdditionalGuests] = useState<string | null>(null);
+  const isAdmin = user?.uid === event.createdBy;
 
   // Update which guest should show additional guests dropdown
   useEffect(() => {
@@ -39,15 +38,13 @@ export function RsvpEventCard({
       return;
     }
 
-    // Check main guest first
     if (guest.rsvps[event.id] === RsvpStatus.ATTENDING) {
       setShowingAdditionalGuests(guest.id);
       return;
     }
 
-    // Then check sub-guests in order
     const attendingSubGuest = guest.subGuests?.find(subGuest => 
-      subGuest.rsvps[event.id] === RsvpStatus.ATTENDING
+      !subGuest.assignedByGuest && subGuest.rsvps[event.id] === RsvpStatus.ATTENDING
     );
     
     if (attendingSubGuest) {
@@ -59,19 +56,19 @@ export function RsvpEventCard({
 
   const renderRSVPButtons = (guestId: string, rsvps: Record<string, string>, eventId: string, isSubGuest: boolean = false) => {
     const maxAdditionalGuests = guest?.additionalGuests?.[eventId] ?? 0;
-    const currentAdditionalGuests = additionalGuestsCount[eventId] ?? 0;
+    const currentAdditionalGuests = guest?.additionalRsvps?.[eventId] ?? 0;
     const isShowingAdditionalGuests = showingAdditionalGuests === guestId;
     const currentStatus = rsvps[eventId];
-    // const currentAdditionalGuestNames = additionalGuestNames[eventId] || [];
+    const currentGuestNames = additionalGuestNames[eventId] || [];
 
     return (
       <div className="space-y-4">
         <div className="flex justify-center">
           <div className="flex space-x-4">
             <button
-              onClick={() => onRSVP(
+              onClick={() => handleRSVP(
                 guestId, 
-                eventId, 
+                eventId,
                 isAdmin && currentStatus === RsvpStatus.ATTENDING ? RsvpStatus.AWAITING_RESPONSE : RsvpStatus.ATTENDING, 
                 isSubGuest
               )}
@@ -85,9 +82,9 @@ export function RsvpEventCard({
               Attending
             </button>
             <button
-              onClick={() => onRSVP(
+              onClick={() => handleRSVP(
                 guestId, 
-                eventId, 
+                eventId,
                 isAdmin && currentStatus === RsvpStatus.NOT_ATTENDING ? RsvpStatus.AWAITING_RESPONSE : RsvpStatus.NOT_ATTENDING, 
                 isSubGuest
               )}
@@ -113,7 +110,7 @@ export function RsvpEventCard({
                 <label className="text-[var(--blossom-text-dark)] font-medium">Number of additional guests:</label>
                 <select
                   value={currentAdditionalGuests}
-                  onChange={(e) => onAdditionalGuestsChange(eventId, parseInt(e.target.value))}
+                  onChange={(e) => handleAdditionalGuestCountChange(eventId, parseInt(e.target.value))}
                   className="px-3 py-2 border border-[var(--blossom-border)] rounded text-[var(--blossom-text-dark)] bg-white focus:ring-2 focus:ring-[var(--blossom-pink-primary)] focus:border-[var(--blossom-pink-primary)]"
                 >
                   {[...Array(maxAdditionalGuests + 1)].map((_, i) => (
@@ -121,6 +118,36 @@ export function RsvpEventCard({
                   ))}
                 </select>
               </div>
+
+              {currentAdditionalGuests > 0 && (
+                <div className="w-full space-y-4 mt-4">
+                  {[...Array(currentAdditionalGuests)].map((_, index) => {
+                    const currentName = currentGuestNames[index] || { firstName: '', lastName: '' };
+                    return (
+                      <div key={index} className="flex flex-col sm:flex-row gap-3">
+                        <input
+                          type="text"
+                          placeholder="First Name"
+                          value={currentName.firstName}
+                          onChange={(e) => handleAdditionalGuestNameChange(eventId, index, e.target.value, currentName.lastName)}
+                          className={`flex-1 px-3 py-2 border rounded text-[var(--blossom-text-dark)] bg-white focus:ring-2 focus:ring-[var(--blossom-pink-primary)] focus:border-[var(--blossom-pink-primary)] ${
+                            !currentName.firstName.trim() ? 'border-red-500' : 'border-[var(--blossom-border)]'
+                          }`}
+                        />
+                        <input
+                          type="text"
+                          placeholder="Last Name"
+                          value={currentName.lastName}
+                          onChange={(e) => handleAdditionalGuestNameChange(eventId, index, currentName.firstName, e.target.value)}
+                          className={`flex-1 px-3 py-2 border rounded text-[var(--blossom-text-dark)] bg-white focus:ring-2 focus:ring-[var(--blossom-pink-primary)] focus:border-[var(--blossom-pink-primary)] ${
+                            !currentName.lastName.trim() ? 'border-red-500' : 'border-[var(--blossom-border)]'
+                          }`}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
         )}
