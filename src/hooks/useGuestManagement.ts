@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { collection, getDocs, query, doc, updateDoc, deleteDoc, setDoc, where } from 'firebase/firestore';
+import { collection, getDocs, query, doc, updateDoc, deleteDoc, setDoc, where, writeBatch } from 'firebase/firestore';
 import { db } from '@/utils/firebase';
 import { Guest, Event } from '@/src/models/interfaces';
 import { useOccasion } from '@/src/contexts/OccasionContext';
@@ -204,7 +204,7 @@ export function useGuestManagement({ occasionId, useContext = true }: UseGuestMa
     }
   };
 
-  const handleBulkEmail = async (occasionName: string, hosts: string[]) => {
+  const handleBulkEmail = async (occasionName: string, hosts: string[]): Promise<number> => {
     try {
       const selectedGuestsData = guests
         .filter(g => selectedGuests.includes(g.id))
@@ -224,15 +224,38 @@ export function useGuestManagement({ occasionId, useContext = true }: UseGuestMa
         guestIds: selectedGuestsData.map(guest => guest.id)
       };
 
-      await sendBulkInviteEmails(emailData);
+      // First try to send the emails
+      const response = await sendBulkInviteEmails(emailData);
+      
+      if (!response) {
+        throw new Error('No response received from email service');
+      }
 
-      const updatePromises = selectedGuestsData.map(guest =>
-        updateDoc(doc(db, 'guests', guest.id), {
-          emailSent: true,
-        })
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.error || 'Failed to send emails');
+      }
+
+      // Create a batch write for all updates
+      const batch = writeBatch(db);
+      
+      // Add all updates to the batch
+      selectedGuestsData.forEach(guest => {
+        const guestRef = doc(db, 'guests', guest.id);
+        batch.update(guestRef, { emailSent: true });
+      });
+
+      // Commit the batch
+      await batch.commit();
+
+      // Update local state to reflect the email sent status
+      setGuests(prevGuests => 
+        prevGuests.map(guest => 
+          selectedGuestsData.some(selectedGuest => selectedGuest.id === guest.id)
+            ? { ...guest, emailSent: true }
+            : guest
+        )
       );
-
-      await Promise.all(updatePromises);
 
       return selectedGuestsData.length;
     } catch (error) {

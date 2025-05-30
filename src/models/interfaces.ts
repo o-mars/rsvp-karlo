@@ -45,6 +45,7 @@ export interface SubGuest {
   firstName: string;
   lastName: string;
   rsvps: Record<EventId, RsvpStatus>;
+  assignedByGuest?: boolean;  // Indicates whether the sub-guest was added by the guest (vs host)
 }
 
 export interface Guest {
@@ -64,8 +65,8 @@ export interface Guest {
 }
 
 export interface EventStats {
-  totalGuests: number;
-  invited: number;
+  totalGuests: number; // This seems unnecessary - invited is the true totalGuests for a given event, you may want this figure for other reasons...
+  invited: number;    // This is the true totalGuests for a given event
   responded: number;
   attending: number;
   notAttending: number;

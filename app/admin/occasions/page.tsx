@@ -292,7 +292,10 @@ export default function EventsPage() {
           onSelectAll={toggleAllSelection}
           onEditGuest={setEditingGuest}
           onDeleteGuest={handleDeleteGuest}
-          onBulkEmail={() => handleBulkEmail(occasion!.name, occasion!.hosts)}
+          onBulkEmail={async () => {
+            if (!occasion?.name || !occasion?.hosts) return 0;
+            return handleBulkEmail(occasion.name, occasion.hosts);
+          }}
           onImportGuests={handleImportGuests}
           onExportGuests={() => console.log('Export guests clicked: TODO')}
           onAddGuest={() => setIsGuestModalOpen(true)}

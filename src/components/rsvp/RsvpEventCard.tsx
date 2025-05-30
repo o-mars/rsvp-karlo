@@ -2,14 +2,17 @@ import { Guest, Event, RsvpStatus, EventId, RSVPStatus, GuestId } from '@/src/mo
 import { useState, useEffect } from 'react';
 import ImagePreviewModal from '@/src/components/shared/ImagePreviewModal';
 import { formatEventDate, formatEventTime } from '@/src/utils/dateUtils';
+import { downloadICSFile } from '@/src/utils/calendarUtils';
 
 interface RsvpEventCardProps {
   event: Event;
   guest: Guest;
   onRSVP: (guestId: GuestId, eventId: EventId, response: RSVPStatus, isSubGuest: boolean) => Promise<void>;
   onAdditionalGuestsChange: (eventId: EventId, count: number) => void;
+  // onAdditionalGuestNameChange: (eventId: EventId, index: number, firstName: string, lastName: string) => void;
   saving: boolean;
   additionalGuestsCount: Record<EventId, number>;
+  // additionalGuestNames: Record<EventId, Array<{ firstName: string; lastName: string }>>;
   isAdmin?: boolean;
 }
 
@@ -18,8 +21,10 @@ export function RsvpEventCard({
   guest,
   onRSVP,
   onAdditionalGuestsChange,
+  // onAdditionalGuestNameChange,
   saving,
   additionalGuestsCount,
+  // additionalGuestNames,
   isAdmin = false,
 }: RsvpEventCardProps) {
   const hasSubGuests = guest.subGuests && guest.subGuests.length > 0;
@@ -57,6 +62,7 @@ export function RsvpEventCard({
     const currentAdditionalGuests = additionalGuestsCount[eventId] ?? 0;
     const isShowingAdditionalGuests = showingAdditionalGuests === guestId;
     const currentStatus = rsvps[eventId];
+    // const currentAdditionalGuestNames = additionalGuestNames[eventId] || [];
 
     return (
       <div className="space-y-4">
@@ -142,10 +148,16 @@ export function RsvpEventCard({
 
       <div className="flex flex-col gap-2 mb-4">
         <div className="flex items-center text-[var(--blossom-text-light)]">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-[var(--blossom-pink-primary)] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-          </svg>
-          <span className="italic">{formatEventDate(event.date)} at {formatEventTime(event.time)}</span>
+          <button
+            onClick={() => downloadICSFile(event)}
+            className="flex items-center hover:text-[var(--blossom-pink-primary)] transition-colors cursor-pointer"
+            title="Add to Calendar"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-[var(--blossom-pink-primary)] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <span className="italic">{formatEventDate(event.date)} at {formatEventTime(event.time)}</span>
+          </button>
         </div>
         <div className="flex items-center text-[var(--blossom-text-light)]">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-[var(--blossom-pink-primary)] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -186,7 +198,10 @@ export function RsvpEventCard({
         </div>
 
         {(guest.subGuests || [])
-          .filter(subGuest => subGuest.rsvps[event.id] !== undefined)
+          .filter(subGuest => 
+            subGuest.rsvps[event.id] !== undefined && 
+            !subGuest.assignedByGuest // Filter out guest-assigned sub-guests
+          )
           .map((subGuest, index, array) => (
             <div 
               key={subGuest.id} 

@@ -161,7 +161,8 @@ export default function GuestListTable({
       await new Promise(resolve => setTimeout(resolve, 2000));
     } catch (err) {
       console.error('Error sending emails:', err);
-      toast.error('There was an error sending the emails. Please try again.');
+      const errorMessage = err instanceof Error ? err.message : 'There was an error sending the emails. Please try again.';
+      toast.error(errorMessage);
     } finally {
       setIsSendingEmails(false);
       setShowWarningModal(false);

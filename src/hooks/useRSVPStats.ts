@@ -189,16 +189,16 @@ export function useRSVPStats({ occasionId }: UseRSVPStatsProps = {}) {
     }, 0);
     
     // Calculate total responded (main guests + sub-guests + additional guests who have responded)
-    const responded = eventGuests.reduce((total, guest) => {
-      const hasResponded = guest.rsvps[eventId] === RsvpStatus.ATTENDING || guest.rsvps[eventId] === RsvpStatus.NOT_ATTENDING;
-      if (!hasResponded) return total;
+    // const responded = eventGuests.reduce((total, guest) => {
+    //   const hasResponded = guest.rsvps[eventId] === RsvpStatus.ATTENDING || guest.rsvps[eventId] === RsvpStatus.NOT_ATTENDING;
+    //   if (!hasResponded) return total;
       
-      const subGuestsResponded = (guest.subGuests || []).filter(sg => 
-        sg.rsvps[eventId] === RsvpStatus.ATTENDING || sg.rsvps[eventId] === RsvpStatus.NOT_ATTENDING
-      ).length;
+    //   const subGuestsResponded = (guest.subGuests || []).filter(sg => 
+    //     sg.rsvps[eventId] === RsvpStatus.ATTENDING || sg.rsvps[eventId] === RsvpStatus.NOT_ATTENDING
+    //   ).length;
       
-      return total + 1 + subGuestsResponded + (guest.additionalGuests?.[eventId] ?? 0);
-    }, 0);
+    //   return total + 1 + subGuestsResponded + (guest.additionalGuests?.[eventId] ?? 0);
+    // }, 0);
     
     // Calculate total attending (main guests + sub-guests + additional guests who are attending)
     const attending = eventGuests.reduce((total, guest) => {
@@ -225,6 +225,8 @@ export function useRSVPStats({ occasionId }: UseRSVPStatsProps = {}) {
       
       return total + mainGuestNotAttending + subGuestsNotAttending + additionalGuestsNotAttending;
     }, 0);
+
+    const responded = attending + notAttending;
     
     // Calculate pending (invited - responded)
     const pending = invited - responded;
