@@ -4,6 +4,7 @@ import { db } from '@/utils/firebase';
 import { Guest, Event, RsvpStatus, GuestId, EventId, RSVPStatus } from '@/src/models/interfaces';
 import { RsvpEventCard } from './RsvpEventCard';
 import { useToast } from '@/src/hooks/useToast';
+import { useAuth } from '@/src/contexts/AuthContext';
 import { Toaster } from '@/src/components/ui/toaster';
 
 interface RsvpContentProps {
@@ -22,6 +23,7 @@ export function RsvpContent({ guestId, onError }: RsvpContentProps) {
   const [additionalGuestNames, setAdditionalGuestNames] = useState<Record<EventId, Array<{ firstName: string; lastName: string }>>>({});
   const [debounceTimers, setDebounceTimers] = useState<Record<string, NodeJS.Timeout>>({});
   */
+  const { user } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -453,7 +455,7 @@ export function RsvpContent({ guestId, onError }: RsvpContentProps) {
                 saving={saving}
                 additionalGuestsCount={additionalGuestsCount}
                 // additionalGuestNames={additionalGuestNames}
-                isAdmin={false}
+                isAdmin={user?.uid === event.createdBy}
               />
             ))}
         </div>
