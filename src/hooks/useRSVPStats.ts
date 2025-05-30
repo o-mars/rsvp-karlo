@@ -181,7 +181,6 @@ export function useRSVPStats({ occasionId }: UseRSVPStatsProps = {}) {
       return total + 1 + subGuestsCount + additionalGuestsAllowed;
     }, 0);
     
-    // Calculate total invited (main guests + their sub-guests + additional guests allowed)
     const invited = eventGuests.reduce((total, guest) => {
       const subGuestsCount = (guest.subGuests || []).filter(sg => sg.rsvps[eventId] !== undefined).length;
       const additionalGuestsAllowed = guest.additionalGuests?.[eventId] ?? 0;
@@ -205,7 +204,7 @@ export function useRSVPStats({ occasionId }: UseRSVPStatsProps = {}) {
       const mainGuestAttending = guest.rsvps[eventId] === RsvpStatus.ATTENDING ? 1 : 0;
       
       const subGuestsAttending = (guest.subGuests || []).filter(sg => 
-        sg.rsvps[eventId] === RsvpStatus.ATTENDING
+        sg.rsvps[eventId] === RsvpStatus.ATTENDING && !sg.assignedByGuest
       ).length;
       
       const additionalGuestsAttending = guest.additionalRsvps?.[eventId] ?? 0;
@@ -218,7 +217,7 @@ export function useRSVPStats({ occasionId }: UseRSVPStatsProps = {}) {
       const mainGuestNotAttending = guest.rsvps[eventId] === RsvpStatus.NOT_ATTENDING ? 1 : 0;
       
       const subGuestsNotAttending = (guest.subGuests || []).filter(sg => 
-        sg.rsvps[eventId] === RsvpStatus.NOT_ATTENDING
+        sg.rsvps[eventId] === RsvpStatus.NOT_ATTENDING && !sg.assignedByGuest // Technically guest assigned sub guests must be attending
       ).length;
 
       const additionalGuestsNotAttending = (guest.additionalGuests?.[eventId] ?? 0) - (guest.additionalRsvps?.[eventId] ?? 0);

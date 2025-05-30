@@ -38,20 +38,31 @@ export default function OccasionRSVPTableRow({ guest, events }: OccasionRSVPTabl
       ))}
 
       {/* Additional RSVPs row - only show if there are any additional RSVPs */}
-      {Object.values(guest.additionalRsvps || {}).some(count => count > 0) && (
+      {Object.entries(guest.additionalRsvps || {}).some(([eventId, count]) => {
+        const namedSubGuestsForEvent = guest.subGuests.filter(sg => 
+          sg.assignedByGuest && sg.rsvps[eventId] === RsvpStatus.ATTENDING
+        ).length;
+        return count > namedSubGuestsForEvent;
+      }) && (
         <tr className="hover:bg-[var(--blossom-card-bg-secondary)]">
           <td className="px-6 py-4 whitespace-nowrap text-[var(--blossom-text-dark)] pl-12">
             Additional Guests
           </td>
           {events.map((event) => {
             const additionalCount = guest.additionalRsvps?.[event.id] || 0;
+            const namedSubGuestsForEvent = guest.subGuests.filter(sg => 
+              sg.assignedByGuest && sg.rsvps[event.id] === RsvpStatus.ATTENDING
+            ).length;
+            const remainingAdditionalCount = Math.max(0, additionalCount - namedSubGuestsForEvent);
+
+            // Only show the cell if there are remaining unnamed additional guests
             return (
               <td key={event.id} className="px-6 py-4 whitespace-nowrap">
-                {additionalCount > 0 ? (
+                {remainingAdditionalCount > 0 ? (
                   <div className="flex items-center gap-2">
                     <RsvpStatusBadge status={RsvpStatus.ATTENDING} />
                     <span className="text-base font-medium text-[var(--blossom-primary)] bg-[var(--blossom-card-bg-secondary)] px-2 py-0.5 rounded-full">
-                      x{additionalCount}
+                      x{remainingAdditionalCount}
                     </span>
                   </div>
                 ) : (
