@@ -26,7 +26,7 @@ function RSVPContent() {
       <div className="min-h-screen flex flex-col relative bg-white">
         <div className="absolute inset-0 bg-gradient-to-b from-pink-50 to-white opacity-70"></div>
         <div className="relative z-10 flex-grow flex flex-col">
-          <header className="pt-20 pb-16 px-4 sm:px-6 lg:px-8 text-center">
+          <header className="pt-10 md:pt-16 pb-4 md:pb-10 px-4 sm:px-6 lg:px-8 text-center">
             <h1 
               className="text-3xl sm:text-5xl font-bold text-gray-900 cursor-pointer transition-colors duration-200 inline-block" 
               onClick={() => router.push('/')}
