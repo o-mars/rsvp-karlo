@@ -88,9 +88,11 @@ export function RsvpContent({ guestId, onError }: RsvpContentProps) {
             .filter(event => guest?.rsvps[event.id] !== undefined)
             .map((event, index, filteredEvents) => (
               <div key={event.id} className="relative">
-                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-[var(--blossom-pink-medium)] text-white px-3 md:px-4 py-0.5 md:py-1 rounded-full text-xs md:text-sm">
-                  Event {index + 1} of {filteredEvents.length}
-                </div>
+                {filteredEvents.length > 1 && (
+                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-[var(--blossom-pink-medium)] text-white px-3 md:px-4 py-0.5 md:py-1 rounded-full text-xs md:text-sm">
+                    Event {index + 1} of {filteredEvents.length}
+                  </div>
+                )}
                 <RsvpEventCard
                   event={event}
                   guest={guest}
