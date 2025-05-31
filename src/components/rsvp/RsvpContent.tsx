@@ -1,7 +1,9 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { RsvpEventCard } from './RsvpEventCard';
+import { RsvpConfirmation } from './RsvpConfirmation';
 import { Toaster } from '@/src/components/ui/toaster';
 import { useGuestRsvp } from '@/src/hooks/useGuestRsvp';
+import { Button } from '@/src/components/ui/button';
 
 interface RsvpContentProps {
   guestId: string;
@@ -9,16 +11,19 @@ interface RsvpContentProps {
 }
 
 export function RsvpContent({ guestId, onError }: RsvpContentProps) {
+  const [isConfirmed, setIsConfirmed] = useState(false);
   const {
     guest,
     events,
     loading,
     saving,
     error,
+    isCompleted,
     handleRSVP,
     handleAdditionalGuestCountChange,
     handleAdditionalGuestNameChange,
-    additionalGuestNames
+    additionalGuestNames,
+    confirmRSVP
   } = useGuestRsvp({ guestId, onError });
 
   const hasSubGuests = guest?.subGuests && guest.subGuests.length > 0;
@@ -48,6 +53,16 @@ export function RsvpContent({ guestId, onError }: RsvpContentProps) {
     }
   }, [guest, hasSubGuests]);
 
+  const handleConfirm = async () => {
+    try {
+      await confirmRSVP();
+      setIsConfirmed(true);
+    } catch (error) {
+      // Error is already handled in confirmRSVP
+      console.error('Failed to confirm RSVP:', error);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex-grow flex items-center justify-center">
@@ -71,6 +86,10 @@ export function RsvpContent({ guestId, onError }: RsvpContentProps) {
 
   if (!guest) {
     return null;
+  }
+
+  if (isConfirmed) {
+    return <RsvpConfirmation guest={guest} events={events} />;
   }
 
   return (
@@ -104,6 +123,17 @@ export function RsvpContent({ guestId, onError }: RsvpContentProps) {
                 />
               </div>
             ))}
+        </div>
+
+        <div className="mt-5 flex justify-center">
+          <Button
+            size="lg"
+            disabled={!isCompleted || saving}
+            onClick={handleConfirm}
+            className="bg-green-600 hover:bg-green-700 text-white"
+          >
+            {saving ? 'Saving...' : 'Confirm RSVP'}
+          </Button>
         </div>
       </div>
       <Toaster />

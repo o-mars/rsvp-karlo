@@ -123,24 +123,28 @@ export function RsvpEventCard({
                 <div className="w-full space-y-3 md:space-y-4 mt-3 md:mt-4">
                   {[...Array(currentAdditionalGuests)].map((_, index) => {
                     const currentName = currentGuestNames[index] || { firstName: '', lastName: '' };
+                    const displayValue = currentName.firstName && currentName.lastName 
+                      ? `${currentName.firstName} ${currentName.lastName}`
+                      : currentName.firstName || '';
                     return (
-                      <div key={index} className="flex flex-col sm:flex-row gap-2 md:gap-3">
+                      <div key={index} className="w-full">
                         <input
                           type="text"
-                          placeholder="First Name"
-                          value={currentName.firstName}
-                          onChange={(e) => handleAdditionalGuestNameChange(eventId, index, e.target.value, currentName.lastName)}
-                          className={`flex-1 px-2 md:px-3 py-1.5 md:py-2 text-sm md:text-base border rounded text-[var(--blossom-text-dark)] bg-white focus:ring-2 focus:ring-[var(--blossom-pink-primary)] focus:border-[var(--blossom-pink-primary)] ${
-                            !currentName.firstName.trim() ? 'border-red-500' : 'border-[var(--blossom-border)]'
-                          }`}
-                        />
-                        <input
-                          type="text"
-                          placeholder="Last Name"
-                          value={currentName.lastName}
-                          onChange={(e) => handleAdditionalGuestNameChange(eventId, index, currentName.firstName, e.target.value)}
-                          className={`flex-1 px-2 md:px-3 py-1.5 md:py-2 text-sm md:text-base border rounded text-[var(--blossom-text-dark)] bg-white focus:ring-2 focus:ring-[var(--blossom-pink-primary)] focus:border-[var(--blossom-pink-primary)] ${
-                            !currentName.lastName.trim() ? 'border-red-500' : 'border-[var(--blossom-border)]'
+                          placeholder={`Guest ${index + 1} Full Name`}
+                          value={displayValue}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            const words = value.split(/\s+/).filter(word => word.length > 0);
+                            if (words.length > 1) {
+                              const lastName = words.pop() || '';
+                              const firstName = words.join(' ');
+                              handleAdditionalGuestNameChange(eventId, index, firstName, lastName);
+                            } else {
+                              handleAdditionalGuestNameChange(eventId, index, value, '');
+                            }
+                          }}
+                          className={`w-full px-2 md:px-3 py-1.5 md:py-2 text-sm md:text-base border rounded text-[var(--blossom-text-dark)] bg-white focus:ring-2 focus:ring-[var(--blossom-pink-primary)] focus:border-[var(--blossom-pink-primary)] ${
+                            !displayValue ? 'border-red-500' : 'border-[var(--blossom-border)]'
                           }`}
                         />
                       </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '@/utils/firebase';
 import { Guest, Event, RsvpStatus, GuestId, EventId, RSVPStatus, SubGuest } from '@/src/models/interfaces';
@@ -16,9 +16,11 @@ interface UseGuestRsvpReturn {
   saving: boolean;
   error: string | null;
   additionalGuestNames: Record<EventId, Array<{ firstName: string; lastName: string }>>;
+  isCompleted: boolean;
   handleRSVP: (guestId: GuestId, eventId: EventId, response: RSVPStatus, isSubGuest: boolean) => Promise<void>;
   handleAdditionalGuestCountChange: (eventId: EventId, count: number) => void;
   handleAdditionalGuestNameChange: (eventId: EventId, index: number, firstName: string, lastName: string) => void;
+  confirmRSVP: () => Promise<void>;
 }
 
 export function useGuestRsvp({ guestId, onError }: UseGuestRsvpProps): UseGuestRsvpReturn {
@@ -30,6 +32,37 @@ export function useGuestRsvp({ guestId, onError }: UseGuestRsvpProps): UseGuestR
   const [additionalGuestNames, setAdditionalGuestNames] = useState<Record<EventId, Array<{ firstName: string; lastName: string }>>>({});
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
+
+  const isCompleted = useMemo(() => {
+    if (!guest || !events.length) return false;
+
+    const mainGuestComplete = Object.values(guest.rsvps).every(rsvpStatus => 
+      rsvpStatus === RsvpStatus.ATTENDING ||
+      rsvpStatus === RsvpStatus.NOT_ATTENDING
+    );
+
+    if (!mainGuestComplete) return false;
+
+    const subGuestsComplete = guest.subGuests.every(subGuest =>
+      Object.values(subGuest.rsvps).every(rsvpStatus =>
+        rsvpStatus === RsvpStatus.ATTENDING ||
+        rsvpStatus === RsvpStatus.NOT_ATTENDING
+      )
+    );
+
+    if (!subGuestsComplete) return false;
+
+    const additionalGuestsComplete = events.every(event => {
+      const additionalCount = guest.additionalRsvps?.[event.id] || 0;
+      if (additionalCount === 0) return true;
+      
+      const names = additionalGuestNames[event.id] || [];
+      return names.length === additionalCount &&
+        names.every(name => name.firstName.trim() && name.lastName.trim());
+    });
+
+    return additionalGuestsComplete;
+  }, [guest, events, additionalGuestNames]);
 
   useEffect(() => {
     const fetchGuestAndEvents = async () => {
@@ -50,7 +83,6 @@ export function useGuestRsvp({ guestId, onError }: UseGuestRsvpProps): UseGuestR
         const initialAdditionalGuestNames: Record<EventId, Array<{ firstName: string; lastName: string }>> = {};
 
         if (guestData.subGuests) {
-          // Group sub-guests by event
           const subGuestsByEvent = guestData.subGuests.reduce((acc, subGuest) => {
             if (subGuest.assignedByGuest) {
               Object.entries(subGuest.rsvps).forEach(([eventId, status]) => {
@@ -58,7 +90,6 @@ export function useGuestRsvp({ guestId, onError }: UseGuestRsvpProps): UseGuestR
                   if (!acc[eventId]) {
                     acc[eventId] = [];
                   }
-                  // Only add if not already present (avoid duplicates)
                   const exists = acc[eventId].some(name => 
                     name.firstName === subGuest.firstName && 
                     name.lastName === subGuest.lastName
@@ -75,7 +106,6 @@ export function useGuestRsvp({ guestId, onError }: UseGuestRsvpProps): UseGuestR
             return acc;
           }, {} as Record<EventId, Array<{ firstName: string; lastName: string }>>);
 
-          // Merge with initialAdditionalGuestNames
           Object.entries(subGuestsByEvent).forEach(([eventId, names]) => {
             initialAdditionalGuestNames[eventId] = names;
           });
@@ -235,13 +265,10 @@ export function useGuestRsvp({ guestId, onError }: UseGuestRsvpProps): UseGuestR
           const maxAdditionalGuests = guest.additionalGuests?.[eventId] ?? 0;
           let updatedSubGuests = [...guest.subGuests];
 
-          // First, remove any guest-assigned sub-guests that are no longer in any additional guests list
           const allAdditionalNames = Object.values(currentNames).flat();
           updatedSubGuests = updatedSubGuests.filter(sg => {
-            // Keep non-guest-assigned sub-guests
             if (!sg.assignedByGuest) return true;
             
-            // Check if this sub-guest's name exists in any additional guests list
             return allAdditionalNames.some(name => 
               name.firstName.toLowerCase() === sg.firstName.toLowerCase() && 
               name.lastName.toLowerCase() === sg.lastName.toLowerCase()
@@ -250,7 +277,6 @@ export function useGuestRsvp({ guestId, onError }: UseGuestRsvpProps): UseGuestR
 
           additionalNames.forEach((name, index) => {
             if (index < maxAdditionalGuests && name.firstName.trim() && name.lastName.trim()) {
-              // Check if there's an existing guest-assigned sub-guest with the same name
               const existingSubGuest = updatedSubGuests.find(sg => 
                 sg.assignedByGuest && 
                 sg.firstName.toLowerCase() === name.firstName.trim().toLowerCase() && 
@@ -258,10 +284,8 @@ export function useGuestRsvp({ guestId, onError }: UseGuestRsvpProps): UseGuestR
               );
 
               if (existingSubGuest) {
-                // If found, just add this event to their RSVPs
                 existingSubGuest.rsvps[eventId] = RsvpStatus.ATTENDING;
               } else {
-                // If not found, create a new sub-guest
                 const newSubGuest: SubGuest = {
                   id: `${guest.id}-${eventId}-${index}-${Date.now()}`,
                   firstName: name.firstName.trim(),
@@ -271,13 +295,11 @@ export function useGuestRsvp({ guestId, onError }: UseGuestRsvpProps): UseGuestR
                 };
                 updatedSubGuests.push(newSubGuest);
 
-                // Find any existing sub-guests that had this event in their RSVPs but now have a different name
                 updatedSubGuests = updatedSubGuests.map(sg => {
                   if (sg.assignedByGuest && 
                       sg.rsvps[eventId] === RsvpStatus.ATTENDING && 
                       (sg.firstName.toLowerCase() !== name.firstName.trim().toLowerCase() || 
                        sg.lastName.toLowerCase() !== name.lastName.trim().toLowerCase())) {
-                    // Remove this event from their RSVPs
                     const remainingRsvps = { ...sg.rsvps };
                     delete remainingRsvps[eventId];
                     return { ...sg, rsvps: remainingRsvps };
@@ -327,6 +349,35 @@ export function useGuestRsvp({ guestId, onError }: UseGuestRsvpProps): UseGuestR
     }, 500);
   };
 
+  const confirmRSVP = async () => {
+    if (!guest) return;
+
+    try {
+      setSaving(true);
+      
+      await updateDoc(doc(db, 'guests', guest.id), {
+        rsvps: guest.rsvps,
+        additionalRsvps: guest.additionalRsvps,
+        subGuests: guest.subGuests
+      });
+
+      toast({
+        title: "RSVP confirmed successfully",
+        variant: "success",
+      });
+    } catch (error) {
+      console.error('Error confirming RSVP:', error);
+      setError('Failed to confirm RSVP. Please try again.');
+      toast({
+        title: "Failed to confirm RSVP",
+        variant: "destructive",
+      });
+      throw error;
+    } finally {
+      setSaving(false);
+    }
+  };
+
   useEffect(() => {
     return () => {
       if (debounceTimerRef.current) {
@@ -342,8 +393,10 @@ export function useGuestRsvp({ guestId, onError }: UseGuestRsvpProps): UseGuestR
     saving,
     error,
     additionalGuestNames,
+    isCompleted,
     handleRSVP,
     handleAdditionalGuestCountChange,
-    handleAdditionalGuestNameChange
+    handleAdditionalGuestNameChange,
+    confirmRSVP
   };
 } 
