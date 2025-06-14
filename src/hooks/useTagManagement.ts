@@ -14,7 +14,7 @@ import {
 import { db } from "@/utils/firebase";
 import { useOccasion } from "@/src/contexts/OccasionContext";
 import { useAuth } from "@/src/contexts/AuthContext";
-import { Guest, Tag } from "@/src/models/interfaces";
+import { Guest, Tag, TagId } from "@/src/models/interfaces";
 
 interface UseTagManagementProps {
   occasionId?: string;
@@ -154,11 +154,16 @@ export function useTagManagement({
     }
   };
 
-  const handleDeleteTag = async (tagToDelete: Tag) => {
+  const handleDeleteTag = async (tagId: TagId): Promise<void> => {
     try {
+      const tagToDelete = tags.find((tag) => tag.id === tagId);
+      if (!tagToDelete) {
+        throw new Error("Tag not found");
+      }
+
       // Check if any guests are using this tag using the provided guests data
       const guestsUsingTag = guests.filter((guest) =>
-        guest.tags?.includes(tagToDelete.id)
+        guest.tags?.includes(tagId)
       );
 
       if (guestsUsingTag.length > 0) {
@@ -167,18 +172,14 @@ export function useTagManagement({
         );
       }
 
-      await deleteDoc(doc(db, "tags", tagToDelete.id));
+      await deleteDoc(doc(db, "tags", tagId));
 
       // Update local state by removing the deleted tag
-      setTags((prevTags) =>
-        prevTags.filter((tag) => tag.id !== tagToDelete.id)
-      );
+      setTags((prevTags) => prevTags.filter((tag) => tag.id !== tagId));
 
       if (occasionContext && occasionContext.refreshData && !occasionId) {
         await occasionContext.refreshData();
       }
-
-      return true;
     } catch (error) {
       console.error("Error in deletion process:", error);
       throw error;

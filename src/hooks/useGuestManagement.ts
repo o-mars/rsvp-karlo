@@ -13,7 +13,7 @@ import {
   writeBatch,
 } from "firebase/firestore";
 import { db } from "@/utils/firebase";
-import { Guest, Event } from "@/src/models/interfaces";
+import { Guest, Event, TagId, GuestId } from "@/src/models/interfaces";
 import { useOccasion } from "@/src/contexts/OccasionContext";
 import { useAuth } from "@/src/contexts/AuthContext";
 import { useEmailService } from "./useEmailService";
@@ -289,6 +289,35 @@ export function useGuestManagement({
     }
   };
 
+  const handleSetTagsForGuests = async (
+    guestIds: GuestId[],
+    tagIds: TagId[]
+  ): Promise<void> => {
+    try {
+      // Create a batch write for all updates
+      const batch = writeBatch(db);
+
+      // Add all updates to the batch
+      guestIds.forEach((guestId) => {
+        const guestRef = doc(db, "guests", guestId);
+        batch.update(guestRef, { tags: tagIds });
+      });
+
+      // Commit the batch
+      await batch.commit();
+
+      // Update local state to reflect the new tags
+      setGuests((prevGuests) =>
+        prevGuests.map((guest) =>
+          guestIds.includes(guest.id) ? { ...guest, tags: tagIds } : guest
+        )
+      );
+    } catch (error) {
+      console.error("Error in handleSetTagsForGuests:", error);
+      throw error;
+    }
+  };
+
   const generateGuestId = (firstName: string, lastName: string) => {
     const cleanFirstName = firstName.trim().replace(/[^A-Za-z0-9]/g, "");
     const cleanLastName = lastName.trim().replace(/[^A-Za-z0-9]/g, "");
@@ -335,6 +364,7 @@ export function useGuestManagement({
     handleUpdateGuest,
     handleDeleteGuest,
     handleBulkEmail,
+    handleSetTagsForGuests,
     toggleGuestSelection: (id: string) => {
       setSelectedGuests((prev) =>
         prev.includes(id)

@@ -1,6 +1,6 @@
 "use client";
 
-import { Guest, Event, Tag } from "@/src/models/interfaces";
+import { Guest, Event, Tag, GuestId, TagId } from "@/src/models/interfaces";
 import GuestListTableRow from "../GuestListTableRow/GuestListTableRow";
 import toast from "react-hot-toast";
 import { useState } from "react";
@@ -25,6 +25,10 @@ interface GuestListTableProps {
   onUpdateTag: (tag: Partial<Tag>) => Promise<void>;
   onDeleteTag: (tagId: string) => Promise<void>;
   onApplyTags: (selectedTagIds: string[]) => void;
+  handleSetTagsForGuests: (
+    guestIds: GuestId[],
+    tagIds: TagId[]
+  ) => Promise<void>;
 }
 
 interface WarningModalProps {
@@ -119,7 +123,7 @@ export default function GuestListTable({
   onCreateTag,
   onUpdateTag,
   onDeleteTag,
-  onApplyTags,
+  handleSetTagsForGuests,
 }: GuestListTableProps) {
   const [isSendingEmails, setIsSendingEmails] = useState(false);
   const [showWarningModal, setShowWarningModal] = useState(false);
@@ -467,10 +471,18 @@ export default function GuestListTable({
                 onUpdateTag={onUpdateTag}
                 onDeleteTag={onDeleteTag}
                 onCreateTag={onCreateTag}
-                onApply={(selectedTagIds) => {
+                onApply={async (selectedTagIds) => {
                   if (selectedGuests.length > 0) {
                     // Apply tags to selected guests
-                    onApplyTags(selectedTagIds);
+                    console.log(
+                      "selectedGuests",
+                      selectedGuests,
+                      selectedTagIds
+                    );
+                    await handleSetTagsForGuests(
+                      selectedGuests,
+                      selectedTagIds
+                    );
                   } else {
                     // Update filter tags
                     setFilterTagIds(selectedTagIds);

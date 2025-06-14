@@ -64,6 +64,7 @@ export default function EventsPage() {
     handleAddGuest,
     handleUpdateGuest,
     fetchData: fetchGuestData,
+    handleSetTagsForGuests,
   } = useGuestManagement({
     occasionId: occasion?.id,
     useContext: false,
@@ -373,7 +374,7 @@ export default function EventsPage() {
           onCreateTag={handleAddTag}
           onUpdateTag={handleUpdateTag}
           onDeleteTag={handleDeleteTag}
-          onApplyTags={handleUpdateEvent}
+          handleSetTagsForGuests={handleSetTagsForGuests}
         />
       )}
 
