@@ -1,18 +1,22 @@
 import { useState, useEffect } from "react";
-import { Tag } from "@/src/models/interfaces";
+import { Tag, TagId } from "@/src/models/interfaces";
 
 interface CreateOrUpdateTagProps {
   onCreateTag: (tag: Partial<Tag>) => Promise<void>;
+  onUpdateTag?: (tag: Partial<Tag>) => Promise<void>;
   onCancel: () => void;
   initialName?: string;
   initialColor?: string;
+  tagId?: TagId;
 }
 
 export default function CreateOrUpdateTag({
   onCreateTag,
+  onUpdateTag,
   onCancel,
   initialName = "",
   initialColor = "#ec4899",
+  tagId,
 }: CreateOrUpdateTagProps) {
   const [newTagName, setNewTagName] = useState(initialName);
   const [newTagColor, setNewTagColor] = useState(initialColor);
@@ -23,19 +27,27 @@ export default function CreateOrUpdateTag({
     setNewTagColor(initialColor);
   }, [initialName, initialColor]);
 
-  const handleCreateTag = async () => {
+  const handleSubmit = async () => {
     if (!newTagName.trim()) return;
 
     try {
-      await onCreateTag({
-        name: newTagName.trim(),
-        color: newTagColor,
-      });
+      if (tagId) {
+        await onUpdateTag?.({
+          id: tagId,
+          name: newTagName.trim(),
+          color: newTagColor,
+        });
+      } else {
+        await onCreateTag({
+          name: newTagName.trim(),
+          color: newTagColor,
+        });
+      }
       setNewTagName("");
       setNewTagColor("#ec4899");
       onCancel();
     } catch (error) {
-      console.error("Error creating tag:", error);
+      console.error("Error saving tag:", error);
     }
   };
 
@@ -83,7 +95,7 @@ export default function CreateOrUpdateTag({
         </button>
         <button
           type="button"
-          onClick={handleCreateTag}
+          onClick={handleSubmit}
           disabled={!newTagName.trim()}
           className={`p-1 ${
             newTagName.trim()
