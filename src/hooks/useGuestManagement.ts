@@ -97,6 +97,13 @@ export function useGuestManagement({
           ...doc.data(),
         })) as Event[];
 
+        const sortedEvents = eventsList.sort((a, b) => {
+          if (a.date && b.date) {
+            return new Date(a.date).getTime() - new Date(b.date).getTime();
+          }
+          return 0;
+        });
+
         const guestsList = guestsSnapshot.docs.map((doc) => {
           const data = doc.data();
           return {
@@ -106,7 +113,7 @@ export function useGuestManagement({
           };
         }) as Guest[];
 
-        setEvents(eventsList);
+        setEvents(sortedEvents);
         setGuests(guestsList);
         setLoading(false);
       }
