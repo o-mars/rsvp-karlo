@@ -11,7 +11,6 @@ interface GuestListTableProps {
   events: Event[];
   tags: Tag[];
   selectedGuests: string[];
-  selectedTagIds: string[];
   isLoading?: boolean;
   onSelectGuest: (id: string, selected: boolean) => void;
   onSelectAll: (selected: boolean) => void;
@@ -24,7 +23,6 @@ interface GuestListTableProps {
   onCreateTag: (tag: Partial<Tag>) => Promise<void>;
   onUpdateTag: (tag: Partial<Tag>) => Promise<void>;
   onDeleteTag: (tagId: string) => Promise<void>;
-  onApplyTags: (selectedTagIds: string[]) => void;
   handleSetTagsForGuests: (
     guestIds: GuestId[],
     tagIds: TagId[]
@@ -110,7 +108,6 @@ export default function GuestListTable({
   events,
   tags = [],
   selectedGuests,
-  selectedTagIds = [],
   isLoading = false,
   onSelectGuest,
   onSelectAll,
@@ -118,7 +115,6 @@ export default function GuestListTable({
   onDeleteGuest,
   onBulkEmail,
   onImportGuests,
-  onExportGuests,
   onAddGuest,
   onCreateTag,
   onUpdateTag,
@@ -263,19 +259,16 @@ export default function GuestListTable({
     await sendBulkEmails();
   };
 
-  const handleExport = async () => {
-    try {
-      // Call the original export function
-      await onExportGuests();
-
-      // Show success toast
+  const handleApplyTags = async (selectedTagIds: string[]) => {
+    if (selectedGuests.length > 0) {
+      await handleSetTagsForGuests(selectedGuests, selectedTagIds);
       toast.success(
-        `Successfully exported ${selectedGuests.length} ${selectedGuests.length === 1 ? "guest" : "guests"}.`
+        `Successfully applied tags to ${selectedGuests.length} ${selectedGuests.length === 1 ? "guest" : "guests"}.`
       );
-    } catch (err) {
-      console.error("Error exporting guests:", err);
-      toast.error("There was an error exporting the guests. Please try again.");
+    } else {
+      setFilterTagIds(selectedTagIds);
     }
+    setShowTagModal(false);
   };
 
   return (
@@ -286,25 +279,6 @@ export default function GuestListTable({
             Guests
           </h2>
           <div className="flex space-x-2">
-            {selectedGuests.length > 0 ? (
-              <button
-                onClick={handleExport}
-                className="bg-[var(--blossom-pink-light)] hover:bg-pink-200 text-[var(--blossom-text-dark)] py-1.5 px-3 rounded transition-colors flex items-center text-sm"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-4 w-4 mr-1"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z"
-                  />
-                </svg>
-                {allGuestsSelected ? "Export Guests" : "Export Selected"}
-              </button>
-            ) : null}
             <button
               onClick={() => setShowTagModal(true)}
               className="bg-[var(--blossom-pink-light)] hover:bg-pink-200 text-[var(--blossom-text-dark)] py-1.5 px-3 rounded transition-colors flex items-center text-sm"
@@ -323,9 +297,9 @@ export default function GuestListTable({
               </svg>
               {selectedGuests.length > 0
                 ? "Apply Tags"
-                : selectedTagIds.length > 0
-                  ? `${selectedTagIds.length} Tag${
-                      selectedTagIds.length === 1 ? "" : "s"
+                : filterTagIds.length > 0
+                  ? `${filterTagIds.length} Tag${
+                      filterTagIds.length === 1 ? "" : "s"
                     } Selected`
                   : "Filter by Tags"}
             </button>
@@ -471,24 +445,7 @@ export default function GuestListTable({
                 onUpdateTag={onUpdateTag}
                 onDeleteTag={onDeleteTag}
                 onCreateTag={onCreateTag}
-                onApply={async (selectedTagIds) => {
-                  if (selectedGuests.length > 0) {
-                    // Apply tags to selected guests
-                    console.log(
-                      "selectedGuests",
-                      selectedGuests,
-                      selectedTagIds
-                    );
-                    await handleSetTagsForGuests(
-                      selectedGuests,
-                      selectedTagIds
-                    );
-                  } else {
-                    // Update filter tags
-                    setFilterTagIds(selectedTagIds);
-                  }
-                  setShowTagModal(false);
-                }}
+                onApply={handleApplyTags}
                 mode={selectedGuests.length > 0 ? "apply" : "filter"}
               />
             </div>
