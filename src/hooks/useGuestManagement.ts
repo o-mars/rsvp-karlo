@@ -289,6 +289,8 @@ export function useGuestManagement({
         )
       );
 
+      setSelectedGuests([]);
+
       return selectedGuestsData.length;
     } catch (error) {
       console.error("Error in handleBulkEmail:", error);
@@ -319,6 +321,8 @@ export function useGuestManagement({
           guestIds.includes(guest.id) ? { ...guest, tags: tagIds } : guest
         )
       );
+
+      setSelectedGuests([]);
     } catch (error) {
       console.error("Error in handleSetTagsForGuests:", error);
       throw error;

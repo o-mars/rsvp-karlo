@@ -10,6 +10,7 @@ import {
   Tag,
 } from "@/src/models/interfaces";
 import CreateOrUpdateTag from "@/src/components/Tags/CreateOrUpdateTag/CreateOrUpdateTag";
+import SimpleTagSelector from "@/src/components/Tags/SimpleTagSelector/SimpleTagSelector";
 
 interface CreateOrUpdateGuestCardProps {
   isOpen: boolean;
@@ -299,15 +300,6 @@ export default function CreateOrUpdateGuestCard({
       ...guestData,
       email: updatedEmails,
     });
-  };
-
-  const handleTagToggle = (tagId: string) => {
-    setGuestData((prev) => ({
-      ...prev,
-      tags: prev.tags?.includes(tagId)
-        ? prev.tags.filter((id) => id !== tagId)
-        : [...(prev.tags || []), tagId],
-    }));
   };
 
   if (!isOpen) return null;
@@ -664,27 +656,14 @@ export default function CreateOrUpdateGuestCard({
               </div>
 
               <div className="bg-[var(--blossom-card-bg-secondary)] p-4 rounded-lg">
-                <div className="flex flex-wrap gap-2">
-                  {tags.map((tag) => (
-                    <button
-                      key={tag.id}
-                      type="button"
-                      onClick={() => handleTagToggle(tag.id)}
-                      className={`px-3 py-1.5 rounded-full text-sm transition-colors ${
-                        guestData.tags?.includes(tag.id)
-                          ? "text-white"
-                          : "bg-white border border-[var(--blossom-border)] text-[var(--blossom-text-dark)] hover:bg-[var(--blossom-pink-light)]"
-                      }`}
-                      style={
-                        guestData.tags?.includes(tag.id)
-                          ? { backgroundColor: tag.color }
-                          : undefined
-                      }
-                    >
-                      {tag.name}
-                    </button>
-                  ))}
-                </div>
+                <SimpleTagSelector
+                  tags={tags}
+                  selectedTagIds={guestData.tags || []}
+                  onSelectionChange={(selectedTagIds) =>
+                    setGuestData({ ...guestData, tags: selectedTagIds })
+                  }
+                  showUntagged={false}
+                />
               </div>
             </div>
 

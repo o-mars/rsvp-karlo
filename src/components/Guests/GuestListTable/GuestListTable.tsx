@@ -139,6 +139,16 @@ export default function GuestListTable({
     selectedGuests.length === filteredGuests.length &&
     filteredGuests.length > 0;
 
+  // Calculate total and selected guest counts including sub-guests
+  const totalGuestCount = filteredGuests.reduce(
+    (total, guest) => total + 1 + (guest.subGuests?.length || 0),
+    0
+  );
+
+  const selectedGuestCount = filteredGuests
+    .filter((guest) => selectedGuests.includes(guest.id))
+    .reduce((total, guest) => total + 1 + (guest.subGuests?.length || 0), 0);
+
   if (isLoading) {
     return (
       <div className="flex justify-center p-6">
@@ -277,6 +287,13 @@ export default function GuestListTable({
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-[var(--blossom-text-dark)]">
             Guests
+            <span className="ml-2 text-sm font-normal text-[var(--blossom-text-dark)]/70">
+              (
+              {selectedGuests.length > 0
+                ? `${selectedGuestCount} selected`
+                : `${totalGuestCount} total`}
+              )
+            </span>
           </h2>
           <div className="flex space-x-2">
             <button
